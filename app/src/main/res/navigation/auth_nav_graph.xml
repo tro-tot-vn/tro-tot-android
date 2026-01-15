@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/auth_nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.trototvn.trototandroid.ui.auth.login.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+        <action
+            android:id="@+id/action_login_to_forgot"
+            app:destination="@id/forgotPasswordFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.trototvn.trototandroid.ui.auth.register.RegisterFragment"
+        android:label="Register">
+        <action
+            android:id="@+id/action_register_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.trototvn.trototandroid.ui.auth.forgot.ForgotPasswordFragment"
+        android:label="Forgot Password">
+        <action
+            android:id="@+id/action_forgot_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+</navigation>

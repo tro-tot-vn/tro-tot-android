@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <!-- Bottom Navigation Fragments -->
+    
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.trototvn.trototandroid.ui.main.home.HomeFragment"
+        android:label="Home">
+        <!-- Actions will be added as features are implemented -->
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.trototvn.trototandroid.ui.main.search.SearchFragment"
+        android:label="Search" />
+
+    <fragment
+        android:id="@+id/myPostsFragment"
+        android:name="com.trototvn.trototandroid.ui.main.myposts.MyPostsFragment"
+        android:label="My Posts" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.trototvn.trototandroid.ui.main.profile.ProfileFragment"
+        android:label="Profile" />
+
+</navigation>

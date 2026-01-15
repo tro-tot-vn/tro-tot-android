@@ -10,7 +10,7 @@
     <ProgressBar
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:indeterminateTint="@color/colorPrimary" />
+        android:indeterminateTint="?attr/colorPrimary" />
 
     <TextView
         android:id="@+id/tvMessage"
@@ -19,6 +19,6 @@
         android:layout_marginTop="16dp"
         android:text="@string/loading"
         android:textSize="16sp"
-        android:textColor="@android:color/black" />
+        android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>
