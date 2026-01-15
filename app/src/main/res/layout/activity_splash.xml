@@ -17,7 +17,7 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:contentDescription="@string/app_name"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@mipmap/ic_trotot_logo_app" />
 
         <TextView
             android:layout_width="wrap_content"
