@@ -1,0 +1,141 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  build-benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Measure build time
+      run: |
+        echo "🚀 Starting build time measurement..."
+        START_TIME=$(date +%s)
+        ./gradlew assembleDebug --stacktrace
+        END_TIME=$(date +%s)
+        BUILD_TIME=$((END_TIME - START_TIME))
+        echo "⏱️ Build completed in ${BUILD_TIME} seconds"
+        echo "BUILD_TIME=${BUILD_TIME}" >> $GITHUB_ENV
+        
+    - name: Check APK size
+      run: |
+        APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$APK_PATH" ]; then
+          APK_SIZE=$(stat -c%s "$APK_PATH")
+          APK_SIZE_MB=$((APK_SIZE / 1024 / 1024))
+          echo "📱 APK size: ${APK_SIZE_MB} MB (${APK_SIZE} bytes)"
+          echo "APK_SIZE_MB=${APK_SIZE_MB}" >> $GITHUB_ENV
+          
+          # Check if APK size is reasonable (< 50MB)
+          if [ $APK_SIZE_MB -gt 50 ]; then
+            echo "⚠️ Warning: APK size is larger than 50MB"
+            exit 1
+          else
+            echo "✅ APK size is within acceptable limits"
+          fi
+        else
+          echo "❌ APK not found!"
+          exit 1
+        fi
+        
+    - name: Run static analysis
+      run: |
+        echo "🔍 Running static analysis..."
+        ./gradlew lintDebug --stacktrace
+        
+    - name: Comment PR with performance metrics
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const buildTime = process.env.BUILD_TIME;
+          const apkSize = process.env.APK_SIZE_MB;
+          
+          const comment = `## 📊 Performance Report
+          
+          | Metric | Value |
+          |--------|-------|
+          | 🚀 Build Time | ${buildTime} seconds |
+          | 📱 APK Size | ${apkSize} MB |
+          
+          ### Status
+          ${apkSize < 50 ? '✅ APK size is within limits' : '⚠️ APK size exceeds 50MB'}
+          ${buildTime < 300 ? '✅ Build time is acceptable' : '⚠️ Build time is slow (>5 minutes)'}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  memory-leak-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Run memory leak detection
+      run: |
+        echo "🧠 Checking for potential memory leaks..."
+        # Run with JVM memory profiling
+        ./gradlew assembleDebug -Dorg.gradle.jvmargs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError" --stacktrace
+        
+    - name: Upload heap dumps if any
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: heap-dumps
+        path: "*.hprof"

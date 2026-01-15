@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Sign APK
+        # Configure signing here if needed, or rely on debug build for now
+        run: echo "Skipping signing for now"
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Changes in this Release
+
+            Auto-generated release from ${{ github.ref }}
+
+            ### Downloads
+            Download the APK file below and install on your Android device.
+
+          draft: false
+          prerelease: false
+          files: |
+            ./app/build/outputs/apk/release/app-release.apk
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: always()
+
+    steps:
+      - name: Notify success
+        if: needs.build-release.result == 'success'
+        run: echo "✅ Release build successful!"
+
+      - name: Notify failure
+        if: needs.build-release.result == 'failure'
+        run: echo "❌ Release build failed!"
