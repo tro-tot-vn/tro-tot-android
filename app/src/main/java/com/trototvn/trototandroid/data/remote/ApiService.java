@@ -1,6 +1,11 @@
 package com.trototvn.trototandroid.data.remote;
 
+import com.trototvn.trototandroid.data.model.ResponseData;
 import com.trototvn.trototandroid.data.model.User;
+import com.trototvn.trototandroid.data.model.auth.LoginRequest;
+import com.trototvn.trototandroid.data.model.auth.LoginResponse;
+import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
+import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
 
 import java.util.List;
 
@@ -15,10 +20,23 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
- * Example API Service with RxJava support
- * This is a template - modify according to your actual API endpoints
+ * API Service interface
  */
 public interface ApiService {
+
+    // ========== Authentication ==========
+
+    /**
+     * POST - Login
+     */
+    @POST("api/auth/login")
+    Single<ResponseData<LoginResponse>> login(@Body LoginRequest request);
+
+    /**
+     * POST - Register
+     */
+    @POST("api/auth/register")
+    Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
 
     // ========== Example CRUD operations for User ==========
 
@@ -60,18 +78,4 @@ public interface ApiService {
      */
     @DELETE("users/{id}")
     Completable deleteUser(@Path("id") int userId);
-
-    // ========== Authentication (example) ==========
-
-    /**
-     * POST - Login
-     */
-    // @POST("auth/login")
-    // Single<LoginResponse> login(@Body LoginRequest request);
-
-    /**
-     * POST - Register
-     */
-    // @POST("auth/register")
-    // Single<User> register(@Body RegisterRequest request);
 }

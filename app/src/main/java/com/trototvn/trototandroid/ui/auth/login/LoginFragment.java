@@ -1,39 +1,150 @@
 package com.trototvn.trototandroid.ui.auth.login;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
+import com.trototvn.trototandroid.R;
+import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentLoginBinding;
+import com.trototvn.trototandroid.ui.auth.AuthActivity;
+import com.trototvn.trototandroid.ui.base.BaseFragment;
+import com.trototvn.trototandroid.ui.main.MainActivity;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+/**
+ * LoginFragment - Clean implementation with MVVM pattern
+ */
 @AndroidEntryPoint
-public class LoginFragment extends Fragment {
+public class LoginFragment extends BaseFragment<FragmentLoginBinding> {
 
-    private FragmentLoginBinding binding;
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        binding = FragmentLoginBinding.inflate(inflater, container, false);
-        return binding.getRoot();
-    }
+    private LoginViewModel viewModel;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
         super.onViewCreated(view, savedInstanceState);
-        binding.textView.setText("Login Fragment - Will be implemented next");
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+    protected void setupViews() {
+        // Login button click
+        binding.btnLogin.setOnClickListener(v -> handleLogin());
+
+        // Register link click
+        binding.tvRegisterLink.setOnClickListener(v -> navigateToRegister());
+
+        // Forgot password link click
+        binding.tvForgotPassword.setOnClickListener(v -> navigateToForgotPassword());
+    }
+
+    @Override
+    protected void observeData() {
+        // Observe login result
+        viewModel.getLoginResult().observe(getViewLifecycleOwner(), this::handleLoginResult);
+
+        // Observe validation errors
+        viewModel.getIdentifierError().observe(getViewLifecycleOwner(), error -> {
+            binding.tilIdentifier.setError(error);
+        });
+
+        viewModel.getPasswordError().observe(getViewLifecycleOwner(), error -> {
+            binding.tilPassword.setError(error);
+        });
+    }
+
+    /**
+     * Handle login button click
+     */
+    private void handleLogin() {
+        String identifier = getTextOrEmpty(binding.etIdentifier);
+        String password = getTextOrEmpty(binding.etPassword);
+
+        viewModel.login(identifier, password);
+    }
+
+    /**
+     * Handle login result from ViewModel
+     */
+    private void handleLoginResult(Resource<?> resource) {
+        switch (resource.getStatus()) {
+            case LOADING:
+                showLoading(true);
+                hideError();
+                break;
+
+            case SUCCESS:
+                showLoading(false);
+                showToast("Đăng nhập thành công!");
+                navigateToMainApp();
+                break;
+
+            case ERROR:
+                showLoading(false);
+                showError(resource.getMessage());
+                break;
+        }
+    }
+
+    /**
+     * Navigate to main app after successful login
+     */
+    private void navigateToMainApp() {
+        if (getActivity() instanceof AuthActivity) {
+            ((AuthActivity) getActivity()).navigateToMainApp();
+        }
+    }
+
+    /**
+     * Navigate to register screen
+     */
+    private void navigateToRegister() {
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_loginFragment_to_registerFragment);
+    }
+
+    /**
+     * Navigate to forgot password screen
+     */
+    private void navigateToForgotPassword() {
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_loginFragment_to_forgotPasswordFragment);
+    }
+
+    /**
+     * Show loading state
+     */
+    @Override
+    protected void showLoading(boolean isLoading) {
+        binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        binding.btnLogin.setEnabled(!isLoading);
+    }
+
+    /**
+     * Show error banner
+     */
+    private void showError(String message) {
+        binding.cardError.setVisibility(View.VISIBLE);
+        binding.tvErrorMessage.setText(message != null ? message : "Đã xảy ra lỗi");
+    }
+
+    /**
+     * Hide error banner
+     */
+    private void hideError() {
+        binding.cardError.setVisibility(View.GONE);
+    }
+
+    /**
+     * Helper to get text from EditText or empty string
+     */
+    private String getTextOrEmpty(android.widget.EditText editText) {
+        return editText.getText() != null ? editText.getText().toString().trim() : "";
     }
 }

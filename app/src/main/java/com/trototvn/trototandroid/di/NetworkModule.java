@@ -5,6 +5,7 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.trototvn.trototandroid.data.remote.ApiClient;
+import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.data.remote.AuthInterceptor;
 import com.trototvn.trototandroid.data.remote.NetworkInterceptor;
 
@@ -30,7 +31,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
 
-    private static final String BASE_URL = "https://your-api-url.com/"; // TODO: Change this
+    private static final String BASE_URL = "http://10.0.2.2:3000/api/"; // Android emulator localhost
     private static final int TIMEOUT_SECONDS = 30;
 
     @Provides
@@ -89,10 +90,9 @@ public class NetworkModule {
                 .build();
     }
 
-    // Example: Provide API Service
-    // @Provides
-    // @Singleton
-    // public ApiService provideApiService(Retrofit retrofit) {
-    // return retrofit.create(ApiService.class);
-    // }
+    @Provides
+    @Singleton
+    public ApiService provideApiService(Retrofit retrofit) {
+        return retrofit.create(ApiService.class);
+    }
 }

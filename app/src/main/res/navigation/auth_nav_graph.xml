@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/auth_nav_graph"
     app:startDestination="@id/loginFragment">
 
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.trototvn.trototandroid.ui.auth.login.LoginFragment"
-        android:label="Login">
+        android:label="Login"
+        tools:layout="@layout/fragment_login">
         <action
-            android:id="@+id/action_login_to_register"
+            android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
         <action
-            android:id="@+id/action_login_to_forgot"
+            android:id="@+id/action_loginFragment_to_forgotPasswordFragment"
             app:destination="@id/forgotPasswordFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/registerFragment"
         android:name="com.trototvn.trototandroid.ui.auth.register.RegisterFragment"
-        android:label="Register">
+        android:label="Register"
+        tools:layout="@layout/fragment_register">
         <action
-            android:id="@+id/action_register_to_login"
+            android:id="@+id/action_registerFragment_to_loginFragment"
             app:destination="@id/loginFragment"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="false" />
@@ -30,9 +33,10 @@
     <fragment
         android:id="@+id/forgotPasswordFragment"
         android:name="com.trototvn.trototandroid.ui.auth.forgot.ForgotPasswordFragment"
-        android:label="Forgot Password">
+        android:label="Forgot Password"
+        tools:layout="@layout/fragment_forgot_password">
         <action
-            android:id="@+id/action_forgot_to_login"
+            android:id="@+id/action_forgotPasswordFragment_to_loginFragment"
             app:destination="@id/loginFragment"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="false" />

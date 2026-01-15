@@ -1,7 +1,7 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Base Light Theme -->
-    <style name="Base.Theme.TrọTốtAndroid" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.TroTotAndroid" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
@@ -49,17 +49,16 @@
     </style>
 
     <!-- Main App Theme -->
-    <style name="Theme.TrọTốtAndroid" parent="Base.Theme.TrọTốtAndroid" />
+    <style name="Theme.TroTotAndroid" parent="Base.Theme.TroTotAndroid" />
     
     <!-- Splash Theme (No ActionBar, colored background) -->
-    <style name="Theme.TrọTốtAndroid.Splash" parent="Theme.TrọTốtAndroid">
+    <style name="Theme.TroTotAndroid.Splash" parent="Theme.TroTotAndroid">
         <item name="android:windowBackground">@color/md_theme_light_primary</item>
         <item name="android:windowFullscreen">false</item>
     </style>
     
     <!-- Auth Theme (No ActionBar) -->
-    <style name="Theme.TrọTốtAndroid.Auth" parent="Theme.TrọTốtAndroid">
+    <style name="Theme.TroTotAndroid.Auth" parent="Theme.TroTotAndroid">
         <item name="android:windowBackground">@color/md_theme_light_background</item>
     </style>
-    
 </resources>
