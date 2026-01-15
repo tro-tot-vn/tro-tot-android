@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_large"
-            android:text="Đăng nhập"
+            android:text="@string/login"
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="?android:attr/textColorPrimary"
@@ -85,7 +85,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_large"
-            android:hint="Số điện thoại hoặc email"
+            android:hint="@string/identifier_hint"
             app:endIconMode="clear_text"
             app:layout_constraintTop_toBottomOf="@id/cardError">
 
@@ -131,14 +131,15 @@
             app:layout_constraintTop_toBottomOf="@id/tilPassword" />
 
         <!-- Login Button -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
-            style="@style/Widget.App.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_large"
-            android:text="ĐĂNG NHẬP"
-            app:layout_constraintTop_toBottomOf="@id/tvForgotPassword" />
+            android:padding="@dimen/spacing_medium"
+            android:text="@string/login"
+            android:textAllCaps="true"
+            app:layout_constraintTop_toBottomOf="@+id/tvForgotPassword" />
 
         <!-- Loading Indicator -->
         <ProgressBar
@@ -154,29 +155,29 @@
 
         <!-- Register Link -->
         <TextView
-            android:id="@+id/tvRegisterPrompt"
+            android:id="@+id/tvNoAccount"
+            style="@style/TextAppearance.App.Body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_large"
-            android:text="Chưa có tài khoản?"
-            android:textSize="@dimen/text_size_body"
-            app:layout_constraintEnd_toStartOf="@id/tvRegisterLink"
+            android:text="@string/dont_have_account"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tvRegisterLink"
             app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnLogin" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
             android:id="@+id/tvRegisterLink"
+            style="@style/TextAppearance.App.Body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_tiny"
-            android:text="Đăng ký tài khoản mới"
+            android:layout_marginStart="@dimen/spacing_small"
+            android:text="@string/register"
             android:textColor="?attr/colorPrimary"
-            android:textSize="@dimen/text_size_body"
             android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tvRegisterPrompt"
-            app:layout_constraintTop_toTopOf="@id/tvRegisterPrompt" />
+            app:layout_constraintStart_toEndOf="@+id/tvNoAccount" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
