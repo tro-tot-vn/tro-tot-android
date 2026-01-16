@@ -62,7 +62,8 @@ public class PostDetailViewModel extends BaseViewModel {
      * Check if user is authenticated
      */
     public boolean isAuthenticated() {
-        return sessionManager.getAccessToken() != null && !sessionManager.getAccessToken().isEmpty();
+        String token = sessionManager.getToken();
+        return token != null && !token.isEmpty();
     }
 
     /**
