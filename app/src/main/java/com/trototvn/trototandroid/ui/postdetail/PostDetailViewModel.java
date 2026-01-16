@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.repository.PostDetailRepository;
-import com.trototvn.trototandroid.data.local.SessionManager;
+import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
 
 import javax.inject.Inject;

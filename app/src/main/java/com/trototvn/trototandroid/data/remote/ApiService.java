@@ -12,6 +12,12 @@ import com.trototvn.trototandroid.data.model.auth.Token;
 import com.trototvn.trototandroid.data.model.post.Post;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
+import com.trototvn.trototandroid.data.model.post.SavePostRequest;
+import com.trototvn.trototandroid.data.model.post.ContactLogRequest;
+import com.trototvn.trototandroid.data.model.rating.Rating;
+import com.trototvn.trototandroid.data.model.rating.RatingListResponse;
+import com.trototvn.trototandroid.data.model.rating.RatingStats;
+import com.trototvn.trototandroid.data.model.rating.AddRatingRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
 
 import java.util.List;
@@ -97,6 +103,66 @@ public interface ApiService {
             @Query("page") int page,
             @Query("pageSize") int pageSize
     );
+
+    // ========== Save Post ==========
+
+    /**
+     * POST - Save post to favorites
+     * Requires authentication
+     */
+    @POST("api/customer/saved-posts")
+    Single<ResponseData<Void>> savePost(@Body SavePostRequest request);
+
+    // ========== Interaction Logging ==========
+
+    /**
+     * POST - Log contact interaction (view phone)
+     * Requires authentication
+     */
+    @POST("api/interactions/contact")
+    Single<ResponseData<Void>> logContact(@Body ContactLogRequest request);
+
+    // ========== Ratings & Reviews ==========
+
+    /**
+     * POST - Add rating to post
+     * Requires authentication
+     */
+    @POST("api/customer/rate/{postId}")
+    Single<ResponseData<Void>> addRating(
+            @Path("postId") int postId,
+            @Body AddRatingRequest request
+    );
+
+    /**
+     * GET - Get ratings list with cursor pagination
+     */
+    @GET("api/customer/rate/{postId}")
+    Single<ResponseData<RatingListResponse>> getRatings(
+            @Path("postId") int postId,
+            @Query("limit") int limit,
+            @Query("cursor") String cursor  // Date string
+    );
+
+    /**
+     * GET - Get my rating on specific post
+     * Requires authentication
+     */
+    @GET("api/customer/my-rate/{postId}")
+    Single<ResponseData<Rating>> getMyRating(@Path("postId") int postId);
+
+    /**
+     * DELETE - Delete my rating
+     * Requires authentication
+     */
+    @DELETE("api/customer/my-rate/{postId}")
+    Single<ResponseData<Void>> deleteMyRating(@Path("postId") int postId);
+
+    /**
+     * GET - Get rating statistics (avg, count)
+     */
+    @GET("api/customer/avg-rate/{postId}")
+    Single<ResponseData<RatingStats>> getRatingStats(@Path("postId") int postId);
 
     // ========== Example CRUD operations for User ==========
 
