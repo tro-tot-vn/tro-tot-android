@@ -10,6 +10,7 @@ import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
 import com.trototvn.trototandroid.data.model.auth.Token;
 import com.trototvn.trototandroid.data.model.post.Post;
+import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
 
@@ -60,6 +61,12 @@ public interface ApiService {
      */
     @GET("api/post/latest-post")
     Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
+
+    /**
+     * GET - Post Detail by ID
+     */
+    @GET("api/post/{postId}")
+    Single<ResponseData<PostDetail>> getPostDetail(@Path("postId") int postId);
 
     /**
      * GET - Get Personalized Recommendations

@@ -44,7 +44,7 @@ public class TokenAuthenticator implements Authenticator {
 
         String refreshToken = sessionManager.getRefreshToken();
         if (refreshToken == null) {
-            return null; // No refresh token available, let user login again
+            return null; // No refresh token available, let user login agained
         }
 
         // Call refresh token API synchronously
