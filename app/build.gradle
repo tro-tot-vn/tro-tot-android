@@ -84,7 +84,6 @@ dependencies {
 
     // Post Detail UI Libraries
     implementation 'me.relex:circleindicator:2.1.6'
-    implementation 'com.github.mahimrocky:ShowMoreText:1.0.2'
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
     implementation 'com.google.android.gms:play-services-maps:19.0.0'

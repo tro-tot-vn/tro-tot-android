@@ -106,9 +106,9 @@ public class PostDetail {
     public List<String> getImageUrls() {
         List<String> urls = new ArrayList<>();
         if (multimediaFiles != null) {
-            for (MultimediaFileDetail file : multimediaFiles) {
-                if (file.getFile() != null && "IMAGE".equals(file.getFile().getFileType())) {
-                    urls.add("https://storage.googleapis.com/tro-tot-vn-storage/" + file.getFile().getFileId());
+            for (MultimediaFileDetail mf : multimediaFiles) {
+                if (mf != null && mf.getFileType() == FileType.IMAGE) {
+                    urls.add("https://storage.googleapis.com/tro-tot-vn-storage/" + mf.getFileId());
                 }
             }
         }
