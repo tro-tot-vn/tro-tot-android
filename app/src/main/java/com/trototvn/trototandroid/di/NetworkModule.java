@@ -33,7 +33,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
 
-    private static final String BASE_URL = "http://localhost:3333/api/"; // Android emulator localhost
+    private static final String BASE_URL = "http://192.168.1.4:3333/api/"; // Android emulator localhost
     private static final int TIMEOUT_SECONDS = 30;
 
     @Provides
