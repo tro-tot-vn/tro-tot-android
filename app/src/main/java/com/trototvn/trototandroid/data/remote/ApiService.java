@@ -6,6 +6,9 @@ import com.trototvn.trototandroid.data.model.auth.LoginRequest;
 import com.trototvn.trototandroid.data.model.auth.LoginResponse;
 import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
+import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
+import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
+import com.trototvn.trototandroid.data.model.auth.Token;
 
 import java.util.List;
 
@@ -37,6 +40,14 @@ public interface ApiService {
      */
     @POST("api/auth/register")
     Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
+
+    /**
+     * POST - Refresh Token
+     * Using Call instead of RxJava/Single because Authenticator runs synchronously
+     * Backend only returns { accessToken }, NOT full Token object
+     */
+    @POST("api/auth/refresh-token")
+    retrofit2.Call<ResponseData<RefreshTokenResponse>> refreshToken(@Body RefreshTokenRequest request);
 
     // ========== Example CRUD operations for User ==========
 

@@ -1,13 +1,22 @@
 package com.trototvn.trototandroid.data.model;
 
 /**
- * Generic API response wrapper
+ * Generic API response wrapper (matches backend structure exactly)
  * @param <T> Data type
  */
 public class ResponseData<T> {
+    private int status;      // HTTP status code
     private String message;
     private T data;
     private Object error; // Can be String or array of validation errors
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
 
     public String getMessage() {
         return message;

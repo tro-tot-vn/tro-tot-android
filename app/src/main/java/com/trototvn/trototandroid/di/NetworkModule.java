@@ -8,6 +8,8 @@ import com.trototvn.trototandroid.data.remote.ApiClient;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.data.remote.AuthInterceptor;
 import com.trototvn.trototandroid.data.remote.NetworkInterceptor;
+import com.trototvn.trototandroid.data.remote.TokenAuthenticator;
+import com.trototvn.trototandroid.utils.SessionManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -65,10 +67,20 @@ public class NetworkModule {
 
     @Provides
     @Singleton
+    public TokenAuthenticator provideTokenAuthenticator(
+            SessionManager sessionManager,
+            javax.inject.Provider<ApiService> apiServiceProvider
+    ) {
+        return new TokenAuthenticator(sessionManager, apiServiceProvider);
+    }
+
+    @Provides
+    @Singleton
     public OkHttpClient provideOkHttpClient(
             AuthInterceptor authInterceptor,
             NetworkInterceptor networkInterceptor,
-            HttpLoggingInterceptor loggingInterceptor) {
+            HttpLoggingInterceptor loggingInterceptor,
+            TokenAuthenticator tokenAuthenticator) {
         return new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -76,6 +88,7 @@ public class NetworkModule {
                 .addInterceptor(authInterceptor)
                 .addInterceptor(networkInterceptor)
                 .addInterceptor(loggingInterceptor)
+                .authenticator(tokenAuthenticator)
                 .build();
     }
 
