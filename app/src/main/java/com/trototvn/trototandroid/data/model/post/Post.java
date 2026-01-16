@@ -165,15 +165,14 @@ public class Post {
 
     /**
      * Get the first image URL for display
-     * Matches frontend: API_BASE_URL/api/files/{fileId}
+     * Matches frontend: getFileUrl(post.multimediaFiles[0].fileId)
      */
     public String getFirstImageUrl() {
         if (multimediaFiles != null && !multimediaFiles.isEmpty()) {
-            for (MultimediaFile file : multimediaFiles) {
-                if (file.getFile() != null && file.getFile().getFileType() == FileType.IMAGE) {
-                    // Use fileId with API endpoint, NOT Google Drive URL
-                    return "http://192.168.1.4:8000/api/files/" + file.getFileId();
-                }
+            MultimediaFile firstFile = multimediaFiles.get(0);
+            if (firstFile != null) {
+                // Use fileId directly from MultimediaFile, like frontend
+                return "http://192.168.1.4:3333/api/files/" + firstFile.getFileId();
             }
         }
         return null;
