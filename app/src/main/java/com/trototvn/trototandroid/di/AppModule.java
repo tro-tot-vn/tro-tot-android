@@ -8,6 +8,10 @@ import com.trototvn.trototandroid.data.repository.PostDetailRepository;
 import com.trototvn.trototandroid.data.repository.PostDetailRepositoryImpl;
 import com.trototvn.trototandroid.data.repository.ProfileRepository;
 import com.trototvn.trototandroid.data.repository.ProfileRepositoryImpl;
+import com.trototvn.trototandroid.data.repository.RatingRepository;
+import com.trototvn.trototandroid.data.repository.RatingRepositoryImpl;
+import com.trototvn.trototandroid.data.repository.SavedPostRepository;
+import com.trototvn.trototandroid.data.repository.SavedPostRepositoryImpl;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import javax.inject.Singleton;
@@ -43,6 +47,18 @@ public class AppModule {
     @Provides
     @Singleton
     public PostDetailRepository providePostDetailRepository(PostDetailRepositoryImpl impl) {
+        return impl;
+    }
+
+    @Provides
+    @Singleton
+    public RatingRepository provideRatingRepository(RatingRepositoryImpl impl) {
+        return impl;
+    }
+
+    @Provides
+    @Singleton
+    public SavedPostRepository provideSavedPostRepository(SavedPostRepositoryImpl impl) {
         return impl;
     }
 }
