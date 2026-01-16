@@ -9,6 +9,9 @@ import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
 import com.trototvn.trototandroid.data.model.auth.Token;
+import com.trototvn.trototandroid.data.model.post.Post;
+import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
+import com.trototvn.trototandroid.data.model.search.SearchResponse;
 
 import java.util.List;
 
@@ -48,6 +51,45 @@ public interface ApiService {
      */
     @POST("api/auth/refresh-token")
     retrofit2.Call<ResponseData<RefreshTokenResponse>> refreshToken(@Body RefreshTokenRequest request);
+
+    // ========== Posts ==========
+
+    /**
+     * GET - Get Latest Posts
+     * Returns 4 latest approved posts for home screen
+     */
+    @GET("api/post/latest-post")
+    Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
+
+    /**
+     * GET - Get Personalized Recommendations
+     * Requires authentication
+     */
+    @GET("api/recommend")
+    Single<RecommendationResponse> getRecommendations(
+            @Query("page") int page,
+            @Query("pageSize") int pageSize,
+            @Query("logId") Integer logId
+    );
+
+    /**
+     * GET - Hybrid Vector Search
+     * New search endpoint with better results
+     */
+    @GET("api/search")
+    Single<SearchResponse> search(
+            @Query("query") String query,
+            @Query("city") String city,
+            @Query("district") String district,
+            @Query("ward") String ward,
+            @Query("priceMin") Integer priceMin,
+            @Query("priceMax") Integer priceMax,
+            @Query("acreageMin") Integer acreageMin,
+            @Query("acreageMax") Integer acreageMax,
+            @Query("interiorCondition") String interiorCondition,
+            @Query("page") int page,
+            @Query("pageSize") int pageSize
+    );
 
     // ========== Example CRUD operations for User ==========
 

@@ -63,8 +63,26 @@
     <string name="report">Báo cáo</string>
     
     <!-- Bottom Navigation -->
-    <string name="nav_home">Trang chủ</string>
+    <string name="nav_my_posts">Tin đăng của tôi</string>
     <string name="nav_search">Tìm kiếm</string>
-    <string name="nav_my_posts">Bài đăng</string>
-    <string name="nav_profile">Cá nhân</string>
+    <string name="nav_profile">Hồ sơ</string>
+    <string name="nav_home">Trang chủ</string>
+    
+    <!-- Home Screen -->
+    <string name="find_your_room">Tìm phòng trọ phù hợp với bạn</string>
+    <string name="thousands_of_rooms">Hàng ngàn phòng trọ chất lượng đang chờ đợi</string>
+    <string name="latest_posts">Phòng trọ mới đăng</string>
+    <string name="recommendations_for_you">Gợi ý cho bạn</string>
+    <string name="load_more">Xem thêm</string>
+    <string name="retry">Thử lại</string>
+    <string name="post_image">Hình ảnh phòng trọ</string>
+    <string name="location_icon">Biểu tượng vị trí</string>
+    
+    <!-- Search Screen -->
+    <string name="location">Vị trí</string>
+    <string name="price">Giá</string>
+    <string name="acreage">Diện tích</string>
+    <string name="interior">Nội thất</string>
+    <string name="clear_filters">Xóa bộ lọc</string>
+    <string name="search_to_begin">Nhập từ khóa để bắt đầu tìm kiếm</string>
 </resources>

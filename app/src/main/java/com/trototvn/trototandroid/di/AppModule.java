@@ -2,6 +2,8 @@ package com.trototvn.trototandroid.di;
 
 import android.content.Context;
 
+import com.trototvn.trototandroid.data.repository.PostRepository;
+import com.trototvn.trototandroid.data.repository.PostRepositoryImpl;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import javax.inject.Singleton;
@@ -23,5 +25,11 @@ public class AppModule {
     @Singleton
     public SessionManager provideSessionManager(@ApplicationContext Context context) {
         return new SessionManager(context);
+    }
+
+    @Provides
+    @Singleton
+    public PostRepository providePostRepository(PostRepositoryImpl impl) {
+        return impl;
     }
 }
