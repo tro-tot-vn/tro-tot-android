@@ -165,12 +165,14 @@ public class Post {
 
     /**
      * Get the first image URL for display
+     * Matches frontend: API_BASE_URL/api/files/{fileId}
      */
     public String getFirstImageUrl() {
         if (multimediaFiles != null && !multimediaFiles.isEmpty()) {
             for (MultimediaFile file : multimediaFiles) {
                 if (file.getFile() != null && file.getFile().getFileType() == FileType.IMAGE) {
-                    return "https://drive.google.com/thumbnail?id=" + file.getFile().getFileCloudId();
+                    // Use fileId with API endpoint, NOT Google Drive URL
+                    return "http://192.168.1.4:8000/api/files/" + file.getFileId();
                 }
             }
         }
