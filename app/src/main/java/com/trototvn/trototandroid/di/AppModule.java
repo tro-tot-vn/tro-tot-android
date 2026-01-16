@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.trototvn.trototandroid.data.repository.PostRepository;
 import com.trototvn.trototandroid.data.repository.PostRepositoryImpl;
+import com.trototvn.trototandroid.data.repository.ProfileRepository;
+import com.trototvn.trototandroid.data.repository.ProfileRepositoryImpl;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import javax.inject.Singleton;
@@ -30,6 +32,12 @@ public class AppModule {
     @Provides
     @Singleton
     public PostRepository providePostRepository(PostRepositoryImpl impl) {
+        return impl;
+    }
+
+    @Provides
+    @Singleton
+    public ProfileRepository provideProfileRepository(ProfileRepositoryImpl impl) {
         return impl;
     }
 }

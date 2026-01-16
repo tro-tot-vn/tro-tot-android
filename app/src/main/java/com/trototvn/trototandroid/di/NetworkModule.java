@@ -108,4 +108,10 @@ public class NetworkModule {
     public ApiService provideApiService(Retrofit retrofit) {
         return retrofit.create(ApiService.class);
     }
+
+    @Provides
+    @Singleton
+    public com.trototvn.trototandroid.data.remote.ProfileApiService provideProfileApiService(Retrofit retrofit) {
+        return retrofit.create(com.trototvn.trototandroid.data.remote.ProfileApiService.class);
+    }
 }

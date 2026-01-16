@@ -85,4 +85,14 @@
     <string name="interior">Nội thất</string>
     <string name="clear_filters">Xóa bộ lọc</string>
     <string name="search_to_begin">Nhập từ khóa để bắt đầu tìm kiếm</string>
+    
+    <!-- Profile Screen -->
+    <string name="profile">Hồ sơ</string>
+    <string name="edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="member_since">Thành viên từ %s</string>
+    <string name="saved_posts">Tin đã lưu</string>
+    <string name="view_history">Lịch sử xem</string>
+    <string name="subscriptions">Theo dõi khu vực</string>
+    <string name="account_settings">Cài đặt tài khoản</string>
+    <string name="logout_confirm">Bạn có chắc muốn đăng xuất?</string>
 </resources>

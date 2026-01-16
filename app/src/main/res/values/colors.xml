@@ -68,4 +68,11 @@
     
     <color name="md_theme_dark_outline">#1E293B</color>
     <color name="md_theme_dark_outlineVariant">#334155</color>
+    
+    <!-- Convenience aliases for commonly used colors -->
+    <color name="primary">@color/md_theme_light_primary</color>
+    <color name="background">@color/md_theme_light_background</color>
+    <color name="surface">@color/md_theme_light_surface</color>
+    <color name="text_primary">@color/md_theme_light_onBackground</color>
+    <color name="text_secondary">@color/md_theme_light_onSurfaceVariant</color>
 </resources>
