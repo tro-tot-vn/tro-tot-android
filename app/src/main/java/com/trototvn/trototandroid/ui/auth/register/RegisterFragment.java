@@ -17,6 +17,7 @@ import com.trototvn.trototandroid.ui.base.BaseFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -46,7 +47,7 @@ public class RegisterFragment extends BaseFragment<FragmentRegisterBinding> {
     protected void setupViews() {
         setupGenderDropdown();
         setupJobDropdown();
-        setupCityDropdown();
+        // setupCityDropdown(); // ❌ REMOVED - now dynamic from ViewModel
         setupBirthdayPicker();
 
         // Register button click
@@ -76,6 +77,23 @@ public class RegisterFragment extends BaseFragment<FragmentRegisterBinding> {
         
         viewModel.getPasswordError().observe(getViewLifecycleOwner(), error -> 
                 binding.tilPassword.setError(error));
+        
+        viewModel.getBirthdayError().observe(getViewLifecycleOwner(), error -> 
+                binding.tilBirthday.setError(error));
+        
+        // Observe cities
+        viewModel.getCities().observe(getViewLifecycleOwner(), cities -> {
+            if (cities != null && !cities.isEmpty()) {
+                setupCityDropdown(cities);
+            }
+        });
+        
+        // Observe districts
+        viewModel.getDistricts().observe(getViewLifecycleOwner(), districts -> {
+            if (districts != null && !districts.isEmpty()) {
+                setupDistrictDropdown(districts);
+            }
+        });
     }
 
     /**
@@ -112,59 +130,48 @@ public class RegisterFragment extends BaseFragment<FragmentRegisterBinding> {
     }
 
     /**
-     * Setup city dropdown (simplified - using hardcoded cities)
+     * Setup city dropdown with dynamic data from ViewModel
      */
-    private void setupCityDropdown() {
-        String[] cities = {
-                "Hồ Chí Minh",
-                "Hà Nội",
-                "Đà Nẵng",
-                "Cần Thơ",
-                "Hải Phòng"
-        };
+    private void setupCityDropdown(List<com.trototvn.trototandroid.data.model.location.City> cities) {
+        String[] cityNames = new String[cities.size()];
+        for (int i = 0; i < cities.size(); i++) {
+            cityNames[i] = cities.get(i).getName();
+        }
         
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                cities
+                cityNames
         );
         binding.actvCity.setAdapter(adapter);
         binding.actvCity.setOnItemClickListener((parent, view, position, id) -> {
-            selectedCity = cities[position];
-            setupDistrictDropdown(selectedCity);
+            selectedCity = cities.get(position).getName();
+            // Load districts for selected city
+            viewModel.loadDistricts(cities.get(position).getId());
+            // Reset district selection
+            selectedDistrict = "";
+            binding.actvDistrict.setText("", false);
         });
     }
 
     /**
-     * Setup district dropdown based on selected city
+     * Setup district dropdown with dynamic data from ViewModel
      */
-    private void setupDistrictDropdown(String city) {
-        String[] districts;
-        
-        // Simplified district data - in production, load from JSON or API
-        switch (city) {
-            case "Hồ Chí Minh":
-                districts = new String[]{"Quận 1", "Quận 2", "Quận 3", "Quận 4", "Quận 5", 
-                        "Quận 6", "Quận 7", "Quận 8", "Quận 9", "Quận 10"};
-                break;
-            case "Hà Nội":
-                districts = new String[]{"Ba Đình", "Hoàn Kiếm", "Đống Đa", "Hai Bà Trưng",
-                        "Cầu Giấy", "Thanh Xuân", "Tây Hồ"};
-                break;
-            default:
-                districts = new String[]{"Quận 1", "Quận 2", "Quận 3"};
-                break;
+    private void setupDistrictDropdown(List<com.trototvn.trototandroid.data.model.location.District> districts) {
+        String[] districtNames = new String[districts.size()];
+        for (int i = 0; i < districts.size(); i++) {
+            districtNames[i] = districts.get(i).getName();
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
-                districts
+                districtNames
         );
         binding.actvDistrict.setAdapter(adapter);
         binding.actvDistrict.setText("", false);
         binding.actvDistrict.setOnItemClickListener((parent, view, position, id) -> {
-            selectedDistrict = districts[position];
+            selectedDistrict = districts.get(position).getName();
         });
     }
 

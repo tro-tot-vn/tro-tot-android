@@ -7,6 +7,16 @@ import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
 import com.trototvn.trototandroid.data.repository.AuthRepository;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
+import com.trototvn.trototandroid.data.model.location.City;
+import com.trototvn.trototandroid.data.model.location.District;
+import com.trototvn.trototandroid.utils.LocationService;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import java.util.regex.Pattern;
 
@@ -27,6 +37,7 @@ public class RegisterViewModel extends BaseViewModel {
             .compile("^0[0-9]{9}$"); // Vietnamese phone: 0 + 9 digits
 
     private final AuthRepository authRepository;
+    private final LocationService locationService;
 
     // LiveData for register result
     private final MutableLiveData<Resource<RegisterResponse>> registerResult = new MutableLiveData<>();
@@ -37,10 +48,17 @@ public class RegisterViewModel extends BaseViewModel {
     private final MutableLiveData<String> firstNameError = new MutableLiveData<>();
     private final MutableLiveData<String> lastNameError = new MutableLiveData<>();
     private final MutableLiveData<String> passwordError = new MutableLiveData<>();
+    private final MutableLiveData<String> birthdayError = new MutableLiveData<>();
+
+    // LiveData for location data
+    private final MutableLiveData<List<City>> cities = new MutableLiveData<>();
+    private final MutableLiveData<List<District>> districts = new MutableLiveData<>();
 
     @Inject
-    public RegisterViewModel(AuthRepository authRepository) {
+    public RegisterViewModel(AuthRepository authRepository, LocationService locationService) {
         this.authRepository = authRepository;
+        this.locationService = locationService;
+        loadCities();
     }
 
     public MutableLiveData<Resource<RegisterResponse>> getRegisterResult() {
@@ -67,6 +85,32 @@ public class RegisterViewModel extends BaseViewModel {
         return passwordError;
     }
 
+    public MutableLiveData<String> getBirthdayError() {
+        return birthdayError;
+    }
+
+    public MutableLiveData<List<City>> getCities() {
+        return cities;
+    }
+
+    public MutableLiveData<List<District>> getDistricts() {
+        return districts;
+    }
+
+    /**
+     * Load all cities from LocationService
+     */
+    public void loadCities() {
+        cities.setValue(locationService.getAllCities());
+    }
+
+    /**
+     * Load districts for selected city
+     */
+    public void loadDistricts(String cityId) {
+        districts.setValue(locationService.getDistrictsByCityId(cityId));
+    }
+
     /**
      * Perform registration
      */
@@ -77,7 +121,7 @@ public class RegisterViewModel extends BaseViewModel {
         clearErrors();
 
         // Validate input
-        if (!validateInput(phone, email, firstName, lastName, password)) {
+        if (!validateInput(phone, email, firstName, lastName, password, birthday)) {
             return;
         }
 
@@ -106,7 +150,7 @@ public class RegisterViewModel extends BaseViewModel {
      * Validate registration input
      */
     private boolean validateInput(String phone, String email, String firstName, 
-                                  String lastName, String password) {
+                                  String lastName, String password, String birthday) {
         boolean isValid = true;
 
         // Validate phone
@@ -154,6 +198,29 @@ public class RegisterViewModel extends BaseViewModel {
             isValid = false;
         }
 
+        // ✅ NEW: Validate birthday
+        if (birthday == null || birthday.trim().isEmpty()) {
+            birthdayError.setValue("Vui lòng chọn ngày sinh");
+            isValid = false;
+        } else {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                Date birthDate = sdf.parse(birthday);
+                
+                // Check if date is valid and user is 18+
+                Calendar eighteenYearsAgo = Calendar.getInstance();
+                eighteenYearsAgo.add(Calendar.YEAR, -18);
+                
+                if (birthDate != null && birthDate.after(eighteenYearsAgo.getTime())) {
+                    birthdayError.setValue("Bạn phải đủ 18 tuổi để đăng ký");
+                    isValid = false;
+                }
+            } catch (ParseException e) {
+                birthdayError.setValue("Ngày sinh không hợp lệ");
+                isValid = false;
+            }
+        }
+
         return isValid;
     }
 
@@ -166,5 +233,6 @@ public class RegisterViewModel extends BaseViewModel {
         firstNameError.setValue(null);
         lastNameError.setValue(null);
         passwordError.setValue(null);
+        birthdayError.setValue(null);
     }
 }
