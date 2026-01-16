@@ -9,8 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentHomeBinding;
 import com.trototvn.trototandroid.utils.SessionManager;
@@ -66,8 +69,8 @@ public class HomeFragment extends Fragment {
     private void setupRecyclerViews() {
         // Latest Posts RecyclerView
         latestPostsAdapter = new PostAdapter(post -> {
-            // TODO: Navigate to post detail
-            Timber.d("Post clicked: %s", post.getTitle());
+            // TODO Session 2: Implement navigation to PostDetailFragment
+            Timber.d("Post clicked - ID: %d, Title: %s", post.getPostId(), post.getTitle());
         });
         
         binding.rvLatestPosts.setLayoutManager(new GridLayoutManager(requireContext(), 2));
@@ -76,8 +79,8 @@ public class HomeFragment extends Fragment {
         
         // Recommendations RecyclerView
         recommendationsAdapter = new PostAdapter(post -> {
-            // TODO: Navigate to post detail & log click
-            Timber.d("Recommendation clicked: %s", post.getTitle());
+            // TODO Session 2: Implement navigation to PostDetailFragment
+            Timber.d("Recommendation clicked - ID: %d", post.getPostId());
         });
         
         binding.rvRecommendations.setLayoutManager(new GridLayoutManager(requireContext(), 2));

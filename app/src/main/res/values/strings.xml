@@ -95,4 +95,15 @@
     <string name="subscriptions">Theo dõi khu vực</string>
     <string name="account_settings">Cài đặt tài khoản</string>
     <string name="logout_confirm">Bạn có chắc muốn đăng xuất?</string>
+    
+    <!-- Post Detail -->
+    <string name="detailed_description">Mô tả chi tiết</string>
+    <string name="contact_phone">SĐT Liên hệ:</string>
+    <string name="show_phone">Hiện SĐT</string>
+    <string name="see_more">Xem thêm</string>
+    <string name="see_less">Thu gọn</string>
+    <string name="property_details">Thông tin chi tiết</string>
+    <string name="address">Địa chỉ</string>
+    <string name="login_required">Vui lòng đăng nhập</string>
+    <string name="login_to_continue">Vui lòng đăng nhập để sử dụng chức năng này</string>
 </resources>

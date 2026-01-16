@@ -39,6 +39,7 @@
     
     <!-- Dark Theme -->
     <color name="md_theme_dark_primary">#F8FAFC</color>
+    <color name="md_theme_dark_inversePrimary">#FFB3AC</color>
     <color name="md_theme_dark_onPrimary">#0F172A</color>
     <color name="md_theme_dark_primaryContainer">#1E293B</color>
     <color name="md_theme_dark_onPrimaryContainer">#F8FAFC</color>
@@ -75,4 +76,7 @@
     <color name="surface">@color/md_theme_light_surface</color>
     <color name="text_primary">@color/md_theme_light_onBackground</color>
     <color name="text_secondary">@color/md_theme_light_onSurfaceVariant</color>
+    
+    <!-- Custom colors -->
+    <color name="orange_500">#FF6D0B</color>
 </resources>
