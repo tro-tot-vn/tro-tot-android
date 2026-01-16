@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class MyPost {
     private int postId;
-    private String status;  // APPROVED, PENDING, REJECTED, EXPIRED, HIDDEN
+    private String status;  // APPROVED, PENDING, REJECTED, EXPOSED, HIDDEN
     private String createdAt;
     private String extendedAt;
     private String title;
@@ -84,9 +84,12 @@ public class MyPost {
      */
     public String getFirstImageUrl() {
         if (multimediaFiles != null && !multimediaFiles.isEmpty()) {
-            for (MultimediaFile file : multimediaFiles) {
-                if (file.getFileType() == FileType.IMAGE) {
-                    return "https://storage.googleapis.com/tro-tot-vn-storage/" + file.getFileId();
+            for (MultimediaFile mf : multimediaFiles) {
+                if (mf != null && mf.getFile() != null) {
+                    MultimediaFileDetail fileDetail = mf.getFile();
+                    if (fileDetail.getFileType() == FileType.IMAGE) {
+                        return "https://storage.googleapis.com/tro-tot-vn-storage/" + fileDetail.getFileId();
+                    }
                 }
             }
         }

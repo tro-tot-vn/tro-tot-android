@@ -14,6 +14,8 @@ import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
 import com.trototvn.trototandroid.data.model.post.SavePostRequest;
 import com.trototvn.trototandroid.data.model.post.ContactLogRequest;
+import com.trototvn.trototandroid.data.model.post.MyPostsResponse;
+import com.trototvn.trototandroid.data.model.post.HidePostRequest;
 import com.trototvn.trototandroid.data.model.rating.Rating;
 import com.trototvn.trototandroid.data.model.rating.RatingListResponse;
 import com.trototvn.trototandroid.data.model.rating.RatingStats;
@@ -163,6 +165,30 @@ public interface ApiService {
      */
     @GET("api/customer/avg-rate/{postId}")
     Single<ResponseData<RatingStats>> getRatingStats(@Path("postId") int postId);
+
+    // ========== My Posts ==========
+
+    /**
+     * GET - Get my posts with status filter and pagination
+     */
+    @GET("api/post/my-posts")
+    Single<ResponseData<MyPostsResponse>> getMyPosts(
+            @Query("status") String status,
+            @Query("cursor") Integer cursor,
+            @Query("limit") int limit
+    );
+
+    /**
+     * POST - Hide my post
+     */
+    @POST("api/post/hide")
+    Single<ResponseData<Void>> hidePost(@Body HidePostRequest request);
+
+    /**
+     * POST - Unhide my post
+     */
+    @POST("api/post/unhide")
+    Single<ResponseData<Void>> unhidePost(@Body HidePostRequest request);
 
     // ========== Example CRUD operations for User ==========
 
