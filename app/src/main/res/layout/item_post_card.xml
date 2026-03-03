@@ -71,7 +71,7 @@
                     android:layout_height="16dp"
                     android:contentDescription="@string/location_icon"
                     android:src="@android:drawable/ic_menu_mylocation"
-                    android:tint="?android:attr/textColorSecondary" />
+                    app:tint="?android:attr/textColorSecondary" />
 
                 <TextView
                     android:id="@+id/tvLocation"
