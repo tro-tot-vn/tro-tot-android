@@ -9,6 +9,7 @@ import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.data.remote.AuthInterceptor;
 import com.trototvn.trototandroid.data.remote.NetworkInterceptor;
 import com.trototvn.trototandroid.data.remote.TokenAuthenticator;
+import com.trototvn.trototandroid.utils.Constants;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import java.util.concurrent.TimeUnit;
@@ -33,7 +34,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
 
-    private static final String BASE_URL = "http://192.168.1.4:3333"; // Android emulator localhost
     private static final int TIMEOUT_SECONDS = 30;
 
     @Provides
@@ -96,7 +96,7 @@ public class NetworkModule {
     @Singleton
     public Retrofit provideRetrofit(OkHttpClient okHttpClient, Gson gson) {
         return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(Constants.BASE_URL)
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())

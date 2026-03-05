@@ -6,7 +6,7 @@ package com.trototvn.trototandroid.utils;
 public class Constants {
 
     // API related
-    public static final String BASE_URL = "https://your-api-url.com/";
+    public static final String BASE_URL = "http://khoakomlem-internal.ddns.net:3333/";
     public static final int TIMEOUT_SECONDS = 30;
 
     // Pagination

@@ -1,5 +1,7 @@
 package com.trototvn.trototandroid.data.model.post;
 
+import com.trototvn.trototandroid.utils.Constants;
+
 import java.util.Date;
 import java.util.List;
 
@@ -172,7 +174,7 @@ public class Post {
             MultimediaFile firstFile = multimediaFiles.get(0);
             if (firstFile != null) {
                 // Use fileId directly from MultimediaFile, like frontend
-                return "http://192.168.1.4:3333/api/files/" + firstFile.getFileId();
+                return Constants.BASE_URL +  "api/files/" + firstFile.getFileId();
             }
         }
         return null;
