@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.trototvn.trototandroid.utils.Constants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -17,9 +18,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * API Client - Singleton Retrofit instance
  */
 public class ApiClient {
-
-    private static final String BASE_URL = "https://your-api-url.com/"; // TODO: Change this
-    private static final int TIMEOUT_SECONDS = 30;
 
     private static Retrofit retrofit;
 
@@ -47,16 +45,16 @@ public class ApiClient {
 
         // OkHttp client
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .connectTimeout(Constants.TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(Constants.TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .writeTimeout(Constants.TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .addInterceptor(new AuthInterceptor(context))
                 .addInterceptor(new NetworkInterceptor(context))
                 .addInterceptor(createLoggingInterceptor())
                 .build();
 
         return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(Constants.BASE_URL)
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create()) // RxJava support
