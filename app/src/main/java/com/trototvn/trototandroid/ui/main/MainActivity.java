@@ -11,6 +11,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.databinding.ActivityMainBinding;
 import com.trototvn.trototandroid.ui.auth.AuthActivity;
+import com.trototvn.trototandroid.ui.splash.SplashActivity;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import javax.inject.Inject;
@@ -42,8 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupNavigation() {
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-            .findFragmentById(R.id.main_nav_host_fragment);
-        
+                .findFragmentById(R.id.main_nav_host_fragment);
+
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
         }
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         if (navController != null) {
             NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
-            
+
             // Optional: Handle reselection (prevent fragment recreation)
             binding.bottomNavigation.setOnItemReselectedListener(item -> {
                 // Do nothing on reselection
@@ -65,11 +66,10 @@ public class MainActivity extends AppCompatActivity {
      */
     public void logout() {
         sessionManager.clearSession();
-        
-        Intent intent = new Intent(this, AuthActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        finish();
     }
 
     @Override

@@ -115,16 +115,14 @@ public class SessionManager {
      * Clear session (logout)
      */
     public void clearSession() {
-        boolean rememberMe = isRememberMe();
-        String savedIdentifier = getSavedIdentifier();
-
-        prefs.edit().clear().apply();
-
-        // Restore remember me preference after clear
-        if (rememberMe) {
-            setRememberMe(true);
-            saveIdentifier(savedIdentifier);
-        }
+        prefs.edit()
+                .remove(KEY_TOKEN)
+                .remove(KEY_REFRESH_TOKEN)
+                .remove(KEY_USER_ID)
+                .remove(KEY_USER_NAME)
+                .remove(KEY_USER_EMAIL)
+                .putBoolean(KEY_IS_LOGGED_IN, false)
+                .apply();
     }
 
     /**

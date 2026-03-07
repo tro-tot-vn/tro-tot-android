@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentProfileBinding;
+import com.trototvn.trototandroid.ui.main.MainActivity;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import timber.log.Timber;
@@ -31,7 +32,7 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         binding = FragmentProfileBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -44,7 +45,7 @@ public class ProfileFragment extends Fragment {
 
         setupRecyclerView();
         setupObservers();
-        
+
         // Load data
         viewModel.loadProfile();
         viewModel.loadCounts();
@@ -54,7 +55,7 @@ public class ProfileFragment extends Fragment {
         menuAdapter = new ProfileMenuAdapter(menuItem -> {
             // Handle menu item clicks
             Timber.d("Menu item clicked: %s", menuItem.getTitle());
-            
+
             switch (itemTypeToProfileMenuItemType(menuItem.getType())) {
                 case LOGOUT:
                     showLogoutConfirmation();
@@ -97,7 +98,7 @@ public class ProfileFragment extends Fragment {
                 binding.pbLoading.setVisibility(View.VISIBLE);
             } else {
                 binding.pbLoading.setVisibility(View.GONE);
-                
+
                 if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                     updateProfile(resource.getData());
                 } else if (resource.getStatus() == Resource.Status.ERROR) {
@@ -116,7 +117,7 @@ public class ProfileFragment extends Fragment {
         // Update UI
         binding.tvName.setText(profile.getFullName());
         binding.tvEmail.setText(profile.getEmail());
-        
+
         if (profile.getJoinedAt() != null) {
             String memberSince = viewModel.getMemberSinceDuration(profile.getJoinedAt());
             binding.tvMemberSince.setText(getString(R.string.member_since, memberSince));
@@ -133,54 +134,48 @@ public class ProfileFragment extends Fragment {
 
         // Create menu items with counts
         java.util.List<ProfileMenuItem> menuItems = new java.util.ArrayList<>();
-        
+
         // Edit Profile
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_menu_edit,
                 getString(R.string.edit_profile),
                 null,
-                ProfileMenuItem.ItemType.EDIT_PROFILE
-        ));
+                ProfileMenuItem.ItemType.EDIT_PROFILE));
 
         // Saved Posts
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_menu_save,
                 getString(R.string.saved_posts),
                 savedCount != null && savedCount > 0 ? savedCount + " tin" : null,
-                ProfileMenuItem.ItemType.SAVED_POSTS
-        ));
+                ProfileMenuItem.ItemType.SAVED_POSTS));
 
         // View History
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_menu_recent_history,
                 getString(R.string.view_history),
                 historyCount != null && historyCount > 0 ? historyCount + " tin" : null,
-                ProfileMenuItem.ItemType.VIEW_HISTORY
-        ));
+                ProfileMenuItem.ItemType.VIEW_HISTORY));
 
         // Subscriptions
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_menu_mylocation,
                 getString(R.string.subscriptions),
                 subsCount != null && subsCount > 0 ? subsCount + " khu vực" : null,
-                ProfileMenuItem.ItemType.SUBSCRIPTIONS
-        ));
+                ProfileMenuItem.ItemType.SUBSCRIPTIONS));
 
         // Settings
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_menu_preferences,
                 getString(R.string.account_settings),
                 null,
-                ProfileMenuItem.ItemType.SETTINGS
-        ));
+                ProfileMenuItem.ItemType.SETTINGS));
 
         // Logout
         menuItems.add(new ProfileMenuItem(
                 android.R.drawable.ic_lock_power_off,
                 getString(R.string.logout),
                 null,
-                ProfileMenuItem.ItemType.LOGOUT
-        ));
+                ProfileMenuItem.ItemType.LOGOUT));
 
         menuAdapter.submitList(menuItems);
     }
