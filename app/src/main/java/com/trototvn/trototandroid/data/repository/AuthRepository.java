@@ -19,7 +19,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
- * AuthRepository - Handles authentication business logic with clean code practices
+ * AuthRepository - Handles authentication business logic with clean code
+ * practices
  */
 @Singleton
 public class AuthRepository {
@@ -47,7 +48,8 @@ public class AuthRepository {
                         // Save token and user info to session
                         LoginResponse data = response.getData();
                         if (data.getToken() != null && data.getAccount() != null) {
-                            saveUserSession(data.getAccount(), 
+                            Timber.i("Login successful for user: %s", data.getAccount().getEmail());
+                            saveUserSession(data.getAccount(),
                                     data.getToken().getAccessToken(),
                                     data.getToken().getRefreshToken());
                         }
@@ -56,13 +58,10 @@ public class AuthRepository {
                         return Resource.<LoginResponse>error(response.getMessage(), null);
                     }
                 })
-                .onErrorResumeNext(new Function<Throwable, Single<Resource<LoginResponse>>>() {
-                    @Override
-                    public Single<Resource<LoginResponse>> apply(Throwable throwable) {
-                        Timber.e(throwable, "Login error");
-                        Resource<LoginResponse> errorResource = Resource.error(throwable.getMessage(), null);
-                        return Single.just(errorResource);
-                    }
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Login error");
+                    String userMessage = com.trototvn.trototandroid.utils.ErrorHandler.getErrorMessage(throwable);
+                    return Single.just(Resource.error(userMessage, null));
                 });
     }
 
@@ -99,8 +98,7 @@ public class AuthRepository {
                 refreshToken,
                 account.getId(),
                 account.getFullName(),
-                account.getEmail()
-        );
+                account.getEmail());
     }
 
     /**

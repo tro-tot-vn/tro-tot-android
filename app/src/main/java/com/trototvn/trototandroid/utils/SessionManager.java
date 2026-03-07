@@ -21,6 +21,8 @@ public class SessionManager {
     private static final String KEY_USER_NAME = "user_name";
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+    private static final String KEY_REMEMBER_ME = "remember_me";
+    private static final String KEY_SAVED_IDENTIFIER = "saved_identifier";
 
     private final SharedPreferences prefs;
 
@@ -113,6 +115,37 @@ public class SessionManager {
      * Clear session (logout)
      */
     public void clearSession() {
+        boolean rememberMe = isRememberMe();
+        String savedIdentifier = getSavedIdentifier();
+
         prefs.edit().clear().apply();
+
+        // Restore remember me preference after clear
+        if (rememberMe) {
+            setRememberMe(true);
+            saveIdentifier(savedIdentifier);
+        }
+    }
+
+    /**
+     * Remember Me status
+     */
+    public void setRememberMe(boolean enabled) {
+        prefs.edit().putBoolean(KEY_REMEMBER_ME, enabled).apply();
+    }
+
+    public boolean isRememberMe() {
+        return prefs.getBoolean(KEY_REMEMBER_ME, false);
+    }
+
+    /**
+     * Saved identifier for pre-fill
+     */
+    public void saveIdentifier(String identifier) {
+        prefs.edit().putString(KEY_SAVED_IDENTIFIER, identifier).apply();
+    }
+
+    public String getSavedIdentifier() {
+        return prefs.getString(KEY_SAVED_IDENTIFIER, null);
     }
 }

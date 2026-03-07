@@ -54,11 +54,40 @@ public class ProfileFragment extends Fragment {
         menuAdapter = new ProfileMenuAdapter(menuItem -> {
             // Handle menu item clicks
             Timber.d("Menu item clicked: %s", menuItem.getTitle());
-            // TODO: Navigate to respective fragments
+            
+            switch (itemTypeToProfileMenuItemType(menuItem.getType())) {
+                case LOGOUT:
+                    showLogoutConfirmation();
+                    break;
+                case EDIT_PROFILE:
+                    // TODO: Implement navigation
+                    break;
+                case SETTINGS:
+                    // TODO: Implement navigation
+                    break;
+                // Add other types as needed
+            }
         });
 
         binding.rvMenuItems.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvMenuItems.setAdapter(menuAdapter);
+    }
+
+    private ProfileMenuItem.ItemType itemTypeToProfileMenuItemType(ProfileMenuItem.ItemType type) {
+        return type;
+    }
+
+    private void showLogoutConfirmation() {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.logout)
+                .setMessage(R.string.logout_confirm)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).logout();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void setupObservers() {

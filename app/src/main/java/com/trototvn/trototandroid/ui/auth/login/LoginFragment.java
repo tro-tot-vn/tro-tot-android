@@ -42,12 +42,45 @@ public class LoginFragment extends BaseFragment<FragmentLoginBinding> {
 
         // Forgot password link click
         binding.tvForgotPassword.setOnClickListener(v -> navigateToForgotPassword());
+
+        // Handle Remember Me checkbox
+        binding.cbRememberMe.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            viewModel.setRememberMe(isChecked);
+        });
+
+        // Pre-fill identifier if saved
+        String savedIdentifier = viewModel.getSavedIdentifier();
+        if (savedIdentifier != null) {
+            binding.etIdentifier.setText(savedIdentifier);
+            binding.cbRememberMe.setChecked(true);
+        }
     }
 
     @Override
     protected void observeData() {
-        // Observe login result
-        viewModel.getLoginResult().observe(getViewLifecycleOwner(), this::handleLoginResult);
+        viewModel.getLoginResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null)
+                return;
+
+            switch (resource.getStatus()) {
+                case LOADING:
+                    showLoading(true);
+                    binding.cardError.setVisibility(View.GONE);
+                    break;
+                case SUCCESS:
+                    showLoading(false);
+                    // Navigate to Main Activity
+                    if (getActivity() instanceof AuthActivity) {
+                        ((AuthActivity) getActivity()).navigateToMainApp();
+                    }
+                    break;
+                case ERROR:
+                    showLoading(false);
+                    binding.cardError.setVisibility(View.VISIBLE);
+                    binding.tvErrorMessage.setText(resource.getMessage());
+                    break;
+            }
+        });
 
         // Observe validation errors
         viewModel.getIdentifierError().observe(getViewLifecycleOwner(), error -> {
@@ -56,6 +89,12 @@ public class LoginFragment extends BaseFragment<FragmentLoginBinding> {
 
         viewModel.getPasswordError().observe(getViewLifecycleOwner(), error -> {
             binding.tilPassword.setError(error);
+        });
+
+        viewModel.getRememberMe().observe(getViewLifecycleOwner(), isChecked -> {
+            if (binding.cbRememberMe.isChecked() != isChecked) {
+                binding.cbRememberMe.setChecked(isChecked);
+            }
         });
     }
 

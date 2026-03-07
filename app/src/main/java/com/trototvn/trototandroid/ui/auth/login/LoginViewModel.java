@@ -6,6 +6,8 @@ import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.auth.LoginResponse;
 import com.trototvn.trototandroid.data.repository.AuthRepository;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
+import com.trototvn.trototandroid.utils.SessionManager;
+import com.trototvn.trototandroid.utils.StringUtils;
 
 import javax.inject.Inject;
 
@@ -19,6 +21,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 public class LoginViewModel extends BaseViewModel {
 
     private final AuthRepository authRepository;
+    private final SessionManager sessionManager;
 
     // LiveData for login result
     private final MutableLiveData<Resource<LoginResponse>> loginResult = new MutableLiveData<>();
@@ -27,9 +30,14 @@ public class LoginViewModel extends BaseViewModel {
     private final MutableLiveData<String> identifierError = new MutableLiveData<>();
     private final MutableLiveData<String> passwordError = new MutableLiveData<>();
 
+    // LiveData for Remember Me state
+    private final MutableLiveData<Boolean> rememberMe = new MutableLiveData<>(false);
+
     @Inject
-    public LoginViewModel(AuthRepository authRepository) {
+    public LoginViewModel(AuthRepository authRepository, SessionManager sessionManager) {
         this.authRepository = authRepository;
+        this.sessionManager = sessionManager;
+        this.rememberMe.setValue(sessionManager.isRememberMe());
     }
 
     public MutableLiveData<Resource<LoginResponse>> getLoginResult() {
@@ -42,6 +50,19 @@ public class LoginViewModel extends BaseViewModel {
 
     public MutableLiveData<String> getPasswordError() {
         return passwordError;
+    }
+
+    public MutableLiveData<Boolean> getRememberMe() {
+        return rememberMe;
+    }
+
+    public void setRememberMe(boolean enabled) {
+        rememberMe.setValue(enabled);
+        sessionManager.setRememberMe(enabled);
+    }
+
+    public String getSavedIdentifier() {
+        return sessionManager.getSavedIdentifier();
     }
 
     /**
@@ -58,6 +79,7 @@ public class LoginViewModel extends BaseViewModel {
         }
 
         // Show loading
+        Timber.d("Login attempt for identifier: %s", identifier);
         handleLoading(loginResult);
 
         // Call repository
@@ -65,10 +87,21 @@ public class LoginViewModel extends BaseViewModel {
                 authRepository.login(identifier, password)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                resource -> loginResult.setValue(resource),
-                                throwable -> handleError(loginResult, throwable.getMessage())
-                        )
-        );
+                                resource -> {
+                                    if (resource.getStatus() == Resource.Status.SUCCESS) {
+                                        handleSuccessfulLogin(identifier);
+                                    }
+                                    loginResult.setValue(resource);
+                                },
+                                throwable -> handleError(loginResult, throwable.getMessage())));
+    }
+
+    private void handleSuccessfulLogin(String identifier) {
+        if (Boolean.TRUE.equals(rememberMe.getValue())) {
+            sessionManager.saveIdentifier(identifier);
+        } else {
+            sessionManager.saveIdentifier(null);
+        }
     }
 
     /**
@@ -80,10 +113,16 @@ public class LoginViewModel extends BaseViewModel {
         if (identifier == null || identifier.trim().isEmpty()) {
             identifierError.setValue("Vui lòng nhập số điện thoại hoặc email");
             isValid = false;
+        } else if (!StringUtils.isValidEmail(identifier) && !StringUtils.isValidPhone(identifier)) {
+            identifierError.setValue("Định dạng email hoặc số điện thoại không hợp lệ");
+            isValid = false;
         }
 
         if (password == null || password.trim().isEmpty()) {
             passwordError.setValue("Vui lòng nhập mật khẩu");
+            isValid = false;
+        } else if (password.length() < 6) {
+            passwordError.setValue("Mật khẩu phải có ít nhất 6 ký tự");
             isValid = false;
         }
 

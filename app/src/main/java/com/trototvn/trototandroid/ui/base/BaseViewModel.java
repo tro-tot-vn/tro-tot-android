@@ -14,6 +14,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 public abstract class BaseViewModel extends ViewModel {
 
     protected final CompositeDisposable compositeDisposable = new CompositeDisposable();
+    protected final MutableLiveData<Boolean> sessionExpired = new MutableLiveData<>(false);
 
     /**
      * Add disposable to composite for auto-cleanup
