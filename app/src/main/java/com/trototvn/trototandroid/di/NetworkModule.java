@@ -69,8 +69,7 @@ public class NetworkModule {
     @Singleton
     public TokenAuthenticator provideTokenAuthenticator(
             SessionManager sessionManager,
-            javax.inject.Provider<ApiService> apiServiceProvider
-    ) {
+            javax.inject.Provider<ApiService> apiServiceProvider) {
         return new TokenAuthenticator(sessionManager, apiServiceProvider);
     }
 
@@ -113,5 +112,11 @@ public class NetworkModule {
     @Singleton
     public com.trototvn.trototandroid.data.remote.ProfileApiService provideProfileApiService(Retrofit retrofit) {
         return retrofit.create(com.trototvn.trototandroid.data.remote.ProfileApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public com.trototvn.trototandroid.utils.SocketIOManager provideSocketIOManager(Gson gson) {
+        return new com.trototvn.trototandroid.utils.SocketIOManager(gson);
     }
 }

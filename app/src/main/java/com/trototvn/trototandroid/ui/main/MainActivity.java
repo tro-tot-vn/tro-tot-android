@@ -31,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     @Inject
     SessionManager sessionManager;
 
+    @Inject
+    com.trototvn.trototandroid.utils.SocketIOManager socketIOManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
 
         setupNavigation();
         setupBottomNavigation();
+
+        // Connect socket if logged in
+        if (sessionManager.isLoggedIn()) {
+            socketIOManager.connect(sessionManager.getUserId());
+        }
     }
 
     private void setupNavigation() {
@@ -65,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
      * Call this from fragments to logout
      */
     public void logout() {
+        socketIOManager.disconnect();
         sessionManager.clearSession();
 
         Intent intent = new Intent(this, SplashActivity.class);
