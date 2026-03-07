@@ -16,6 +16,11 @@
         android:title="My Posts" />
     
     <item
+        android:id="@+id/chatFragment"
+        android:icon="@android:drawable/stat_notify_chat"
+        android:title="Chat" />
+    
+    <item
         android:id="@+id/profileFragment"
         android:icon="@android:drawable/ic_menu_myplaces"
         android:title="Profile" />
