@@ -13,6 +13,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import timber.log.Timber;
 
 /**
  * LoginViewModel - Handles login logic and validation

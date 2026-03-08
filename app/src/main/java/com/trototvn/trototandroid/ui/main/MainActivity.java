@@ -1,9 +1,15 @@
 package com.trototvn.trototandroid.ui.main;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -42,6 +48,16 @@ public class MainActivity extends AppCompatActivity {
 
         setupNavigation();
         setupBottomNavigation();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.POST_NOTIFICATIONS }, 101);
+            }
+        }
+
+        // Initialize Notification Channel
+        new com.trototvn.trototandroid.utils.NotificationHelper(this).createNotificationChannel();
 
         // Connect socket if logged in
         if (sessionManager.isLoggedIn()) {

@@ -106,4 +106,9 @@
     <string name="address">Địa chỉ</string>
     <string name="login_required">Vui lòng đăng nhập</string>
     <string name="login_to_continue">Vui lòng đăng nhập để sử dụng chức năng này</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Thông báo hệ thống</string>
+    <string name="notification_channel_desc">Nhận thông báo về tin nhắn và cập nhật mới nhất</string>
+    <string name="notification_title_default">Thông báo mới</string>
 </resources>

@@ -23,6 +23,7 @@ public class SessionManager {
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_REMEMBER_ME = "remember_me";
     private static final String KEY_SAVED_IDENTIFIER = "saved_identifier";
+    private static final String KEY_FCM_TOKEN = "fcm_token";
 
     private final SharedPreferences prefs;
 
@@ -145,5 +146,16 @@ public class SessionManager {
 
     public String getSavedIdentifier() {
         return prefs.getString(KEY_SAVED_IDENTIFIER, null);
+    }
+
+    /**
+     * FCM Token management
+     */
+    public void saveFcmToken(String token) {
+        prefs.edit().putString(KEY_FCM_TOKEN, token).apply();
+    }
+
+    public String getFcmToken() {
+        return prefs.getString(KEY_FCM_TOKEN, null);
     }
 }
