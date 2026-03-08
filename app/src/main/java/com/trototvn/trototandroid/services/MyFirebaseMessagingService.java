@@ -41,7 +41,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         // Check if message contains a data payload.
-        if (remoteMessage.getData().size() > 0) {
+        if (!remoteMessage.getData().isEmpty()) {
             Timber.d("Message data payload: %s", remoteMessage.getData());
             // If the message only has data, show a notification from data
             if (remoteMessage.getNotification() == null) {

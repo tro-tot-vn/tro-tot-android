@@ -4,6 +4,7 @@ import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.Post;
 import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
 import com.trototvn.trototandroid.data.model.search.SearchParams;
+import com.trototvn.trototandroid.data.model.search.SearchInteractionRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
 import com.trototvn.trototandroid.data.remote.ApiService;
 
@@ -42,16 +43,14 @@ public class PostRepositoryImpl implements PostRepository {
                     } else {
                         return Resource.<List<Post>>error(
                                 response.getMessage() != null ? response.getMessage() : "Không thể tải bài đăng",
-                                null
-                        );
+                                null);
                     }
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error fetching latest posts");
                     return Resource.error(
                             throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
-                            null
-                    );
+                            null);
                 });
     }
 
@@ -66,34 +65,31 @@ public class PostRepositoryImpl implements PostRepository {
                     } else {
                         return Resource.<RecommendationResponse>error(
                                 "Không thể tải gợi ý",
-                                null
-                        );
+                                null);
                     }
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error fetching recommendations");
                     return Resource.error(
                             throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
-                            null
-                    );
+                            null);
                 });
     }
 
     @Override
     public Single<Resource<SearchResponse>> search(SearchParams params) {
         return apiService.search(
-                        params.getQuery(),
-                        params.getCity(),
-                        params.getDistrict(),
-                        params.getWard(),
-                        params.getPriceMin(),
-                        params.getPriceMax(),
-                        params.getAcreageMin(),
-                        params.getAcreageMax(),
-                        params.getInteriorCondition(),
-                        params.getPage(),
-                        params.getPageSize()
-                )
+                params.getQuery(),
+                params.getCity(),
+                params.getDistrict(),
+                params.getWard(),
+                params.getPriceMin(),
+                params.getPriceMax(),
+                params.getAcreageMin(),
+                params.getAcreageMax(),
+                params.getInteriorCondition(),
+                params.getPage(),
+                params.getPageSize())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> {
@@ -102,16 +98,39 @@ public class PostRepositoryImpl implements PostRepository {
                     } else {
                         return Resource.<SearchResponse>error(
                                 "Không tìm thấy kết quả",
-                                null
-                        );
+                                null);
                     }
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error searching");
                     return Resource.error(
                             throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
-                            null
-                    );
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> logSearchClick(int searchLogId, int postId) {
+        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, postId))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> Resource.<Void>success(null))
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error logging search click");
+                    return Resource.<Void>error("Không thể ghi nhận tương tác", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment) {
+        return apiService
+                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, null, comment))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> Resource.<Void>success(null))
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error submitting search feedback");
+                    return Resource.error("Không thể gửi phản hồi", null);
                 });
     }
 }

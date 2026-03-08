@@ -7,7 +7,7 @@ public class Constants {
 
     // API related
     public static final String BASE_URL = "http://khoakomlem-internal.ddns.net:3333/";
-    public static final int TIMEOUT_SECONDS = 30;
+    public static final int TIMEOUT_SECONDS = 60;
 
     // Pagination
     public static final int PAGE_SIZE = 20;

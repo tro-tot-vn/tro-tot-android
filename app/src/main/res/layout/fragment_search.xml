@@ -40,48 +40,16 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Filter Chips -->
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupFilters"
-                android:layout_width="match_parent"
+            <!-- Filter Chip -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipFilter"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_small"
-                app:chipSpacingHorizontal="@dimen/spacing_small"
-                app:singleLine="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipLocation"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/location"
-                    app:chipIcon="@android:drawable/ic_menu_mylocation" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipPrice"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/price"
-                    app:chipIcon="@android:drawable/ic_menu_sort_by_size" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipAcreage"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/acreage"
-                    app:chipIcon="@android:drawable/ic_menu_compass" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipInterior"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/interior"
-                    app:chipIcon="@android:drawable/ic_menu_view" />
-
-            </com.google.android.material.chip.ChipGroup>
+                android:text="@string/filter"
+                android:checkable="false"
+                app:chipIcon="@android:drawable/ic_menu_manage" />
 
             <!-- Clear Filters Button -->
             <com.google.android.material.button.MaterialButton

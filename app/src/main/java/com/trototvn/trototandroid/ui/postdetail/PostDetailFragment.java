@@ -10,6 +10,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.view.View;
+import android.widget.TableRow;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.databinding.FragmentPostDetailBinding;
@@ -18,6 +24,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 import dagger.hilt.android.AndroidEntryPoint;
+import timber.log.Timber;
 
 /**
  * Post Detail Fragment - Session 1: Basic UI
@@ -43,7 +50,7 @@ public class PostDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+            @Nullable Bundle savedInstanceState) {
         binding = FragmentPostDetailBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -58,16 +65,19 @@ public class PostDetailFragment extends Fragment {
         observeData();
 
         // Load post detail
+        Timber.d("PostDetailFragment onViewCreated for postId: %d", postId);
         if (postId != -1) {
             viewModel.loadPostDetail(postId);
+        } else {
+            Timber.e("PostDetailFragment called with invalid postId: -1");
+            Toast.makeText(requireContext(), "ID bài đăng không hợp lệ", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setupImageGallery() {
         imageAdapter = new PostImageAdapter();
         binding.vpImages.setAdapter(imageAdapter);
-        // TODO Session 2: Manually connect indicator to ViewPager2
-        // binding.indicator.setViewPager(binding.vpImages);
+        binding.dotsIndicator.attachTo(binding.vpImages);
     }
 
     private void observeData() {
@@ -81,7 +91,7 @@ public class PostDetailFragment extends Fragment {
                 }
             } else if (resource.getStatus() == Resource.Status.ERROR) {
                 binding.pbLoading.setVisibility(View.GONE);
-                // Show error
+                Toast.makeText(requireContext(), resource.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -94,16 +104,51 @@ public class PostDetailFragment extends Fragment {
         binding.tvTitle.setText(post.getTitle());
 
         // Price
-        NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN"));
         String priceText = formatter.format(post.getPrice()) + "/tháng";
         binding.tvPrice.setText(priceText);
 
-        // Phone (masked)
+        // Phone (initially masked)
         String phone = post.getOwner().getAccount().getPhone();
         binding.tvPhone.setText(viewModel.getMaskedPhone(phone));
 
+        binding.btnShowPhone.setOnClickListener(v -> {
+            binding.tvPhone.setText(phone);
+            binding.btnShowPhone.setVisibility(View.GONE);
+        });
+
         // Description
         binding.tvDescription.setText(post.getDescription());
+        binding.btnToggleDescription.setOnClickListener(v -> {
+            if (binding.tvDescription.getMaxLines() == 3) {
+                binding.tvDescription.setMaxLines(Integer.MAX_VALUE);
+                binding.btnToggleDescription.setText(R.string.see_less);
+            } else {
+                binding.tvDescription.setMaxLines(3);
+                binding.btnToggleDescription.setText(R.string.see_more);
+            }
+        });
+
+        // Property Details Table
+        binding.tableDetails.removeAllViews();
+        addDetailRow(getString(R.string.acreage), String.format(Locale.getDefault(), "%.1f m²", post.getAcreage()));
+        addDetailRow(getString(R.string.interior), post.getInteriorCondition());
+        addDetailRow(getString(R.string.address), post.getFullAddress());
+    }
+
+    private void addDetailRow(String label, String value) {
+        if (value == null || value.isEmpty())
+            return;
+
+        View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_post_detail_row,
+                binding.tableDetails, false);
+        TextView tvLabel = rowView.findViewById(R.id.tvLabel);
+        TextView tvValue = rowView.findViewById(R.id.tvValue);
+
+        tvLabel.setText(label);
+        tvValue.setText(value);
+
+        binding.tableDetails.addView(rowView);
     }
 
     @Override

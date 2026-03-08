@@ -33,4 +33,15 @@
         android:name="com.trototvn.trototandroid.ui.main.profile.ProfileFragment"
         android:label="Profile" />
 
+    <!-- Feature Fragments -->
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.trototvn.trototandroid.ui.postdetail.PostDetailFragment"
+        android:label="Post Detail">
+        <argument
+            android:name="postId"
+            app:argType="integer" />
+    </fragment>
+
 </navigation>

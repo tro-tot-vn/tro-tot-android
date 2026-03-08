@@ -33,7 +33,7 @@ public class SearchViewModel extends ViewModel {
     private final MutableLiveData<String> query = new MutableLiveData<>("");
     private final MutableLiveData<Resource<List<Post>>> searchResults = new MutableLiveData<>();
     private Integer searchLogId;
-    
+
     // Filter state
     private final MutableLiveData<String> selectedCity = new MutableLiveData<>();
     private final MutableLiveData<String> selectedDistrict = new MutableLiveData<>();
@@ -43,7 +43,7 @@ public class SearchViewModel extends ViewModel {
     private final MutableLiveData<Integer> acreageMin = new MutableLiveData<>();
     private final MutableLiveData<Integer> acreageMax = new MutableLiveData<>();
     private final MutableLiveData<String> interiorCondition = new MutableLiveData<>();
-    
+
     // Pagination state
     private int currentPage = 0;
     private int totalPages = 0;
@@ -95,6 +95,10 @@ public class SearchViewModel extends ViewModel {
 
     public Integer getSearchLogId() {
         return searchLogId;
+    }
+
+    public LiveData<String> getInteriorCondition() {
+        return interiorCondition;
     }
 
     // ========== Setters ==========
@@ -173,11 +177,25 @@ public class SearchViewModel extends ViewModel {
     }
 
     /**
+     * Log a click on a search result
+     */
+    public void logClick(int postId) {
+        if (searchLogId != null) {
+            disposable.add(
+                    postRepository.logSearchClick(searchLogId, postId)
+                            .subscribe(
+                                    resource -> Timber.d("Click logged successfully"),
+                                    error -> Timber.e(error, "Failed to log click")));
+        }
+    }
+
+    /**
      * Check if any filters are applied
      */
     public boolean hasActiveFilters() {
         return selectedCity.getValue() != null ||
                 selectedDistrict.getValue() != null ||
+                selectedWard.getValue() != null ||
                 priceMin.getValue() != null ||
                 priceMax.getValue() != null ||
                 acreageMin.getValue() != null ||
@@ -198,28 +216,28 @@ public class SearchViewModel extends ViewModel {
                                 resource -> {
                                     if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                                         SearchResponse response = resource.getData();
-                                        
+
                                         // Update pagination state
                                         currentPage = page;
                                         if (response.getPagination() != null) {
                                             totalPages = response.getPagination().getTotalPages();
                                             hasMorePages.setValue(response.getPagination().hasNextPage());
                                         }
-                                        
+
                                         // Update search log ID
                                         if (response.getSearchLogId() != null) {
                                             searchLogId = response.getSearchLogId();
                                         }
-                                        
+
                                         // Append or set results
                                         if (page == 1) {
                                             allResults.clear();
                                         }
-                                        
+
                                         if (response.getData() != null) {
                                             allResults.addAll(response.getData());
                                         }
-                                        
+
                                         searchResults.setValue(Resource.success(new ArrayList<>(allResults)));
                                     } else {
                                         if (page == 1) {
@@ -233,20 +251,17 @@ public class SearchViewModel extends ViewModel {
                                     if (page == 1) {
                                         searchResults.setValue(Resource.error(
                                                 error.getMessage() != null ? error.getMessage() : "Lỗi tìm kiếm",
-                                                null
-                                        ));
+                                                null));
                                     }
                                     hasMorePages.setValue(false);
-                                }
-                        )
-        );
+                                }));
     }
 
     private SearchParams buildSearchParams(int page) {
         SearchParams params = new SearchParams(query.getValue());
         params.setPage(page);
         params.setPageSize(20);
-        
+
         // Apply filters
         if (selectedCity.getValue() != null) {
             params.setCity(selectedCity.getValue());
@@ -272,7 +287,7 @@ public class SearchViewModel extends ViewModel {
         if (interiorCondition.getValue() != null) {
             params.setInteriorCondition(interiorCondition.getValue());
         }
-        
+
         return params;
     }
 

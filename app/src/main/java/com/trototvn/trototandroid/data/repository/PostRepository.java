@@ -18,6 +18,7 @@ public interface PostRepository {
 
     /**
      * Get latest posts for home screen
+     * 
      * @param limit Number of posts to fetch
      * @return Single emitting Resource with list of posts
      */
@@ -25,17 +26,29 @@ public interface PostRepository {
 
     /**
      * Get personalized recommendations
-     * @param page Page number (1-indexed)
+     * 
+     * @param page     Page number (1-indexed)
      * @param pageSize Number of items per page
-     * @param logId Optional recommendation log ID for caching
+     * @param logId    Optional recommendation log ID for caching
      * @return Single emitting Resource with recommendation response
      */
     Single<Resource<RecommendationResponse>> getRecommendations(int page, int pageSize, Integer logId);
 
     /**
      * Search posts with filters
+     * 
      * @param params Search parameters
      * @return Single emitting Resource with search response
      */
     Single<Resource<SearchResponse>> search(SearchParams params);
+
+    /**
+     * Log a click on a search result
+     */
+    Single<Resource<Void>> logSearchClick(int searchLogId, int postId);
+
+    /**
+     * Submit feedback for a search
+     */
+    Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment);
 }

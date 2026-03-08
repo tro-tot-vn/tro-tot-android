@@ -137,42 +137,42 @@ public class ProfileFragment extends Fragment {
 
         // Edit Profile
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_menu_edit,
+                R.drawable.ic_pencil,
                 getString(R.string.edit_profile),
                 null,
                 ProfileMenuItem.ItemType.EDIT_PROFILE));
 
         // Saved Posts
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_menu_save,
+                R.drawable.ic_bookmark,
                 getString(R.string.saved_posts),
                 savedCount != null && savedCount > 0 ? savedCount + " tin" : null,
                 ProfileMenuItem.ItemType.SAVED_POSTS));
 
         // View History
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_menu_recent_history,
+                R.drawable.ic_time_past,
                 getString(R.string.view_history),
                 historyCount != null && historyCount > 0 ? historyCount + " tin" : null,
                 ProfileMenuItem.ItemType.VIEW_HISTORY));
 
         // Subscriptions
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_menu_mylocation,
+                R.drawable.ic_land_layer_location,
                 getString(R.string.subscriptions),
                 subsCount != null && subsCount > 0 ? subsCount + " khu vực" : null,
                 ProfileMenuItem.ItemType.SUBSCRIPTIONS));
 
         // Settings
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_menu_preferences,
+                R.drawable.ic_settings,
                 getString(R.string.account_settings),
                 null,
                 ProfileMenuItem.ItemType.SETTINGS));
 
         // Logout
         menuItems.add(new ProfileMenuItem(
-                android.R.drawable.ic_lock_power_off,
+                R.drawable.ic_user_logout,
                 getString(R.string.logout),
                 null,
                 ProfileMenuItem.ItemType.LOGOUT));

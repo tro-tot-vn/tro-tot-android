@@ -14,7 +14,7 @@
         android:id="@+id/myPostsFragment"
         android:icon="@drawable/ic_post"
         android:title="My Posts" />
-    
+
     <item
         android:id="@+id/chatFragment"
         android:icon="@drawable/ic_message"

@@ -35,7 +35,7 @@
                     android:layout_gravity="center_horizontal"
                     android:contentDescription="@string/profile"
                     android:scaleType="centerCrop"
-                    android:src="@android:drawable/ic_menu_myplaces"
+                    android:src="@drawable/ic_user"
                     app:tint="@color/text_secondary" />
 
                 <!-- Name -->
