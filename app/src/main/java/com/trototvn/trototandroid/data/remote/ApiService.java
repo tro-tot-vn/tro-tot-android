@@ -22,6 +22,7 @@ import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.data.model.rating.AddRatingRequest;
 import com.trototvn.trototandroid.data.model.search.SearchInteractionRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
+import com.trototvn.trototandroid.data.model.chat.ChatHistoryResponse;
 
 import java.util.List;
 
@@ -239,4 +240,16 @@ public interface ApiService {
          */
         @DELETE("users/{id}")
         Completable deleteUser(@Path("id") int userId);
+
+        // ========== Chat ==========
+
+        /**
+         * GET - Lấy lịch sử tin nhắn theo offset-based pagination.
+         * offset = 0 → lấy trang đầu tiên (tin mới nhất).
+         */
+        @GET("conversations/{conversationId}/messages")
+        Single<ResponseData<ChatHistoryResponse>> fetchChatHistory(
+                        @Path("conversationId") String conversationId,
+                        @Query("limit") int limit,
+                        @Query("offset") int offset);
 }

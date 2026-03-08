@@ -100,4 +100,16 @@ public interface ChatDao {
 
     @Query("DELETE FROM conversations WHERE conversation_id = :conversationId")
     Completable deleteConversation(String conversationId);
+
+    // ─────────────────────────────────────────────────────────────
+    // CLEANUP – giữ bảng Room gọn nhẹ
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Xóa các tin nhắn cũ của một conversation, chỉ giữ lại :keepCount tin mới
+     * nhất.
+     * SQLite không có DELETE ... LIMIT trực tiếp nên dùng subquery.
+     */
+    @Query("DELETE FROM messages WHERE conversation_id = :conversationId AND message_id NOT IN (SELECT message_id FROM messages WHERE conversation_id = :conversationId ORDER BY created_at DESC LIMIT :keepCount)")
+    Completable deleteOldMessages(String conversationId, int keepCount);
 }
