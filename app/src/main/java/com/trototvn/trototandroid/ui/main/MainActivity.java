@@ -78,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
         if (navController != null) {
             NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
 
+            // Disable icon tint to show original icon colors
+            binding.bottomNavigation.setItemIconTintList(null);
+
             // Optional: Handle reselection (prevent fragment recreation)
             binding.bottomNavigation.setOnItemReselectedListener(item -> {
                 // Do nothing on reselection

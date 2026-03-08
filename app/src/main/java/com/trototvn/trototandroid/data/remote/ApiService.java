@@ -20,6 +20,7 @@ import com.trototvn.trototandroid.data.model.rating.Rating;
 import com.trototvn.trototandroid.data.model.rating.RatingListResponse;
 import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.data.model.rating.AddRatingRequest;
+import com.trototvn.trototandroid.data.model.search.SearchInteractionRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
 
 import java.util.List;
@@ -39,195 +40,203 @@ import retrofit2.http.Query;
  */
 public interface ApiService {
 
-    // ========== Authentication ==========
+        // ========== Authentication ==========
 
-    /**
-     * POST - Login
-     */
-    @POST("api/auth/login")
-    Single<ResponseData<LoginResponse>> login(@Body LoginRequest request);
+        /**
+         * POST - Login
+         */
+        @POST("api/auth/login")
+        Single<ResponseData<LoginResponse>> login(@Body LoginRequest request);
 
-    /**
-     * POST - Register
-     */
-    @POST("api/auth/register")
-    Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
+        /**
+         * POST - Register
+         */
+        @POST("api/auth/register")
+        Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
 
-    /**
-     * POST - Refresh Token
-     * Using Call instead of RxJava/Single because Authenticator runs synchronously
-     * Backend only returns { accessToken }, NOT full Token object
-     */
-    @POST("api/auth/refresh-token")
-    retrofit2.Call<ResponseData<RefreshTokenResponse>> refreshToken(@Body RefreshTokenRequest request);
+        /**
+         * POST - Refresh Token
+         * Using Call instead of RxJava/Single because Authenticator runs synchronously
+         * Backend only returns { accessToken }, NOT full Token object
+         */
+        @POST("api/auth/refresh-token")
+        retrofit2.Call<ResponseData<RefreshTokenResponse>> refreshToken(@Body RefreshTokenRequest request);
 
-    // ========== Posts ==========
+        // ========== Posts ==========
 
-    /**
-     * GET - Get Latest Posts
-     * Returns 4 latest approved posts for home screen
-     */
-    @GET("api/post/latest-post")
-    Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
+        /**
+         * GET - Get Latest Posts
+         * Returns 4 latest approved posts for home screen
+         */
+        @GET("api/post/latest-post")
+        Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
 
-    /**
-     * GET - Post Detail by ID
-     */
-    @GET("api/post/{postId}")
-    Single<ResponseData<PostDetail>> getPostDetail(@Path("postId") int postId);
+        /**
+         * GET - Post Detail by ID
+         */
+        @GET("api/post/{postId}/detail")
+        Single<ResponseData<PostDetail>> getPostDetail(@Path("postId") int postId);
 
-    /**
-     * GET - Get Personalized Recommendations
-     * Requires authentication
-     */
-    @GET("api/recommend")
-    Single<RecommendationResponse> getRecommendations(
-            @Query("page") int page,
-            @Query("pageSize") int pageSize,
-            @Query("logId") Integer logId
-    );
+        /**
+         * GET - Get Personalized Recommendatio
+         * Requires authentication
+         */
+        @GET("api/recommend")
+        Single<RecommendationResponse> getRecommendations(
+                        @Query("page") int page,
+                        @Query("pageSize") int pageSize,
+                        @Query("logId") Integer logId);
 
-    /**
-     * GET - Hybrid Vector Search
-     * New search endpoint with better results
-     */
-    @GET("api/search")
-    Single<SearchResponse> search(
-            @Query("query") String query,
-            @Query("city") String city,
-            @Query("district") String district,
-            @Query("ward") String ward,
-            @Query("priceMin") Integer priceMin,
-            @Query("priceMax") Integer priceMax,
-            @Query("acreageMin") Integer acreageMin,
-            @Query("acreageMax") Integer acreageMax,
-            @Query("interiorCondition") String interiorCondition,
-            @Query("page") int page,
-            @Query("pageSize") int pageSize
-    );
+        /**
+         * POST - Hybrid Vector Search
+         * New search endpoint with better results
+         */
+        @GET("api/search")
+        Single<SearchResponse> search(
+                        @Query("query") String query,
+                        @Query("city") String city,
+                        @Query("district") String district,
+                        @Query("ward") String ward,
+                        @Query("priceMin") Integer priceMin,
+                        @Query("priceMax") Integer priceMax,
+                        @Query("acreageMin") Integer acreageMin,
+                        @Query("acreageMax") Integer acreageMax,
+                        @Query("interiorCondition") String interiorCondition,
+                        @Query("page") int page,
+                        @Query("pageSize") int pageSize);
 
-    // ========== Save Post ==========
+        /**
+         * POST - Log user click on search result
+         */
+        @POST("api/search/click")
+        Single<ResponseData<Void>> logSearchClick(@Body SearchInteractionRequest.Click body);
 
-    /**
-     * POST - Save post to favorites
-     * Requires authentication
-     */
-    @POST("api/customer/saved-posts")
-    Single<ResponseData<Void>> savePost(@Body SavePostRequest request);
+        /**
+         * POST - Submit search quality feedback
+         */
+        @POST("api/search/feedback")
+        Single<ResponseData<Void>> submitSearchFeedback(@Body SearchInteractionRequest.Feedback body);
 
-    // ========== Interaction Logging ==========
+        // ========== Save Post ==========
 
-    /**
-     * POST - Log contact interaction (view phone)
-     * Requires authentication
-     */
-    @POST("api/interactions/contact")
-    Single<ResponseData<Void>> logContact(@Body ContactLogRequest request);
+        /**
+         * POST - Save post to favorites
+         * Requires authentication
+         */
+        @POST("api/customer/saved-posts")
+        Single<ResponseData<Void>> savePost(@Body SavePostRequest request);
 
-    // ========== Ratings & Reviews ==========
+        // ========== Interaction Logging ==========
 
-    /**
-     * POST - Add rating to post
-     * Requires authentication
-     */
-    @POST("api/customer/rate/{postId}")
-    Single<ResponseData<Void>> addRating(
-            @Path("postId") int postId,
-            @Body AddRatingRequest request
-    );
+        /**
+         * POST - Log contact interaction (view phone)
+         * Requires authentication
+         */
+        @POST("api/interactions/contact")
+        Single<ResponseData<Void>> logContact(@Body ContactLogRequest request);
 
-    /**
-     * GET - Get ratings list with cursor pagination
-     */
-    @GET("api/customer/rate/{postId}")
-    Single<ResponseData<RatingListResponse>> getRatings(
-            @Path("postId") int postId,
-            @Query("limit") int limit,
-            @Query("cursor") String cursor  // Date string
-    );
+        // ========== Ratings & Reviews ==========
 
-    /**
-     * GET - Get my rating on specific post
-     * Requires authentication
-     */
-    @GET("api/customer/my-rate/{postId}")
-    Single<ResponseData<Rating>> getMyRating(@Path("postId") int postId);
+        /**
+         * POST - Add rating to post
+         * Requires authentication
+         */
+        @POST("api/customer/rate/{postId}")
+        Single<ResponseData<Void>> addRating(
+                        @Path("postId") int postId,
+                        @Body AddRatingRequest request);
 
-    /**
-     * DELETE - Delete my rating
-     * Requires authentication
-     */
-    @DELETE("api/customer/my-rate/{postId}")
-    Single<ResponseData<Void>> deleteMyRating(@Path("postId") int postId);
+        /**
+         * GET - Get ratings list with cursor pagination
+         */
+        @GET("api/customer/rate/{postId}")
+        Single<ResponseData<RatingListResponse>> getRatings(
+                        @Path("postId") int postId,
+                        @Query("limit") int limit,
+                        @Query("cursor") String cursor // Date string
+        );
 
-    /**
-     * GET - Get rating statistics (avg, count)
-     */
-    @GET("api/customer/avg-rate/{postId}")
-    Single<ResponseData<RatingStats>> getRatingStats(@Path("postId") int postId);
+        /**
+         * GET - Get my rating on specific post
+         * Requires authentication
+         */
+        @GET("api/customer/my-rate/{postId}")
+        Single<ResponseData<Rating>> getMyRating(@Path("postId") int postId);
 
-    // ========== My Posts ==========
+        /**
+         * DELETE - Delete my rating
+         * Requires authentication
+         */
+        @DELETE("api/customer/my-rate/{postId}")
+        Single<ResponseData<Void>> deleteMyRating(@Path("postId") int postId);
 
-    /**
-     * GET - Get my posts with status filter and pagination
-     */
-    @GET("api/post/my-posts")
-    Single<ResponseData<MyPostsResponse>> getMyPosts(
-            @Query("status") String status,
-            @Query("cursor") Integer cursor,
-            @Query("limit") int limit
-    );
+        /**
+         * GET - Get rating statistics (avg, count)
+         */
+        @GET("api/customer/avg-rate/{postId}")
+        Single<ResponseData<RatingStats>> getRatingStats(@Path("postId") int postId);
 
-    /**
-     * POST - Hide my post
-     */
-    @POST("api/post/hide")
-    Single<ResponseData<Void>> hidePost(@Body HidePostRequest request);
+        // ========== My Posts ==========
 
-    /**
-     * POST - Unhide my post
-     */
-    @POST("api/post/unhide")
-    Single<ResponseData<Void>> unhidePost(@Body HidePostRequest request);
+        /**
+         * GET - Get my posts with status filter and pagination
+         */
+        @GET("api/post/my-posts")
+        Single<ResponseData<MyPostsResponse>> getMyPosts(
+                        @Query("status") String status,
+                        @Query("cursor") Integer cursor,
+                        @Query("limit") int limit);
 
-    // ========== Example CRUD operations for User ==========
+        /**
+         * POST - Hide my post
+         */
+        @POST("api/post/hide")
+        Single<ResponseData<Void>> hidePost(@Body HidePostRequest request);
 
-    /**
-     * GET - Fetch list of users
-     */
-    @GET("users")
-    Single<List<User>> getUsers();
+        /**
+         * POST - Unhide my post
+         */
+        @POST("api/post/unhide")
+        Single<ResponseData<Void>> unhidePost(@Body HidePostRequest request);
 
-    /**
-     * GET - Fetch user by ID
-     */
-    @GET("users/{id}")
-    Single<User> getUserById(@Path("id") int userId);
+        // ========== Example CRUD operations for User ==========
 
-    /**
-     * GET - Search users with pagination
-     */
-    @GET("users/search")
-    Single<List<User>> searchUsers(
-            @Query("query") String query,
-            @Query("page") int page,
-            @Query("limit") int limit);
+        /**
+         * GET - Fetch list of users
+         */
+        @GET("users")
+        Single<List<User>> getUsers();
 
-    /**
-     * POST - Create new user
-     */
-    @POST("users")
-    Single<User> createUser(@Body User user);
+        /**
+         * GET - Fetch user by ID
+         */
+        @GET("users/{id}")
+        Single<User> getUserById(@Path("id") int userId);
 
-    /**
-     * PUT - Update existing user
-     */
-    @PUT("users/{id}")
-    Single<User> updateUser(@Path("id") int userId, @Body User user);
+        /**
+         * GET - Search users with pagination
+         */
+        @GET("users/search")
+        Single<List<User>> searchUsers(
+                        @Query("query") String query,
+                        @Query("page") int page,
+                        @Query("limit") int limit);
 
-    /**
-     * DELETE - Delete user
-     */
-    @DELETE("users/{id}")
-    Completable deleteUser(@Path("id") int userId);
+        /**
+         * POST - Create new user
+         */
+        @POST("users")
+        Single<User> createUser(@Body User user);
+
+        /**
+         * PUT - Update existing user
+         */
+        @PUT("users/{id}")
+        Single<User> updateUser(@Path("id") int userId, @Body User user);
+
+        /**
+         * DELETE - Delete user
+         */
+        @DELETE("users/{id}")
+        Completable deleteUser(@Path("id") int userId);
 }

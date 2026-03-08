@@ -80,10 +80,15 @@
     
     <!-- Search Screen -->
     <string name="location">Vị trí</string>
+    <string name="city">Thành phố</string>
     <string name="price">Giá</string>
+    <string name="min">Tối thiểu</string>
+    <string name="max">Tối đa</string>
     <string name="acreage">Diện tích</string>
     <string name="interior">Nội thất</string>
+    <string name="interior_condition">Tình trạng nội thất</string>
     <string name="clear_filters">Xóa bộ lọc</string>
+    <string name="clear_all">Xóa tất cả</string>
     <string name="search_to_begin">Nhập từ khóa để bắt đầu tìm kiếm</string>
     
     <!-- Profile Screen -->
@@ -111,4 +116,5 @@
     <string name="notification_channel_name">Thông báo hệ thống</string>
     <string name="notification_channel_desc">Nhận thông báo về tin nhắn và cập nhật mới nhất</string>
     <string name="notification_title_default">Thông báo mới</string>
+    <string name="bookmark">Bookmark</string>
 </resources>

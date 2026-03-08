@@ -9,10 +9,13 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.annotation.ColorInt;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.ui.main.MainActivity;
+import android.graphics.BitmapFactory;
 
 /**
  * Helper class to manage and display notifications
@@ -60,8 +63,13 @@ public class NotificationHelper {
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+        @ColorInt
+        int brandColor = ContextCompat.getColor(context, R.color.orange_500);
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_trotot_logo_app)
+                .setSmallIcon(R.drawable.ic_message) // Vector silhouette
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_trotot_logo_app))
+                .setColor(brandColor)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setAutoCancel(true)

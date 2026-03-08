@@ -39,7 +39,7 @@ public class HomeFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -47,16 +47,16 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        
+
         setupRecyclerViews();
         setupObservers();
         setupClickListeners();
-        
+
         // Load data
         viewModel.loadLatestPosts();
-        
+
         // Load recommendations only if logged in
         if (sessionManager.isLoggedIn()) {
             viewModel.loadRecommendations();
@@ -69,20 +69,24 @@ public class HomeFragment extends Fragment {
     private void setupRecyclerViews() {
         // Latest Posts RecyclerView
         latestPostsAdapter = new PostAdapter(post -> {
-            // TODO Session 2: Implement navigation to PostDetailFragment
-            Timber.d("Post clicked - ID: %d, Title: %s", post.getPostId(), post.getTitle());
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", post.getPostId());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.postDetailFragment, bundle);
         });
-        
+
         binding.rvLatestPosts.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         binding.rvLatestPosts.setAdapter(latestPostsAdapter);
         binding.rvLatestPosts.setNestedScrollingEnabled(false);
-        
+
         // Recommendations RecyclerView
         recommendationsAdapter = new PostAdapter(post -> {
-            // TODO Session 2: Implement navigation to PostDetailFragment
-            Timber.d("Recommendation clicked - ID: %d", post.getPostId());
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", post.getPostId());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.postDetailFragment, bundle);
         });
-        
+
         binding.rvRecommendations.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         binding.rvRecommendations.setAdapter(recommendationsAdapter);
         binding.rvRecommendations.setNestedScrollingEnabled(false);
@@ -99,7 +103,7 @@ public class HomeFragment extends Fragment {
                 binding.pbLatestPosts.setVisibility(View.GONE);
                 binding.rvLatestPosts.setVisibility(View.VISIBLE);
                 binding.layoutLatestError.setVisibility(View.GONE);
-                
+
                 if (resource.getData() != null) {
                     latestPostsAdapter.submitList(resource.getData());
                 }
@@ -110,7 +114,7 @@ public class HomeFragment extends Fragment {
                 binding.tvLatestError.setText(resource.getMessage());
             }
         });
-        
+
         // Recommendations Observer
         viewModel.getRecommendations().observe(getViewLifecycleOwner(), resource -> {
             if (resource.getStatus() == Resource.Status.LOADING) {
@@ -119,7 +123,7 @@ public class HomeFragment extends Fragment {
             } else if (resource.getStatus() == Resource.Status.SUCCESS) {
                 binding.pbRecommendations.setVisibility(View.GONE);
                 binding.rvRecommendations.setVisibility(View.VISIBLE);
-                
+
                 if (resource.getData() != null) {
                     recommendationsAdapter.submitList(resource.getData());
                 }
@@ -128,7 +132,7 @@ public class HomeFragment extends Fragment {
                 binding.rvRecommendations.setVisibility(View.VISIBLE);
             }
         });
-        
+
         // Load More visibility
         viewModel.getHasMoreRecommendations().observe(getViewLifecycleOwner(), hasMore -> {
             binding.btnLoadMore.setVisibility(Boolean.TRUE.equals(hasMore) ? View.VISIBLE : View.GONE);
@@ -138,7 +142,7 @@ public class HomeFragment extends Fragment {
     private void setupClickListeners() {
         // Retry Latest Posts
         binding.btnRetryLatest.setOnClickListener(v -> viewModel.loadLatestPosts());
-        
+
         // Load More Recommendations
         binding.btnLoadMore.setOnClickListener(v -> viewModel.loadMoreRecommendations());
     }

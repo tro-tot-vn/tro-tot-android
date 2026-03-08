@@ -33,7 +33,7 @@ public class SearchFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         binding = FragmentSearchBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -41,15 +41,15 @@ public class SearchFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+
         viewModel = new ViewModelProvider(this).get(SearchViewModel.class);
-        
+
         setupSearchBar();
         setupRecyclerView();
         setupFilterChips();
         setupObservers();
         setupClickListeners();
-        
+
         // Show empty state initially
         showEmptyState();
     }
@@ -58,7 +58,8 @@ public class SearchFragment extends Fragment {
         // Set up text change listener
         binding.etSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -66,54 +67,54 @@ public class SearchFragment extends Fragment {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         });
 
         // Handle search action
         binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                viewModel.search();
+                performSearch();
                 return true;
             }
             return false;
         });
+
+        // Set up end icon click listener (Magnifying glass)
+        binding.tilSearch.setEndIconOnClickListener(v -> performSearch());
+    }
+
+    private void performSearch() {
+        // Hide keyboard
+        View view = getActivity() != null ? getActivity().getCurrentFocus() : null;
+        if (view != null) {
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) requireContext()
+                    .getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+        viewModel.search();
     }
 
     private void setupRecyclerView() {
         adapter = new PostAdapter(post -> {
-            // TODO: Navigate to detail & log click if searchLogId exists
-            Timber.d("Search result clicked: %s (logId: %s)", 
-                    post.getTitle(), viewModel.getSearchLogId());
+            // Log click tracking
+            viewModel.logClick(post.getPostId());
+
+            // Navigate to detail (bundle usage as previously defined)
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", post.getPostId());
+            androidx.navigation.fragment.NavHostFragment.findNavController(this)
+                    .navigate(com.trototvn.trototandroid.R.id.postDetailFragment, bundle);
         });
-        
+
         binding.rvSearchResults.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         binding.rvSearchResults.setAdapter(adapter);
-        binding.rvSearchResults.setNestedScrollingEnabled(false);
     }
 
     private void setupFilterChips() {
-        // Location chip
-        binding.chipLocation.setOnClickListener(v -> {
-            // TODO: Show location filter dialog
-            Timber.d("Location filter clicked");
-        });
-
-        // Price chip
-        binding.chipPrice.setOnClickListener(v -> {
-            // TODO: Show price range filter dialog
-            Timber.d("Price filter clicked");
-        });
-
-        // Acreage chip
-        binding.chipAcreage.setOnClickListener(v -> {
-            // TODO: Show acreage range filter dialog
-            Timber.d("Acreage filter clicked");
-        });
-
-        // Interior chip
-        binding.chipInterior.setOnClickListener(v -> {
-            // TODO: Show interior condition filter dialog
-            Timber.d("Interior filter clicked");
+        binding.chipFilter.setOnClickListener(v -> {
+            SearchFilterBottomDialog dialog = new SearchFilterBottomDialog();
+            dialog.show(getChildFragmentManager(), "SearchFilterDialog");
         });
     }
 
@@ -141,21 +142,17 @@ public class SearchFragment extends Fragment {
             binding.btnLoadMore.setVisibility(Boolean.TRUE.equals(hasMore) ? View.VISIBLE : View.GONE);
         });
 
-        // Filter state observers (for chip checked state)
-        viewModel.getSelectedCity().observe(getViewLifecycleOwner(), city -> {
-            binding.chipLocation.setChecked(city != null);
-            updateClearFiltersVisibility();
-        });
+        // Filter state observers
+        viewModel.getSelectedCity().observe(getViewLifecycleOwner(), city -> updateFilterChipState());
+        viewModel.getPriceMin().observe(getViewLifecycleOwner(), min -> updateFilterChipState());
+        viewModel.getAcreageMin().observe(getViewLifecycleOwner(), min -> updateFilterChipState());
+        viewModel.getInteriorCondition().observe(getViewLifecycleOwner(), condition -> updateFilterChipState());
+    }
 
-        viewModel.getPriceMin().observe(getViewLifecycleOwner(), min -> {
-            binding.chipPrice.setChecked(min != null || viewModel.getPriceMax().getValue() != null);
-            updateClearFiltersVisibility();
-        });
-
-        viewModel.getAcreageMin().observe(getViewLifecycleOwner(), min -> {
-            binding.chipAcreage.setChecked(min != null || viewModel.getAcreageMax().getValue() != null);
-            updateClearFiltersVisibility();
-        });
+    private void updateFilterChipState() {
+        boolean hasFilters = viewModel.hasActiveFilters();
+        binding.chipFilter.setChecked(hasFilters);
+        binding.btnClearFilters.setVisibility(hasFilters ? View.VISIBLE : View.GONE);
     }
 
     private void setupClickListeners() {
@@ -163,8 +160,8 @@ public class SearchFragment extends Fragment {
         binding.btnClearFilters.setOnClickListener(v -> {
             viewModel.clearFilters();
             // Re-execute search if there's a query
-            if (viewModel.getQuery().getValue() != null && 
-                !viewModel.getQuery().getValue().trim().isEmpty()) {
+            if (viewModel.getQuery().getValue() != null &&
+                    !viewModel.getQuery().getValue().trim().isEmpty()) {
                 viewModel.search();
             }
         });
@@ -174,12 +171,6 @@ public class SearchFragment extends Fragment {
 
         // Retry
         binding.btnRetry.setOnClickListener(v -> viewModel.search());
-    }
-
-    private void updateClearFiltersVisibility() {
-        binding.btnClearFilters.setVisibility(
-                viewModel.hasActiveFilters() ? View.VISIBLE : View.GONE
-        );
     }
 
     private void showLoading() {

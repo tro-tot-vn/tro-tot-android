@@ -79,4 +79,6 @@
     
     <!-- Custom colors -->
     <color name="orange_500">#FF6D0B</color>
+    <color name="gray_300">#CBD5E1</color>
+    <color name="gray_600">#475569</color>
 </resources>

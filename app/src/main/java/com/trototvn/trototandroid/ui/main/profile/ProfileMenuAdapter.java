@@ -32,8 +32,8 @@ public class ProfileMenuAdapter extends ListAdapter<ProfileMenuItem, ProfileMenu
             @Override
             public boolean areContentsTheSame(@NonNull ProfileMenuItem oldItem, @NonNull ProfileMenuItem newItem) {
                 return oldItem.getTitle().equals(newItem.getTitle()) &&
-                       (oldItem.getSubtitle() == null ? newItem.getSubtitle() == null : 
-                        oldItem.getSubtitle().equals(newItem.getSubtitle()));
+                        (oldItem.getSubtitle() == null ? newItem.getSubtitle() == null
+                                : oldItem.getSubtitle().equals(newItem.getSubtitle()));
             }
         });
         this.listener = listener;
@@ -62,8 +62,9 @@ public class ProfileMenuAdapter extends ListAdapter<ProfileMenuItem, ProfileMenu
 
         public void bind(ProfileMenuItem item, OnMenuItemClickListener listener) {
             binding.ivIcon.setImageResource(item.getIconRes());
+
             binding.tvTitle.setText(item.getTitle());
-            
+
             if (item.getSubtitle() != null && !item.getSubtitle().isEmpty()) {
                 binding.tvSubtitle.setText(item.getSubtitle());
                 binding.tvSubtitle.setVisibility(View.VISIBLE);
