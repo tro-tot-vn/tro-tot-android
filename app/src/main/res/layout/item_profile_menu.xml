@@ -20,13 +20,12 @@
         android:padding="@dimen/spacing_medium">
 
         <!-- Icon -->
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/profile"
-            app:tint="@color/primary"
             tools:src="@drawable/ic_bookmark" />
 
         <!-- Text Container -->
@@ -62,7 +61,7 @@
         </LinearLayout>
 
         <!-- Arrow -->
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivArrow"
             android:layout_width="20dp"
             android:layout_height="20dp"

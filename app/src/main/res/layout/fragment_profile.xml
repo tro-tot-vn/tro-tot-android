@@ -36,7 +36,7 @@
                     android:contentDescription="@string/profile"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_user"
-                    app:tint="@color/text_secondary" />
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
                 <!-- Name -->
                 <TextView
