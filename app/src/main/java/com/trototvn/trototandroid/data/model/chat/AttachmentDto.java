@@ -10,10 +10,10 @@ import java.util.Date;
 public class AttachmentDto {
 
     @SerializedName("attachmentId")
-    public String attachmentId;
+    public long attachmentId;
 
     @SerializedName("messageId")
-    public String messageId;
+    public long messageId;
 
     @SerializedName("fileName")
     public String fileName;

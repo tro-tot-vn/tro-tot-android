@@ -16,7 +16,6 @@ import com.trototvn.trototandroid.utils.SocketIOManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -75,7 +74,7 @@ public class ChatRepository {
      * ViewModel subscribe trên IO, observe trên Main.
      * Room tự động emit khi bảng messages thay đổi.
      */
-    public Flowable<List<MessageEntity>> observeMessages(String conversationId) {
+    public Flowable<List<MessageEntity>> observeMessages(long conversationId) {
         return chatDao.getMessagesByConversationId(conversationId)
                 .subscribeOn(Schedulers.io());
     }
@@ -92,14 +91,22 @@ public class ChatRepository {
      * Server sẽ broadcast lại qua socket "message:received"; lúc đó
      * observeIncomingMessages sẽ upsert entity đó với messageId từ server.
      */
-    public Completable sendTextMessage(String conversationId, String content) {
-        String optimisticId = "local_" + UUID.randomUUID().toString();
+    public Completable sendTextMessage(long conversationId, String content) {
+        long optimisticId = -System.currentTimeMillis();
         Date now = new Date();
+
+        long senderId = 0;
+        try {
+            if (sessionManager.getUserId() != null)
+                senderId = Long.parseLong(sessionManager.getUserId());
+        } catch (NumberFormatException e) {
+            Timber.e(e, "Invalid user ID format");
+        }
 
         MessageEntity optimistic = new MessageEntity(
                 optimisticId,
                 conversationId,
-                sessionManager.getUserId(),
+                senderId,
                 content,
                 MessageType.TEXT,
                 MessageStatus.SENT,
@@ -111,13 +118,7 @@ public class ChatRepository {
                 .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> {
                     // Emit qua Socket sau khi đã insert Room thành công
-                    // conversationId là String nhưng socket hiện nhận int → parse an toàn
-                    try {
-                        int convIdInt = Integer.parseInt(conversationId);
-                        socketIOManager.sendMessage(convIdInt, content);
-                    } catch (NumberFormatException e) {
-                        Timber.e(e, "conversationId không phải số nguyên: %s", conversationId);
-                    }
+                    socketIOManager.sendMessage(conversationId, content);
                 });
     }
 
@@ -128,17 +129,25 @@ public class ChatRepository {
      * 3. Emit socket event FILE_SENT
      */
     public Completable sendFileMessage(
-            String conversationId,
+            long conversationId,
             String content,
             @MessageType String messageType,
             MessageAttachmentEntity attachment) {
-        String optimisticId = "local_" + UUID.randomUUID().toString();
+        long optimisticId = -System.currentTimeMillis();
         Date now = new Date();
+
+        long senderId = 0;
+        try {
+            if (sessionManager.getUserId() != null)
+                senderId = Long.parseLong(sessionManager.getUserId());
+        } catch (NumberFormatException e) {
+            Timber.e(e, "Invalid user ID format");
+        }
 
         MessageEntity message = new MessageEntity(
                 optimisticId,
                 conversationId,
-                sessionManager.getUserId(),
+                senderId,
                 content,
                 messageType,
                 MessageStatus.SENT,
@@ -215,7 +224,7 @@ public class ChatRepository {
      * {@code limit}
      * item (có thể còn trang tiếp theo)
      */
-    public Single<Boolean> fetchChatHistory(String conversationId, int limit, int offset) {
+    public Single<Boolean> fetchChatHistory(long conversationId, int limit, int offset) {
         return apiService.fetchChatHistory(conversationId, limit, offset)
                 .subscribeOn(Schedulers.io())
                 .flatMap(response -> {
@@ -263,7 +272,7 @@ public class ChatRepository {
      * {@link #KEEP_MESSAGES_COUNT} tin mới nhất.
      * Nên gọi sau khi fetch history thành công hoặc khi user rời màn hình.
      */
-    public Completable cleanupOldMessages(String conversationId) {
+    public Completable cleanupOldMessages(long conversationId) {
         return chatDao.deleteOldMessages(conversationId, KEEP_MESSAGES_COUNT)
                 .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> Timber.d("Cleanup done for conversation: %s (kept %d)", conversationId,
@@ -279,7 +288,7 @@ public class ChatRepository {
      * Đánh dấu tất cả tin nhắn trong conversation là READ.
      * Gọi khi user mở màn hình chat.
      */
-    public Completable markAllAsRead(String conversationId) {
+    public Completable markAllAsRead(long conversationId) {
         return chatDao.updateAllMessagesStatusInConversation(
                         conversationId,
                         MessageStatus.READ,
@@ -290,7 +299,7 @@ public class ChatRepository {
     /**
      * Cập nhật trạng thái một tin nhắn cụ thể (từ socket event message:read, v.v.)
      */
-    public Completable updateMessageStatus(String messageId, @MessageStatus String status) {
+    public Completable updateMessageStatus(long messageId, @MessageStatus String status) {
         return chatDao.updateMessageStatus(messageId, status, System.currentTimeMillis())
                 .subscribeOn(Schedulers.io());
     }

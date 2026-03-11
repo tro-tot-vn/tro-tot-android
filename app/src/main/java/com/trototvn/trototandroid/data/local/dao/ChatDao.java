@@ -54,18 +54,18 @@ public interface ChatDao {
 
     @Query("UPDATE messages SET message_status = :status, updated_at = :updatedAt WHERE message_id = :messageId")
     Completable updateMessageStatus(
-            String messageId,
+            long messageId,
             @MessageStatus String status,
             long updatedAt);
 
     @Query("UPDATE messages SET message_status = :status, updated_at = :updatedAt WHERE conversation_id = :conversationId AND message_status != :status")
     Completable updateAllMessagesStatusInConversation(
-            String conversationId,
+            long conversationId,
             @MessageStatus String status,
             long updatedAt);
 
     @Query("UPDATE messages SET deleted_at = :deletedAt, updated_at = :updatedAt WHERE message_id = :messageId")
-    Completable softDeleteMessage(String messageId, long deletedAt, long updatedAt);
+    Completable softDeleteMessage(long messageId, long deletedAt, long updatedAt);
 
     // ─────────────────────────────────────────────────────────────
     // QUERY – observe (Flowable = real-time updates for UI)
@@ -77,29 +77,29 @@ public interface ChatDao {
      * UI subscribes on IO, observes on Main.
      */
     @Query("SELECT * FROM messages WHERE conversation_id = :convId AND deleted_at IS NULL ORDER BY created_at ASC")
-    Flowable<List<MessageEntity>> getMessagesByConversationId(String convId);
+    Flowable<List<MessageEntity>> getMessagesByConversationId(long convId);
 
     @Query("SELECT * FROM conversations ORDER BY updated_at DESC")
     Flowable<List<ConversationEntity>> getAllConversations();
 
     @Query("SELECT * FROM messages WHERE message_id = :messageId LIMIT 1")
-    Single<MessageEntity> getMessageById(String messageId);
+    Single<MessageEntity> getMessageById(long messageId);
 
     @Query("SELECT * FROM message_attachments WHERE message_id = :messageId")
-    Single<List<MessageAttachmentEntity>> getAttachmentsByMessageId(String messageId);
+    Single<List<MessageAttachmentEntity>> getAttachmentsByMessageId(long messageId);
 
     @Query("SELECT * FROM conversation_participants WHERE conversation_id = :conversationId")
-    Single<List<ConversationParticipantEntity>> getParticipantsByConversationId(String conversationId);
+    Single<List<ConversationParticipantEntity>> getParticipantsByConversationId(long conversationId);
 
     // ─────────────────────────────────────────────────────────────
     // DELETE
     // ─────────────────────────────────────────────────────────────
 
     @Query("DELETE FROM messages WHERE conversation_id = :conversationId")
-    Completable deleteMessagesByConversationId(String conversationId);
+    Completable deleteMessagesByConversationId(long conversationId);
 
     @Query("DELETE FROM conversations WHERE conversation_id = :conversationId")
-    Completable deleteConversation(String conversationId);
+    Completable deleteConversation(long conversationId);
 
     // ─────────────────────────────────────────────────────────────
     // CLEANUP – giữ bảng Room gọn nhẹ
@@ -111,5 +111,5 @@ public interface ChatDao {
      * SQLite không có DELETE ... LIMIT trực tiếp nên dùng subquery.
      */
     @Query("DELETE FROM messages WHERE conversation_id = :conversationId AND message_id NOT IN (SELECT message_id FROM messages WHERE conversation_id = :conversationId ORDER BY created_at DESC LIMIT :keepCount)")
-    Completable deleteOldMessages(String conversationId, int keepCount);
+    Completable deleteOldMessages(long conversationId, int keepCount);
 }

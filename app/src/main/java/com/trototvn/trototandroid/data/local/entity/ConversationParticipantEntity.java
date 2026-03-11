@@ -1,6 +1,5 @@
 package com.trototvn.trototandroid.data.local.entity;
 
-import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -14,22 +13,19 @@ import androidx.room.PrimaryKey;
 public class ConversationParticipantEntity {
 
     @PrimaryKey
-    @NonNull
     @ColumnInfo(name = "participant_id")
-    public String participantId;
+    public long participantId;
 
-    @NonNull
     @ColumnInfo(name = "conversation_id")
-    public String conversationId;
+    public long conversationId;
 
-    @NonNull
     @ColumnInfo(name = "customer_id")
-    public String customerId;
+    public long customerId;
 
     public ConversationParticipantEntity(
-            @NonNull String participantId,
-            @NonNull String conversationId,
-            @NonNull String customerId) {
+            long participantId,
+            long conversationId,
+            long customerId) {
         this.participantId = participantId;
         this.conversationId = conversationId;
         this.customerId = customerId;

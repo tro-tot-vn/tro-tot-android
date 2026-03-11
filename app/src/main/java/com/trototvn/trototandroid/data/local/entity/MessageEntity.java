@@ -16,17 +16,14 @@ import java.util.Date;
 public class MessageEntity {
 
     @PrimaryKey
-    @NonNull
     @ColumnInfo(name = "message_id")
-    public String messageId;
+    public long messageId;
 
-    @NonNull
     @ColumnInfo(name = "conversation_id")
-    public String conversationId;
+    public long conversationId;
 
-    @NonNull
     @ColumnInfo(name = "sender_id")
-    public String senderId;
+    public long senderId;
 
     @NonNull
     @ColumnInfo(name = "content")
@@ -55,9 +52,9 @@ public class MessageEntity {
     public Date deletedAt;
 
     public MessageEntity(
-            @NonNull String messageId,
-            @NonNull String conversationId,
-            @NonNull String senderId,
+            long messageId,
+            long conversationId,
+            long senderId,
             @NonNull String content,
             @NonNull @MessageType String messageType,
             @NonNull @MessageStatus String messageStatus,

@@ -9,13 +9,13 @@ import com.google.gson.annotations.SerializedName;
 public class SocketMessageEvent {
 
     @SerializedName("messageId")
-    public String messageId;
+    public long messageId;
 
     @SerializedName("conversationId")
-    public String conversationId;
+    public long conversationId;
 
     @SerializedName("senderId")
-    public String senderId;
+    public long senderId;
 
     @SerializedName("content")
     public String content;

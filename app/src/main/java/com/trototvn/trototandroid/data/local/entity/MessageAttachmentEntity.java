@@ -16,13 +16,11 @@ import java.util.Date;
 public class MessageAttachmentEntity {
 
     @PrimaryKey
-    @NonNull
     @ColumnInfo(name = "attachment_id")
-    public String attachmentId;
+    public long attachmentId;
 
-    @NonNull
     @ColumnInfo(name = "message_id")
-    public String messageId;
+    public long messageId;
 
     @NonNull
     @ColumnInfo(name = "file_name")
@@ -53,8 +51,8 @@ public class MessageAttachmentEntity {
     public Date createdAt;
 
     public MessageAttachmentEntity(
-            @NonNull String attachmentId,
-            @NonNull String messageId,
+            long attachmentId,
+            long messageId,
             @NonNull String fileName,
             @NonNull String fileUrl,
             @NonNull String fileType,

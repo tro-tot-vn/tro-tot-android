@@ -30,7 +30,7 @@ public class ChatViewModel extends BaseViewModel {
     private final ChatRepository chatRepository;
     private final SessionManager sessionManager;
 
-    private String conversationId;
+    private long conversationId = -1;
 
     // LiveData quan trọng nhất: Stream tin nhắn từ Room
     private final MutableLiveData<Resource<List<MessageEntity>>> chatMessagesLiveData = new MutableLiveData<>();
@@ -49,7 +49,7 @@ public class ChatViewModel extends BaseViewModel {
      * Khởi tạo ViewModel với conversationId.
      * Nên gọi từ Activity/Fragment ngay sau khi khởi tạo.
      */
-    public void init(String conversationId) {
+    public void init(long conversationId) {
         this.conversationId = conversationId;
         observeChatData();
         // Bắt đầu lắng nghe tin nhắn mới qua socket
@@ -61,7 +61,7 @@ public class ChatViewModel extends BaseViewModel {
      * Mọi thay đổi (từ Socket, API, FCM) đều sẽ trigger UI update thông qua đây.
      */
     public void observeChatData() {
-        if (conversationId == null)
+        if (conversationId == -1)
             return;
 
         addDisposable(chatRepository.observeMessages(conversationId)
@@ -79,7 +79,7 @@ public class ChatViewModel extends BaseViewModel {
      * Phân trang: Tải tin nhắn cũ dựa trên offset (số lượng tin hiện có)
      */
     public void loadMoreOldMessages(int limit) {
-        if (conversationId == null || Boolean.FALSE.equals(hasMoreMessages.getValue()))
+        if (conversationId == -1 || Boolean.FALSE.equals(hasMoreMessages.getValue()))
             return;
 
         // Offset = số lượng tin nhắn đang hiển thị
@@ -108,7 +108,7 @@ public class ChatViewModel extends BaseViewModel {
      * Gửi tin nhắn văn bản
      */
     public void sendTextMessage(String text) {
-        if (conversationId == null || text == null || text.trim().isEmpty())
+        if (conversationId == -1 || text == null || text.trim().isEmpty())
             return;
 
         addDisposable(chatRepository.sendTextMessage(conversationId, text.trim())
@@ -123,7 +123,7 @@ public class ChatViewModel extends BaseViewModel {
      * Gửi tin nhắn file/ảnh
      */
     public void sendFileMessage(String content, @MessageType String type, MessageAttachmentEntity attachment) {
-        if (conversationId == null)
+        if (conversationId == -1)
             return;
 
         addDisposable(chatRepository.sendFileMessage(conversationId, content, type, attachment)

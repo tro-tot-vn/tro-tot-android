@@ -82,20 +82,22 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      */
     private void handleChatMessage(Map<String, String> data) {
         try {
-            String messageId = data.get("messageId");
-            String conversationId = data.get("conversationId");
-            String senderId = data.get("senderId");
+            String messageIdStr = data.get("messageId");
+            String conversationIdStr = data.get("conversationId");
+            String senderIdStr = data.get("senderId");
             String content = data.get("content");
             String messageType = data.get("messageType");
             String messageStatus = data.get("messageStatus");
             String createdAtStr = data.get("createdAt");
 
-            if (messageId == null || conversationId == null)
+            if (messageIdStr == null || conversationIdStr == null || senderIdStr == null)
                 return;
 
+            long messageId = Long.parseLong(messageIdStr);
+            long conversationId = Long.parseLong(conversationIdStr);
+            long senderId = Long.parseLong(senderIdStr);
             long createdAt = createdAtStr != null ? Long.parseLong(createdAtStr) : System.currentTimeMillis();
 
-            assert senderId != null;
             MessageEntity entity = new MessageEntity(
                     messageId,
                     conversationId,

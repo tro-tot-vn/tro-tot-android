@@ -11,13 +11,13 @@ import java.util.List;
 public class MessageDto {
 
     @SerializedName("messageId")
-    public String messageId;
+    public long messageId;
 
     @SerializedName("conversationId")
-    public String conversationId;
+    public long conversationId;
 
     @SerializedName("senderId")
-    public String senderId;
+    public long senderId;
 
     @SerializedName("content")
     public String content;

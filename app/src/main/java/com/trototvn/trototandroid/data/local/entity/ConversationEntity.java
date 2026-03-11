@@ -11,9 +11,8 @@ import java.util.Date;
 public class ConversationEntity {
 
     @PrimaryKey
-    @NonNull
     @ColumnInfo(name = "conversation_id")
-    public String conversationId;
+    public long conversationId;
 
     @NonNull
     @ColumnInfo(name = "created_at")
@@ -24,7 +23,7 @@ public class ConversationEntity {
     public Date updatedAt;
 
     public ConversationEntity(
-            @NonNull String conversationId,
+            long conversationId,
             @NonNull Date createdAt,
             @NonNull Date updatedAt) {
         this.conversationId = conversationId;
