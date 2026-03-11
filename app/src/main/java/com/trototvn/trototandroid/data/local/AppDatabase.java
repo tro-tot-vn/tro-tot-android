@@ -19,7 +19,7 @@ import com.trototvn.trototandroid.data.local.entity.MessageEntity;
         ConversationEntity.class,
         ConversationParticipantEntity.class,
         MessageAttachmentEntity.class
-}, version = 1, exportSchema = true)
+}, version = 1, exportSchema = false)
 @TypeConverters({ DateConverter.class })
 public abstract class AppDatabase extends RoomDatabase {
 
