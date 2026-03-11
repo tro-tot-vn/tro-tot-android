@@ -9,7 +9,6 @@ import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
-import com.trototvn.trototandroid.data.model.chat.SocketMessageEvent;
 import com.trototvn.trototandroid.utils.NotificationHelper;
 import com.trototvn.trototandroid.utils.SessionManager;
 
