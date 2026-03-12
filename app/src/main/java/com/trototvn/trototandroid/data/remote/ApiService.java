@@ -246,7 +246,7 @@ public interface ApiService {
      * GET - Lấy lịch sử tin nhắn theo offset-based pagination.
      * offset = 0 → lấy trang đầu tiên (tin mới nhất).
      */
-    @GET("conversations/{conversationId}/messages")
+    @GET("chat/conversations/{conversationId}/messages")
     Single<ResponseData<ChatHistoryResponse>> fetchChatHistory(
             @Path("conversationId") long conversationId,
             @Query("limit") int limit,
