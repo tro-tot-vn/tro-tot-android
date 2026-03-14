@@ -1,4 +1,4 @@
-package com.trototvn.trototandroid.ui.chat;
+package com.trototvn.trototandroid.ui.main.chat;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

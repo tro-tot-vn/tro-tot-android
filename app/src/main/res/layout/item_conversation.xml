@@ -71,7 +71,7 @@
         android:background="@drawable/bg_badge_unread"
         android:gravity="center"
         android:textColor="@color/white"
-        android:textSize="10sp"
+        android:textSize="11sp"
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/tvLastMessage"
