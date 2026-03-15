@@ -29,7 +29,20 @@ public class ChatListViewModel extends BaseViewModel {
     @Inject
     public ChatListViewModel(ChatRepository chatRepository) {
         this.chatRepository = chatRepository;
+        fetchConversationsFromApi();
         observeConversations();
+    }
+
+    /**
+     * Đồng bộ danh sách hội thoại từ server về Room DB.
+     */
+    private void fetchConversationsFromApi() {
+        addDisposable(chatRepository.fetchConversations()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        () -> Timber.d("Fetched conversations successfully"),
+                        error -> Timber.e(error, "Failed to fetch conversations")));
     }
 
     /**

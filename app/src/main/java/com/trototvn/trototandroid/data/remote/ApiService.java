@@ -9,6 +9,10 @@ import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
 import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
 import com.trototvn.trototandroid.data.model.chat.ChatHistoryResponse;
+import com.trototvn.trototandroid.data.model.chat.ConversationDto;
+import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
+import com.trototvn.trototandroid.data.model.chat.MessageDto;
+import com.trototvn.trototandroid.data.model.chat.SendMessageRequest;
 import com.trototvn.trototandroid.data.model.post.ContactLogRequest;
 import com.trototvn.trototandroid.data.model.post.HidePostRequest;
 import com.trototvn.trototandroid.data.model.post.MyPostsResponse;
@@ -242,13 +246,30 @@ public interface ApiService {
 
     // ========== Chat ==========
 
-    /**
-     * GET - Lấy lịch sử tin nhắn theo offset-based pagination.
-     * offset = 0 → lấy trang đầu tiên (tin mới nhất).
-     */
     @GET("chat/conversations/{conversationId}/messages")
     Single<ResponseData<ChatHistoryResponse>> fetchChatHistory(
             @Path("conversationId") long conversationId,
             @Query("limit") int limit,
             @Query("offset") int offset);
+
+    /**
+     * GET - Lấy danh sách hội thoại.
+     */
+    @GET("chat/conversations")
+    Single<ResponseData<List<ConversationDto>>> fetchConversations();
+
+    /**
+     * POST - Gửi tin nhắn.
+     */
+    @POST("chat/conversations/{conversationId}/messages")
+    Single<ResponseData<MessageDto>> sendMessage(
+            @Path("conversationId") long conversationId,
+            @Body SendMessageRequest request);
+
+    /**
+     * POST - Đánh dấu tin nhắn đã đọc.
+     */
+    @POST("chat/messages/read")
+    Single<ResponseData<Void>> markAsRead(
+            @Body MarkReadRequest request);
 }

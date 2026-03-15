@@ -8,7 +8,10 @@ import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
 import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
+import com.trototvn.trototandroid.data.model.chat.ConversationDto;
+import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
 import com.trototvn.trototandroid.data.model.chat.MessageDto;
+import com.trototvn.trototandroid.data.model.chat.SendMessageRequest;
 import com.trototvn.trototandroid.data.model.chat.SocketMessageEvent;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.utils.SessionManager;
@@ -126,9 +129,19 @@ public class ChatRepository {
 
         return chatDao.insertMessage(optimistic)
                 .subscribeOn(Schedulers.io())
-                .doOnComplete(() -> {
-                    // Emit qua Socket sau khi đã insert Room thành công
-                    socketIOManager.sendMessage(conversationId, content);
+                .andThen(apiService.sendMessage(conversationId, new SendMessageRequest(content, MessageType.TEXT))
+                        .subscribeOn(Schedulers.io()))
+                .flatMapCompletable(response -> {
+                    if (response != null && response.getData() != null) {
+                        MessageEntity serverMessage = mapDtoToEntity(response.getData());
+                        // Upsert the real message from server (replaces optimistic if ID matches, or
+                        // adds new)
+                        return chatDao.insertMessage(serverMessage)
+                                // Optional: Delete optimistic if server returns a different ID and we want to
+                                // clean up
+                                .andThen(chatDao.softDeleteMessage(optimisticId, now.getTime(), now.getTime()));
+                    }
+                    return Completable.complete();
                 });
     }
 
@@ -273,6 +286,32 @@ public class ChatRepository {
                 });
     }
 
+    /**
+     * Tải danh sách hội thoại từ server rồi upsert vào Room (SSOT).
+     */
+    public Completable fetchConversations() {
+        return apiService.fetchConversations()
+                .subscribeOn(Schedulers.io())
+                .flatMapCompletable(response -> {
+                    if (response == null || response.getData() == null || response.getData().isEmpty()) {
+                        return Completable.complete();
+                    }
+
+                    List<ConversationEntity> entities = new ArrayList<>();
+                    for (ConversationDto dto : response.getData()) {
+                        entities.add(new ConversationEntity(
+                                dto.conversationId,
+                                "", // partnerName (UI field)
+                                "", // lastMessage (UI field)
+                                0, // unreadCount (UI field)
+                                dto.createdAt != null ? dto.createdAt : new Date(),
+                                dto.updatedAt != null ? dto.updatedAt : new Date()));
+                    }
+
+                    return chatDao.insertConversations(entities);
+                });
+    }
+
     // ─────────────────────────────────────────────────────────────
     // CLEANUP – dọn rác Room, giữ bảng nhẹ nhàng
     // ─────────────────────────────────────────────────────────────
@@ -304,6 +343,24 @@ public class ChatRepository {
                 MessageStatus.READ,
                 System.currentTimeMillis())
                 .subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Gọi API báo cáo server tin nhắn đã đọc, sau đó cập nhật local DB.
+     */
+    public Completable markMessagesAsRead(List<Long> messageIds) {
+        if (messageIds == null || messageIds.isEmpty())
+            return Completable.complete();
+
+        return apiService.markAsRead(new MarkReadRequest(messageIds))
+                .subscribeOn(Schedulers.io())
+                .flatMapCompletable(response -> {
+                    List<Completable> updates = new ArrayList<>();
+                    for (Long id : messageIds) {
+                        updates.add(chatDao.updateMessageStatus(id, MessageStatus.READ, System.currentTimeMillis()));
+                    }
+                    return Completable.merge(updates);
+                });
     }
 
     /**

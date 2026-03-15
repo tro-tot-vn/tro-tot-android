@@ -51,9 +51,22 @@ public class ChatViewModel extends BaseViewModel {
      */
     public void init(long conversationId) {
         this.conversationId = conversationId;
+        fetchInitialHistory();
         observeChatData();
         // Bắt đầu lắng nghe tin nhắn mới qua socket
         chatRepository.observeIncomingMessages();
+    }
+
+    /**
+     * Kéo lịch sử tin nhắn mới nhất từ server về Room
+     */
+    private void fetchInitialHistory() {
+        addDisposable(chatRepository.fetchChatHistory(conversationId, 20, 0)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        hasMore -> hasMoreMessages.setValue(hasMore),
+                        error -> Timber.e(error, "Failed to fetch initial chat history")));
     }
 
     /**
