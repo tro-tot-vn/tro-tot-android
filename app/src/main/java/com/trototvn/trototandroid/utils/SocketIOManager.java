@@ -3,7 +3,6 @@ package com.trototvn.trototandroid.utils;
 import com.google.gson.Gson;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -12,7 +11,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.socket.client.IO;
 import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 import timber.log.Timber;
 
 /**
@@ -37,7 +35,7 @@ public class SocketIOManager {
 
     /**
      * Connect to Socket.IO server
-     * 
+     *
      * @param userId Current user ID for authentication
      */
     public void connect(String userId) {
@@ -116,7 +114,7 @@ public class SocketIOManager {
     /**
      * Emit join conversation event
      */
-    public void joinConversation(int conversationId) {
+    public void joinConversation(long conversationId) {
         if (socket != null && socket.connected()) {
             socket.emit(SocketEvents.JOIN_CONVERSATION, conversationId);
             Timber.d("Joined conversation: %d", conversationId);
@@ -126,7 +124,7 @@ public class SocketIOManager {
     /**
      * Emit leave conversation event
      */
-    public void leaveConversation(int conversationId) {
+    public void leaveConversation(long conversationId) {
         if (socket != null && socket.connected()) {
             socket.emit(SocketEvents.LEAVE_CONVERSATION, conversationId);
             Timber.d("Left conversation: %d", conversationId);
@@ -136,7 +134,7 @@ public class SocketIOManager {
     /**
      * Emit message sent event
      */
-    public void sendMessage(int conversationId, String content) {
+    public void sendMessage(long conversationId, String content) {
         if (socket != null && socket.connected()) {
             // Create data structure as expected by backend (MessageSentEvent)
             // { conversationId, content, messageType }
@@ -153,7 +151,7 @@ public class SocketIOManager {
     /**
      * Emit typing status
      */
-    public void setTyping(int conversationId, boolean isTyping) {
+    public void setTyping(long conversationId, boolean isTyping) {
         if (socket != null && socket.connected()) {
             com.google.gson.JsonObject data = new com.google.gson.JsonObject();
             data.addProperty("conversationId", conversationId);

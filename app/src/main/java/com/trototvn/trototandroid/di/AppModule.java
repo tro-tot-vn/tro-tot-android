@@ -2,10 +2,14 @@ package com.trototvn.trototandroid.di;
 
 import android.content.Context;
 
-import com.trototvn.trototandroid.data.repository.PostRepository;
-import com.trototvn.trototandroid.data.repository.PostRepositoryImpl;
+import androidx.room.Room;
+
+import com.trototvn.trototandroid.data.local.AppDatabase;
+import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.repository.PostDetailRepository;
 import com.trototvn.trototandroid.data.repository.PostDetailRepositoryImpl;
+import com.trototvn.trototandroid.data.repository.PostRepository;
+import com.trototvn.trototandroid.data.repository.PostRepositoryImpl;
 import com.trototvn.trototandroid.data.repository.ProfileRepository;
 import com.trototvn.trototandroid.data.repository.ProfileRepositoryImpl;
 import com.trototvn.trototandroid.data.repository.RatingRepository;
@@ -60,5 +64,22 @@ public class AppModule {
     @Singleton
     public SavedPostRepository provideSavedPostRepository(SavedPostRepositoryImpl impl) {
         return impl;
+    }
+
+    @Provides
+    @Singleton
+    public AppDatabase provideAppDatabase(@ApplicationContext Context context) {
+        return Room.databaseBuilder(
+                        context,
+                        AppDatabase.class,
+                        "tro_tot_database"
+                )
+                .build();
+    }
+
+    @Provides
+    @Singleton
+    public ChatDao provideChatDao(AppDatabase appDatabase) {
+        return appDatabase.chatDao();
     }
 }
