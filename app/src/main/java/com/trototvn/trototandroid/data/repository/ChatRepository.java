@@ -2,6 +2,7 @@ package com.trototvn.trototandroid.data.repository;
 
 import com.google.gson.Gson;
 import com.trototvn.trototandroid.data.local.dao.ChatDao;
+import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageAttachmentEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
@@ -76,6 +77,15 @@ public class ChatRepository {
      */
     public Flowable<List<MessageEntity>> observeMessages(long conversationId) {
         return chatDao.getMessagesByConversationId(conversationId)
+                .subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Trả về Flowable real-time danh sách hội thoại từ Room.
+     * ViewModel subscribe trên IO, observe trên Main.
+     */
+    public Flowable<List<ConversationEntity>> observeConversations() {
+        return chatDao.getAllConversations()
                 .subscribeOn(Schedulers.io());
     }
 
@@ -221,8 +231,8 @@ public class ChatRepository {
      * @param limit          Số lượng tin mỗi trang
      * @param offset         Vị trí bắt đầu lấy (= số item đang có trên UI)
      * @return Single&lt;Boolean&gt; – {@code true} nếu server trả về đủ
-     * {@code limit}
-     * item (có thể còn trang tiếp theo)
+     *         {@code limit}
+     *         item (có thể còn trang tiếp theo)
      */
     public Single<Boolean> fetchChatHistory(long conversationId, int limit, int offset) {
         return apiService.fetchChatHistory(conversationId, limit, offset)
@@ -290,9 +300,9 @@ public class ChatRepository {
      */
     public Completable markAllAsRead(long conversationId) {
         return chatDao.updateAllMessagesStatusInConversation(
-                        conversationId,
-                        MessageStatus.READ,
-                        System.currentTimeMillis())
+                conversationId,
+                MessageStatus.READ,
+                System.currentTimeMillis())
                 .subscribeOn(Schedulers.io());
     }
 
