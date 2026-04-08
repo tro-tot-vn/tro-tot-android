@@ -21,6 +21,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import android.content.ContentResolver;
+import android.content.Context;
+import android.net.Uri;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -196,6 +207,64 @@ public class ChatRepository {
                         Timber.d("Emitting FILE_SENT for conversation: %s", conversationId);
                     }
                 });
+    }
+
+    /**
+     * Tải file lên và gửi tin nhắn (Atomic từ UI).
+     */
+    public Single<MessageEntity> uploadMediaAndSendMessage(long conversationId, Uri fileUri, String caption, Context context) {
+        return Single.fromCallable(() -> {
+            ContentResolver resolver = context.getContentResolver();
+            InputStream inputStream = resolver.openInputStream(fileUri);
+            if (inputStream == null) throw new IOException("Cannot open input stream");
+            
+            String mimeType = resolver.getType(fileUri);
+            String extension = mimeType != null && mimeType.contains("/") ? mimeType.substring(mimeType.indexOf("/") + 1) : "tmp";
+            
+            File tempFile = new File(context.getCacheDir(), "upload_" + System.currentTimeMillis() + "." + extension);
+            FileOutputStream outputStream = new FileOutputStream(tempFile);
+            
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+            outputStream.flush();
+            outputStream.close();
+            inputStream.close();
+            
+            return tempFile;
+        }).flatMap(tempFile -> {
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), tempFile);
+            MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", tempFile.getName(), requestFile);
+            
+            RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), caption != null ? caption : "");
+            
+            return apiService.sendFileMessage(conversationId, filePart, contentBody)
+                    .flatMap(response -> {
+                        if (tempFile.exists()) tempFile.delete();
+                        
+                        if (response != null && response.getData() != null) {
+                            MessageDto dto = response.getData();
+                            MessageEntity entity = mapDtoToEntity(dto);
+                            
+                            List<MessageAttachmentEntity> attachments = new ArrayList<>();
+                            if (dto.attachments != null) {
+                                for (AttachmentDto attDto : dto.attachments) {
+                                    attachments.add(mapAttachmentDtoToEntity(attDto));
+                                }
+                            }
+                            
+                            return chatDao.insertMessage(entity)
+                                    .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
+                                    .andThen(Single.just(entity));
+                        } else {
+                            return Single.error(new Exception("Upload failed: No data"));
+                        }
+                    }).doOnError(error -> {
+                        if (tempFile.exists()) tempFile.delete();
+                    });
+        }).subscribeOn(Schedulers.io());
     }
 
     // ─────────────────────────────────────────────────────────────

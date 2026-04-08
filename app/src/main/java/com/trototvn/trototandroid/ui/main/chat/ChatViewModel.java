@@ -3,6 +3,9 @@ package com.trototvn.trototandroid.ui.main.chat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import android.content.Context;
+import android.net.Uri;
+
 import com.trototvn.trototandroid.data.local.entity.MessageAttachmentEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
@@ -38,6 +41,8 @@ public class ChatViewModel extends BaseViewModel {
     // LiveData thông báo trạng thái tải thêm tin cũ
     private final MutableLiveData<Boolean> hasMoreMessages = new MutableLiveData<>(true);
     private final MutableLiveData<Resource<Boolean>> loadMoreStatus = new MutableLiveData<>();
+    
+    private final MutableLiveData<Resource<MessageEntity>> uploadState = new MutableLiveData<>();
 
     @Inject
     public ChatViewModel(ChatRepository chatRepository, SessionManager sessionManager) {
@@ -147,6 +152,26 @@ public class ChatViewModel extends BaseViewModel {
                         error -> Timber.e(error, "Send file message failed")));
     }
 
+    /**
+     * Tải file lên và gửi tin nhắn
+     */
+    public void sendImage(Context context, Uri uri) {
+        if (conversationId == -1 || uri == null) return;
+        
+        handleLoading(uploadState);
+        
+        addDisposable(chatRepository.uploadMediaAndSendMessage(conversationId, uri, "", context)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        entity -> handleSuccess(uploadState, entity),
+                        error -> {
+                            Timber.e(error, "Send image failed");
+                            handleError(uploadState, "Lỗi khi gửi ảnh: " + error.getMessage());
+                        }
+                ));
+    }
+
     // Getters
     public LiveData<Resource<List<MessageEntity>>> getChatMessagesLiveData() {
         return chatMessagesLiveData;
@@ -154,6 +179,10 @@ public class ChatViewModel extends BaseViewModel {
 
     public LiveData<Resource<Boolean>> getLoadMoreStatus() {
         return loadMoreStatus;
+    }
+
+    public LiveData<Resource<MessageEntity>> getUploadState() {
+        return uploadState;
     }
 
     public LiveData<Boolean> getHasMoreMessages() {

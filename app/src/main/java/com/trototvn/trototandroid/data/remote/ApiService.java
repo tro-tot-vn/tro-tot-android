@@ -38,6 +38,10 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Multipart;
+import retrofit2.http.Part;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 /**
  * API Service interface
@@ -272,4 +276,14 @@ public interface ApiService {
     @POST("chat/messages/read")
     Single<ResponseData<Void>> markAsRead(
             @Body MarkReadRequest request);
+
+    /**
+     * POST - Gửi file/ảnh trong hội thoại.
+     */
+    @Multipart
+    @POST("chat/conversations/{conversationId}/files")
+    Single<ResponseData<MessageDto>> sendFileMessage(
+            @Path("conversationId") long conversationId,
+            @Part MultipartBody.Part file,
+            @Part("content") RequestBody content);
 }

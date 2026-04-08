@@ -2,6 +2,8 @@ package com.trototvn.trototandroid.ui.main.chat;
 
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
@@ -40,6 +42,8 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
     private ChatAdapter adapter;
     private long conversationId;
     private boolean isInitialLoad = true;
+    
+    private ActivityResultLauncher<String> imagePicker;
 
     /**
      * Factory method để tạo instance mới
@@ -62,6 +66,12 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
             conversationId = getArguments().getLong(ARG_CONVERSATION_ID);
             viewModel.init(conversationId);
         }
+        
+        imagePicker = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null && getContext() != null) {
+                viewModel.sendImage(getContext(), uri);
+            }
+        });
     }
 
     @Override
@@ -114,6 +124,10 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
                 binding.etMessage.setText("");
             }
         });
+        
+        binding.btnAttach.setOnClickListener(v -> {
+            imagePicker.launch("image/*");
+        });
     }
 
     @Override
@@ -146,6 +160,27 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
         viewModel.getLoadMoreStatus().observe(getViewLifecycleOwner(), resource -> {
             if (resource.getStatus() == Resource.Status.LOADING) {
                 // Hiển thị thanh loading ở trên cùng nếu bạn có
+            }
+        });
+        
+        // Observe upload state
+        viewModel.getUploadState().observe(getViewLifecycleOwner(), resource -> {
+            switch (resource.getStatus()) {
+                case LOADING:
+                    binding.btnSend.setEnabled(false);
+                    binding.btnAttach.setEnabled(false);
+                    // Có thể hiển thị progress nhỏ cạnh nút gửi
+                    break;
+                case SUCCESS:
+                    binding.btnSend.setEnabled(true);
+                    binding.btnAttach.setEnabled(true);
+                    binding.etMessage.setText("");
+                    break;
+                case ERROR:
+                    binding.btnSend.setEnabled(true);
+                    binding.btnAttach.setEnabled(true);
+                    showToast(resource.getMessage());
+                    break;
             }
         });
     }
