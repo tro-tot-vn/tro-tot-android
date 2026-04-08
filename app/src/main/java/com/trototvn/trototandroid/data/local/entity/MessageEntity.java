@@ -6,8 +6,10 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+import androidx.room.Ignore;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity(tableName = "messages", indices = {
         @Index(value = "conversation_id"),
@@ -50,6 +52,17 @@ public class MessageEntity {
     @Nullable
     @ColumnInfo(name = "deleted_at")
     public Date deletedAt;
+
+    @Ignore
+    private List<MessageAttachmentEntity> attachments;
+
+    public List<MessageAttachmentEntity> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<MessageAttachmentEntity> attachments) {
+        this.attachments = attachments;
+    }
 
     public MessageEntity(
             long messageId,

@@ -8,10 +8,20 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.viewbinding.ViewBinding;
 
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
+import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.databinding.ItemChatImageReceivedBinding;
+import com.trototvn.trototandroid.databinding.ItemChatImageSentBinding;
 import com.trototvn.trototandroid.databinding.ItemChatReceivedBinding;
 import com.trototvn.trototandroid.databinding.ItemChatSentBinding;
 import com.trototvn.trototandroid.ui.base.BaseAdapter;
 import com.trototvn.trototandroid.ui.base.BaseDiffCallback;
+import com.trototvn.trototandroid.utils.Constants;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -24,8 +34,10 @@ import java.util.Locale;
  */
 public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
-    private static final int VIEW_TYPE_SENT = 1;
-    private static final int VIEW_TYPE_RECEIVED = 2;
+    private static final int VIEW_TYPE_TEXT_SENT = 1;
+    private static final int VIEW_TYPE_TEXT_RECEIVED = 2;
+    private static final int VIEW_TYPE_IMAGE_SENT = 3;
+    private static final int VIEW_TYPE_IMAGE_RECEIVED = 4;
 
     private final long currentUserId;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
@@ -37,10 +49,13 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
     @Override
     public int getItemViewType(int position) {
         MessageEntity message = getItem(position);
-        if (message.senderId == currentUserId) {
-            return VIEW_TYPE_SENT;
+        boolean isSent = message.senderId == currentUserId;
+        boolean isImage = MessageType.IMAGE.equals(message.messageType);
+
+        if (isImage) {
+            return isSent ? VIEW_TYPE_IMAGE_SENT : VIEW_TYPE_IMAGE_RECEIVED;
         } else {
-            return VIEW_TYPE_RECEIVED;
+            return isSent ? VIEW_TYPE_TEXT_SENT : VIEW_TYPE_TEXT_RECEIVED;
         }
     }
 
@@ -50,11 +65,17 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
     @Override
     public BaseViewHolder<ViewBinding> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        if (viewType == VIEW_TYPE_SENT) {
+        if (viewType == VIEW_TYPE_TEXT_SENT) {
             ItemChatSentBinding binding = ItemChatSentBinding.inflate(inflater, parent, false);
             return new BaseViewHolder<>(binding);
-        } else {
+        } else if (viewType == VIEW_TYPE_TEXT_RECEIVED) {
             ItemChatReceivedBinding binding = ItemChatReceivedBinding.inflate(inflater, parent, false);
+            return new BaseViewHolder<>(binding);
+        } else if (viewType == VIEW_TYPE_IMAGE_SENT) {
+            ItemChatImageSentBinding binding = ItemChatImageSentBinding.inflate(inflater, parent, false);
+            return new BaseViewHolder<>(binding);
+        } else {
+            ItemChatImageReceivedBinding binding = ItemChatImageReceivedBinding.inflate(inflater, parent, false);
             return new BaseViewHolder<>(binding);
         }
     }
@@ -74,6 +95,43 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Avatar xử lý sau
+        } else if (holder.binding instanceof ItemChatImageSentBinding) {
+            ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
+            binding.tvTime.setText(timeFormat.format(message.createdAt));
+
+            String url = "";
+            if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
+                url = message.getAttachments().get(0).fileUrl;
+            }
+            if (url != null && !url.isEmpty() && !url.startsWith("http")) {
+                url = Constants.BASE_URL + url;
+            }
+
+            Glide.with(binding.getRoot().getContext())
+                    .load(url)
+                    .placeholder(new ColorDrawable(Color.LTGRAY))
+                    .error(new ColorDrawable(Color.RED))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(binding.ivContent);
+
+        } else if (holder.binding instanceof ItemChatImageReceivedBinding) {
+            ItemChatImageReceivedBinding binding = (ItemChatImageReceivedBinding) holder.binding;
+            binding.tvTime.setText(timeFormat.format(message.createdAt));
+
+            String url = "";
+            if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
+                url = message.getAttachments().get(0).fileUrl;
+            }
+            if (url != null && !url.isEmpty() && !url.startsWith("http")) {
+                url = Constants.BASE_URL + url;
+            }
+
+            Glide.with(binding.getRoot().getContext())
+                    .load(url)
+                    .placeholder(new ColorDrawable(Color.LTGRAY))
+                    .error(new ColorDrawable(Color.RED))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(binding.ivContent);
         }
     }
 

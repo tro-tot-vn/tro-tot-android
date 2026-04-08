@@ -53,3 +53,11 @@ addDisposable(repository.action()
 ```
 
 Pattern trên thỏa mãn tiêu chuẩn Clean qua nguyên tắc Isolation (chia tách), State management an toàn và tuân thủ tuyệt đối SSOT bằng RxJava.
+
+## 3. Kiến trúc UI: Multi-ViewType RecyclerView
+
+Thay vì sử dụng chung một Layout và toggle thuộc tính `View.GONE` / `View.VISIBLE` (điều này sẽ làm nặng XML view hierarchy, tăng thời gian đo đạc và render layout), ứng dụng chuẩn hóa việc Render giao diện chat qua Multi-ViewType trong `ChatAdapter`.
+
+- **Quản Lý Định Danh**: Khai báo 4 hằng số ViewType tương ứng: `TYPE_TEXT_SENT`, `TYPE_TEXT_RECEIVED`, `TYPE_IMAGE_SENT`, `TYPE_IMAGE_RECEIVED`. Việc phân loại dựa trên `senderId` (ai gửi) và `messageType` (loại text hay image).
+- **Inflate Layout**: Các ViewHolder chuyên biệt sẽ được gọi hàm khởi tạo `onCreateViewHolder`. Các file XML độc lập (`item_chat_image_sent.xml` và `item_chat_image_received.xml`) sẽ được bơm vào tương ứng với viewType, giữ cho XML luôn phẳng và nhẹ nhất có thể.
+- **Tích Hợp Glide cho Ảnh**: Tại hàm `bind()` của các ViewHolder chứa layout image, URL được đọc từ list attachments (`message.getAttachments().get(0).getFileUrl()`). Nếu URL truyền về dưới dạng relative (thiếu domain/host), Adapter sẽ tự động prepend Base URL của server (`Constants.BASE_URL`). Cuối cùng sử dụng `Glide` để load ảnh bất đồng bộ với cơ chế caching tự động, hiển thị placeholder (`ColorDrawable` dự phòng), tối ưu hóa mức tiêu thụ RAM và chống OutOfMemory khi load hàng loạt ảnh lớn trong list.
