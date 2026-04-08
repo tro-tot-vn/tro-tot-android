@@ -8,6 +8,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.trototvn.trototandroid.data.local.converter.DateConverter;
+import com.trototvn.trototandroid.data.local.converter.ChatTypeConverters;
 import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
 import com.trototvn.trototandroid.data.local.entity.ConversationParticipantEntity;
@@ -20,7 +21,7 @@ import com.trototvn.trototandroid.data.local.entity.MessageEntity;
         ConversationParticipantEntity.class,
         MessageAttachmentEntity.class
 }, version = 1, exportSchema = false)
-@TypeConverters({ DateConverter.class })
+@TypeConverters({ DateConverter.class, ChatTypeConverters.class })
 public abstract class AppDatabase extends RoomDatabase {
 
     private static final String DB_NAME = "tro_tot_database";

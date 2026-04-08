@@ -458,7 +458,7 @@ public class ChatRepository {
     }
 
     private MessageEntity mapDtoToEntity(MessageDto dto) {
-        return new MessageEntity(
+        MessageEntity entity = new MessageEntity(
                 dto.messageId,
                 dto.conversationId,
                 dto.senderId,
@@ -468,6 +468,8 @@ public class ChatRepository {
                 dto.createdAt != null ? dto.createdAt : new Date(),
                 dto.updatedAt != null ? dto.updatedAt : new Date(),
                 dto.deletedAt);
+        entity.setAttachments(dto.attachments);
+        return entity;
     }
 
     private MessageAttachmentEntity mapAttachmentDtoToEntity(AttachmentDto dto) {

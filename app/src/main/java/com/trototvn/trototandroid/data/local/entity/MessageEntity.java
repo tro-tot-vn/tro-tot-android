@@ -6,10 +6,11 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import androidx.room.Ignore;
 
 import java.util.Date;
 import java.util.List;
+
+import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
 
 @Entity(tableName = "messages", indices = {
         @Index(value = "conversation_id"),
@@ -53,14 +54,14 @@ public class MessageEntity {
     @ColumnInfo(name = "deleted_at")
     public Date deletedAt;
 
-    @Ignore
-    private List<MessageAttachmentEntity> attachments;
+    @ColumnInfo(name = "attachments")
+    private List<AttachmentDto> attachments;
 
-    public List<MessageAttachmentEntity> getAttachments() {
+    public List<AttachmentDto> getAttachments() {
         return attachments;
     }
 
-    public void setAttachments(List<MessageAttachmentEntity> attachments) {
+    public void setAttachments(List<AttachmentDto> attachments) {
         this.attachments = attachments;
     }
 
