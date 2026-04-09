@@ -61,3 +61,12 @@ Thay vì sử dụng chung một Layout và toggle thuộc tính `View.GONE` / `
 - **Quản Lý Định Danh**: Khai báo 4 hằng số ViewType tương ứng: `TYPE_TEXT_SENT`, `TYPE_TEXT_RECEIVED`, `TYPE_IMAGE_SENT`, `TYPE_IMAGE_RECEIVED`. Việc phân loại dựa trên `senderId` (ai gửi) và `messageType` (loại text hay image).
 - **Inflate Layout**: Các ViewHolder chuyên biệt sẽ được gọi hàm khởi tạo `onCreateViewHolder`. Các file XML độc lập (`item_chat_image_sent.xml` và `item_chat_image_received.xml`) sẽ được bơm vào tương ứng với viewType, giữ cho XML luôn phẳng và nhẹ nhất có thể.
 - **Tích Hợp Glide cho Ảnh**: Tại hàm `bind()` của các ViewHolder chứa layout image, URL được đọc từ list attachments (`message.getAttachments().get(0).getFileUrl()`). Nếu URL truyền về dưới dạng relative (thiếu domain/host), Adapter sẽ tự động prepend Base URL của server (`Constants.BASE_URL`). Cuối cùng sử dụng `Glide` để load ảnh bất đồng bộ với cơ chế caching tự động, hiển thị placeholder (`ColorDrawable` dự phòng), tối ưu hóa mức tiêu thụ RAM và chống OutOfMemory khi load hàng loạt ảnh lớn trong list.
+
+## 4. Cơ chế Đánh Dấu Đã Đọc (Read Receipts)
+
+Cơ chế này được xử lý hoàn toàn chạy ngầm, không gây block hay phiền nhiễu cho trải nghiệm người dùng (fire-and-forget). Mạch hoạt động tuân thủ theo nguyên lý SSOT:
+
+1. **Giao Diện Quét Tin Nhắn Cũ (UI Layer)**: Mỗi lần `ChatFragment` nhận tập dữ liệu LiveData (`List<MessageEntity>`) mới nhất từ Room trả ra thông qua ViewModel, nó sẽ càn quét toàn bộ danh sách để tìm những tin nhắn thoả cả hai điều kiện: (1) Được gửi từ thiết bị khác (`senderId != currentUserId`) VÀ (2) Trạng thái chưa phải là `READ` (`!MessageStatus.READ.equals(messageStatus)`).
+2. **Gửi Lượt Xem Lên API (Domain Layer)**: Nếu tìm ra List chứa `messageIds` thoả mãn, nó gọi hàm lửa ném ẩn `viewModel.markAsRead(unreadIds)`. Hàm này khởi chạy dưới `Schedulers.io()`.
+3. **Đồng Bộ Dữ Liệu (Data Layer)**: `ChatRepository` gọi API báo với server những tin này đã được người dùng xem. Nếu thành công, repository tiếp tục chạy câu query `UPDATE` lại status thành `READ` cho chính các messageIds này trong bảng `messages` (Room Database). 
+4. **Vòng lặp SSOT hoàn tất**: Room một khi thay đổi sẽ tự động phát tín hiệu trở ngược lên Flowable, rồi ViewModel tiếp nhận gửi sang LiveData. `ChatFragment` nhận data này, cập nhật UI cùng Adapter (Hiển thị các icon "đã đọc" nhỏ xíu bên góc nếu cần). Tương tác ngầm an toàn tuyệt đối, zero-lag.

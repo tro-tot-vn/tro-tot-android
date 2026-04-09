@@ -11,11 +11,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
+import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentChatDetailBinding;
 import com.trototvn.trototandroid.ui.base.BaseFragment;
 import com.trototvn.trototandroid.utils.SessionManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -149,6 +151,24 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
 
                     if (isInitialLoad && !messages.isEmpty()) {
                         isInitialLoad = false;
+                    }
+
+                    long currentUserId = 0;
+                    try {
+                        String uid = viewModel.getCurrentUserId();
+                        if (uid != null) {
+                            currentUserId = Long.parseLong(uid);
+                        }
+                    } catch (NumberFormatException ignored) {}
+
+                    List<Long> unreadIds = new ArrayList<>();
+                    for (MessageEntity msg : messages) {
+                        if (msg.senderId != currentUserId && !MessageStatus.READ.equals(msg.messageStatus)) {
+                            unreadIds.add(msg.messageId);
+                        }
+                    }
+                    if (!unreadIds.isEmpty()) {
+                        viewModel.markAsRead(unreadIds);
                     }
                 }
             } else if (resource.getStatus() == Resource.Status.ERROR) {

@@ -172,6 +172,21 @@ public class ChatViewModel extends BaseViewModel {
                 ));
     }
 
+    /**
+     * Đánh dấu tin nhắn đã đọc
+     */
+    public void markAsRead(List<Long> messageIds) {
+        if (messageIds == null || messageIds.isEmpty()) return;
+
+        addDisposable(chatRepository.markMessagesAsRead(messageIds)
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Timber.d("Marked %d messages as read", messageIds.size()),
+                        error -> Timber.e(error, "Failed to mark messages as read")
+                )
+        );
+    }
+
     // Getters
     public LiveData<Resource<List<MessageEntity>>> getChatMessagesLiveData() {
         return chatMessagesLiveData;

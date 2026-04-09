@@ -250,7 +250,7 @@ public interface ApiService {
 
     // ========== Chat ==========
 
-    @GET("chat/conversations/{conversationId}/messages")
+    @GET("api/chat/conversations/{conversationId}/messages")
     Single<ResponseData<ChatHistoryResponse>> fetchChatHistory(
             @Path("conversationId") long conversationId,
             @Query("limit") int limit,
@@ -259,13 +259,13 @@ public interface ApiService {
     /**
      * GET - Lấy danh sách hội thoại.
      */
-    @GET("chat/conversations")
+    @GET("api/chat/conversations")
     Single<ResponseData<List<ConversationDto>>> fetchConversations();
 
     /**
      * POST - Gửi tin nhắn.
      */
-    @POST("chat/conversations/{conversationId}/messages")
+    @POST("api/chat/conversations/{conversationId}/messages")
     Single<ResponseData<MessageDto>> sendMessage(
             @Path("conversationId") long conversationId,
             @Body SendMessageRequest request);
@@ -273,7 +273,7 @@ public interface ApiService {
     /**
      * POST - Đánh dấu tin nhắn đã đọc.
      */
-    @POST("chat/messages/read")
+    @POST("api/chat/messages/read")
     Single<ResponseData<Void>> markAsRead(
             @Body MarkReadRequest request);
 
@@ -281,7 +281,7 @@ public interface ApiService {
      * POST - Gửi file/ảnh trong hội thoại.
      */
     @Multipart
-    @POST("chat/conversations/{conversationId}/files")
+    @POST("api/chat/conversations/{conversationId}/files")
     Single<ResponseData<MessageDto>> sendFileMessage(
             @Path("conversationId") long conversationId,
             @Part MultipartBody.Part file,
