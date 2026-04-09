@@ -1,6 +1,7 @@
 package com.trototvn.trototandroid.ui.main.chat;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.viewbinding.ViewBinding;
 
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
+import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
 import com.trototvn.trototandroid.databinding.ItemChatImageReceivedBinding;
 import com.trototvn.trototandroid.databinding.ItemChatImageSentBinding;
@@ -90,6 +92,27 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Xử lý tick đọc/gửi nếu cần
+
+            boolean showStatus = false;
+            if (position == getItemCount() - 1) {
+                showStatus = true;
+            } else {
+                MessageEntity nextMsg = getItem(position + 1);
+                if (nextMsg.senderId != message.senderId) {
+                    showStatus = true;
+                }
+            }
+
+            if (showStatus) {
+                binding.tvMessageStatus.setVisibility(View.VISIBLE);
+                if (MessageStatus.READ.equals(message.messageStatus)) {
+                    binding.tvMessageStatus.setText("Đã xem");
+                } else {
+                    binding.tvMessageStatus.setText("Đã gửi");
+                }
+            } else {
+                binding.tvMessageStatus.setVisibility(View.GONE);
+            }
         } else if (holder.binding instanceof ItemChatReceivedBinding) {
             ItemChatReceivedBinding binding = (ItemChatReceivedBinding) holder.binding;
             binding.tvContent.setText(message.content);
@@ -98,6 +121,27 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
         } else if (holder.binding instanceof ItemChatImageSentBinding) {
             ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
             binding.tvTime.setText(timeFormat.format(message.createdAt));
+
+            boolean showStatus = false;
+            if (position == getItemCount() - 1) {
+                showStatus = true;
+            } else {
+                MessageEntity nextMsg = getItem(position + 1);
+                if (nextMsg.senderId != message.senderId) {
+                    showStatus = true;
+                }
+            }
+
+            if (showStatus) {
+                binding.tvMessageStatus.setVisibility(View.VISIBLE);
+                if (MessageStatus.READ.equals(message.messageStatus)) {
+                    binding.tvMessageStatus.setText("Đã xem");
+                } else {
+                    binding.tvMessageStatus.setText("Đã gửi");
+                }
+            } else {
+                binding.tvMessageStatus.setVisibility(View.GONE);
+            }
 
             String url = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
