@@ -93,22 +93,29 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Xử lý tick đọc/gửi nếu cần
 
-            boolean showStatus = false;
-            if (position == getItemCount() - 1) {
-                showStatus = true;
-            } else {
-                MessageEntity nextMsg = getItem(position + 1);
-                if (nextMsg.senderId != message.senderId) {
+            boolean showStatus = MessageStatus.ERROR.equals(message.messageStatus);
+            if (!showStatus) {
+                if (position == getItemCount() - 1) {
                     showStatus = true;
+                } else {
+                    MessageEntity nextMsg = getItem(position + 1);
+                    if (nextMsg.senderId != message.senderId) {
+                        showStatus = true;
+                    }
                 }
             }
 
             if (showStatus) {
                 binding.tvMessageStatus.setVisibility(View.VISIBLE);
-                if (MessageStatus.READ.equals(message.messageStatus)) {
+                if (MessageStatus.ERROR.equals(message.messageStatus)) {
+                    binding.tvMessageStatus.setText("Gửi không thành công!");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#F44336"));
+                } else if (MessageStatus.READ.equals(message.messageStatus)) {
                     binding.tvMessageStatus.setText("Đã xem");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
                 } else {
                     binding.tvMessageStatus.setText("Đã gửi");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
                 }
             } else {
                 binding.tvMessageStatus.setVisibility(View.GONE);
@@ -122,22 +129,29 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
-            boolean showStatus = false;
-            if (position == getItemCount() - 1) {
-                showStatus = true;
-            } else {
-                MessageEntity nextMsg = getItem(position + 1);
-                if (nextMsg.senderId != message.senderId) {
+            boolean showStatus = MessageStatus.ERROR.equals(message.messageStatus);
+            if (!showStatus) {
+                if (position == getItemCount() - 1) {
                     showStatus = true;
+                } else {
+                    MessageEntity nextMsg = getItem(position + 1);
+                    if (nextMsg.senderId != message.senderId) {
+                        showStatus = true;
+                    }
                 }
             }
 
             if (showStatus) {
                 binding.tvMessageStatus.setVisibility(View.VISIBLE);
-                if (MessageStatus.READ.equals(message.messageStatus)) {
+                if (MessageStatus.ERROR.equals(message.messageStatus)) {
+                    binding.tvMessageStatus.setText("Gửi không thành công!");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#F44336"));
+                } else if (MessageStatus.READ.equals(message.messageStatus)) {
                     binding.tvMessageStatus.setText("Đã xem");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
                 } else {
                     binding.tvMessageStatus.setText("Đã gửi");
+                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
                 }
             } else {
                 binding.tvMessageStatus.setVisibility(View.GONE);

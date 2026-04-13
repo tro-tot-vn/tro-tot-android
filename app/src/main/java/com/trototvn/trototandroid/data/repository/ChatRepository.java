@@ -24,10 +24,12 @@ import java.util.List;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -153,6 +155,10 @@ public class ChatRepository {
                                 .andThen(chatDao.softDeleteMessage(optimisticId, now.getTime(), now.getTime()));
                     }
                     return Completable.complete();
+                })
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "API Error on sendTextMessage");
+                    return chatDao.updateMessageStatus(optimisticId, MessageStatus.ERROR, System.currentTimeMillis());
                 });
     }
 
@@ -213,58 +219,81 @@ public class ChatRepository {
      * Tải file lên và gửi tin nhắn (Atomic từ UI).
      */
     public Single<MessageEntity> uploadMediaAndSendMessage(long conversationId, Uri fileUri, String caption, Context context) {
-        return Single.fromCallable(() -> {
-            ContentResolver resolver = context.getContentResolver();
-            InputStream inputStream = resolver.openInputStream(fileUri);
-            if (inputStream == null) throw new IOException("Cannot open input stream");
-            
-            String mimeType = resolver.getType(fileUri);
-            String extension = mimeType != null && mimeType.contains("/") ? mimeType.substring(mimeType.indexOf("/") + 1) : "tmp";
-            
-            File tempFile = new File(context.getCacheDir(), "upload_" + System.currentTimeMillis() + "." + extension);
-            FileOutputStream outputStream = new FileOutputStream(tempFile);
-            
-            byte[] buffer = new byte[4096];
-            int read;
-            while ((read = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, read);
-            }
-            outputStream.flush();
-            outputStream.close();
-            inputStream.close();
-            
-            return tempFile;
-        }).flatMap(tempFile -> {
-            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), tempFile);
-            MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", tempFile.getName(), requestFile);
-            
-            RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), caption != null ? caption : "");
-            
-            return apiService.sendFileMessage(conversationId, filePart, contentBody)
-                    .flatMap(response -> {
-                        if (tempFile.exists()) tempFile.delete();
-                        
-                        if (response != null && response.getData() != null) {
-                            MessageDto dto = response.getData();
-                            MessageEntity entity = mapDtoToEntity(dto);
-                            
-                            List<MessageAttachmentEntity> attachments = new ArrayList<>();
-                            if (dto.attachments != null) {
-                                for (AttachmentDto attDto : dto.attachments) {
-                                    attachments.add(mapAttachmentDtoToEntity(attDto));
+        long optimisticId = -System.currentTimeMillis();
+        long senderId = 0;
+        try {
+            if (sessionManager.getUserId() != null)
+                senderId = Long.parseLong(sessionManager.getUserId());
+        } catch (NumberFormatException ignored) {
+        }
+
+        Date now = new Date();
+        MessageEntity optimistic = new MessageEntity(
+                optimisticId, conversationId, senderId, caption != null ? caption : "",
+                MessageType.IMAGE, MessageStatus.SENT, now, now, null);
+
+        return chatDao.insertMessage(optimistic)
+                .subscribeOn(Schedulers.io())
+                .andThen(Single.fromCallable(() -> {
+                    ContentResolver resolver = context.getContentResolver();
+                    InputStream inputStream = resolver.openInputStream(fileUri);
+                    if (inputStream == null) throw new IOException("Cannot open input stream");
+
+                    String mimeType = resolver.getType(fileUri);
+                    String extension = mimeType != null && mimeType.contains("/") ? mimeType.substring(mimeType.indexOf("/") + 1) : "tmp";
+
+                    File tempFile = new File(context.getCacheDir(), "upload_" + System.currentTimeMillis() + "." + extension);
+                    FileOutputStream outputStream = new FileOutputStream(tempFile);
+
+                    byte[] buffer = new byte[4096];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                    outputStream.flush();
+                    outputStream.close();
+                    inputStream.close();
+
+                    return tempFile;
+                }).flatMap(tempFile -> {
+                    RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), tempFile);
+                    MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", tempFile.getName(), requestFile);
+
+                    RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), caption != null ? caption : "");
+
+                    return apiService.sendFileMessage(conversationId, filePart, contentBody)
+                            .flatMap(response -> {
+                                if (tempFile.exists()) tempFile.delete();
+
+                                if (response != null && response.getData() != null) {
+                                    MessageDto dto = response.getData();
+                                    MessageEntity entity = mapDtoToEntity(dto);
+
+                                    List<MessageAttachmentEntity> attachments = new ArrayList<>();
+                                    if (dto.attachments != null) {
+                                        for (AttachmentDto attDto : dto.attachments) {
+                                            attachments.add(mapAttachmentDtoToEntity(attDto));
+                                        }
+                                    }
+
+                                    return chatDao.insertMessage(entity)
+                                            .andThen(chatDao.softDeleteMessage(optimisticId, now.getTime(), now.getTime()))
+                                            .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
+                                            .andThen(Single.just(entity));
+                                } else {
+                                    return Single.error(new Exception("Upload failed: No data"));
                                 }
-                            }
-                            
-                            return chatDao.insertMessage(entity)
-                                    .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
-                                    .andThen(Single.just(entity));
-                        } else {
-                            return Single.error(new Exception("Upload failed: No data"));
-                        }
-                    }).doOnError(error -> {
-                        if (tempFile.exists()) tempFile.delete();
-                    });
-        }).subscribeOn(Schedulers.io());
+                            }).onErrorResumeNext(throwable -> {
+                                if (tempFile.exists()) tempFile.delete();
+                                return Single.error(throwable);
+                            });
+                }))
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "API Error on uploadMediaAndSendMessage");
+                    return chatDao.updateMessageStatus(optimisticId, MessageStatus.ERROR, System.currentTimeMillis())
+                            .andThen(Single.error(throwable));
+                })
+                .subscribeOn(Schedulers.io());
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -313,8 +342,8 @@ public class ChatRepository {
      * @param limit          Số lượng tin mỗi trang
      * @param offset         Vị trí bắt đầu lấy (= số item đang có trên UI)
      * @return Single&lt;Boolean&gt; – {@code true} nếu server trả về đủ
-     *         {@code limit}
-     *         item (có thể còn trang tiếp theo)
+     * {@code limit}
+     * item (có thể còn trang tiếp theo)
      */
     public Single<Boolean> fetchChatHistory(long conversationId, int limit, int offset) {
         return apiService.fetchChatHistory(conversationId, limit, offset)
@@ -408,9 +437,9 @@ public class ChatRepository {
      */
     public Completable markAllAsRead(long conversationId) {
         return chatDao.updateAllMessagesStatusInConversation(
-                conversationId,
-                MessageStatus.READ,
-                System.currentTimeMillis())
+                        conversationId,
+                        MessageStatus.READ,
+                        System.currentTimeMillis())
                 .subscribeOn(Schedulers.io());
     }
 
