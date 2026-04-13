@@ -70,3 +70,11 @@ Cơ chế này được xử lý hoàn toàn chạy ngầm, không gây block ha
 2. **Gửi Lượt Xem Lên API (Domain Layer)**: Nếu tìm ra List chứa `messageIds` thoả mãn, nó gọi hàm lửa ném ẩn `viewModel.markAsRead(unreadIds)`. Hàm này khởi chạy dưới `Schedulers.io()`.
 3. **Đồng Bộ Dữ Liệu (Data Layer)**: `ChatRepository` gọi API báo với server những tin này đã được người dùng xem. Nếu thành công, repository tiếp tục chạy câu query `UPDATE` lại status thành `READ` cho chính các messageIds này trong bảng `messages` (Room Database). 
 4. **Vòng lặp SSOT hoàn tất**: Room một khi thay đổi sẽ tự động phát tín hiệu trở ngược lên Flowable, rồi ViewModel tiếp nhận gửi sang LiveData. `ChatFragment` nhận data này, cập nhật UI cùng Adapter (Hiển thị các icon "đã đọc" nhỏ xíu bên góc nếu cần). Tương tác ngầm an toàn tuyệt đối, zero-lag.
+
+## 5. Kiến trúc Push Notification (FCM)
+
+Cơ chế xử lý thông báo dưới nền khi app đang bị ẩn (Background) hoặc đã bị tắt (Killed):
+
+- **Data Payload**: Server backend bắn một thông báo Push thông qua Firebase Cloud Messaging (FCM). Payload sử dụng cấu trúc `Data Payload` để hệ thống Android chủ động chuyển quyền xử lý cho khối Service `MyFirebaseMessagingService.java` dù ứng dụng ở trạng thái nào. Backend sẽ gửi các key cốt lõi như `conversationId`, `senderName`, `messageContent`.
+- **System Notification (Heads-up)**: Bên trong hàm `onMessageReceived`, hệ thống trích xuất gói data và dùng thư viện `NotificationCompat` cùng với cơ chế `NotificationChannel` (chỉ định Importance HIGH cho Android 8.0 trở lên) ráp thông tin để tạo thành Pop-up nổi Heads-up phía trên màn hình hiển thị ngay lập tức.
+- **Deep-link Điều Hướng Trực Tiếp**: Push Notifications được ràng buộc (wrap) bằng một đối tượng `PendingIntent` hỗ trợ song song 2 cờ bảo mật bắt buộc của Android 12+ API 31: `FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE`. Intent gửi lệnh đánh thức thẳng `MainActivity.class`, chèn thêm Bundle Extra gồm có `conversationId`. Tại Activity khi gọi `onCreate` hoặc `onNewIntent`, nếu túm được key này, Navigation Component (`navController.navigate()`) sẽ tự động ép màn hình bay thẳng (navigate) vào luồng `ChatFragment` đúng nhóm người trò chuyện!

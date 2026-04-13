@@ -63,14 +63,28 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             // Logic Chat Sync (SSOT)
             if ("chat".equals(data.get("type"))) {
                 handleChatMessage(data);
-            }
 
-            // If the message only has data, show a notification from data
-            if (remoteMessage.getNotification() == null) {
-                String title = data.get("title");
-                String body = data.get("body");
-                if (title != null && body != null) {
-                    notificationHelper.showNotification(title, body);
+                if (remoteMessage.getNotification() == null) {
+                    String conversationIdStr = data.get("conversationId");
+                    String senderName = data.get("senderName");
+                    if (senderName == null)
+                        senderName = data.get("title") != null ? data.get("title") : "Tin nhắn mới";
+                    String content = data.get("messageContent");
+                    if (content == null) content = data.get("content"); // Fallback to content field
+                    if (content == null) content = data.get("body");
+
+                    if (conversationIdStr != null && content != null) {
+                        notificationHelper.showChatNotification(conversationIdStr, senderName, content);
+                    }
+                }
+            } else {
+                // If the message only has data (and not chat type), show a generic notification
+                if (remoteMessage.getNotification() == null) {
+                    String title = data.get("title");
+                    String body = data.get("body");
+                    if (title != null && body != null) {
+                        notificationHelper.showNotification(title, body);
+                    }
                 }
             }
         }

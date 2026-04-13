@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.POST_NOTIFICATIONS }, 101);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
 
@@ -62,6 +62,40 @@ public class MainActivity extends AppCompatActivity {
         // Connect socket if logged in
         if (sessionManager.isLoggedIn()) {
             socketIOManager.connect(sessionManager.getUserId());
+        }
+
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent != null && intent.getExtras() != null) {
+            String conversationIdStr = intent.getStringExtra("conversationId");
+            if (conversationIdStr != null) {
+                try {
+                    long conversationId = Long.parseLong(conversationIdStr);
+                    String partnerName = intent.getStringExtra("partnerName");
+                    if (partnerName == null) partnerName = "Chat Partner";
+
+                    Bundle bundle = new Bundle();
+                    bundle.putLong("conversationId", conversationId);
+                    bundle.putString("partnerName", partnerName);
+
+                    if (navController != null) {
+                        navController.navigate(R.id.chatDetailFragment, bundle);
+                    }
+
+                    // Remove the extra to prevent re-processing on configuration changes
+                    intent.removeExtra("conversationId");
+                } catch (NumberFormatException ignored) {
+                }
+            }
         }
     }
 
