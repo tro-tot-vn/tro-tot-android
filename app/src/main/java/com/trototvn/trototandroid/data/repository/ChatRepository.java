@@ -353,7 +353,7 @@ public class ChatRepository {
                         return Single.just(false);
                     }
 
-                    List<MessageDto> dtos = response.getData().messages;
+                    List<MessageDto> dtos = response.getData();
 
                     if (dtos == null || dtos.isEmpty()) {
                         return Single.just(false);

@@ -8,7 +8,6 @@ import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
 import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
-import com.trototvn.trototandroid.data.model.chat.ChatHistoryResponse;
 import com.trototvn.trototandroid.data.model.chat.ConversationDto;
 import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
 import com.trototvn.trototandroid.data.model.chat.MessageDto;
@@ -251,7 +250,7 @@ public interface ApiService {
     // ========== Chat ==========
 
     @GET("api/chat/conversations/{conversationId}/messages")
-    Single<ResponseData<ChatHistoryResponse>> fetchChatHistory(
+    Single<ResponseData<List<MessageDto>>> fetchChatHistory(
             @Path("conversationId") long conversationId,
             @Query("limit") int limit,
             @Query("offset") int offset);
