@@ -5,7 +5,7 @@
     app:startDestination="@id/homeFragment">
 
     <!-- Bottom Navigation Fragments -->
-    
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.trototvn.trototandroid.ui.main.home.HomeFragment"
@@ -24,9 +24,14 @@
         android:label="My Posts" />
 
     <fragment
-        android:id="@+id/chatFragment"
-        android:name="com.trototvn.trototandroid.ui.main.chat.ChatFragment"
-        android:label="Message" />
+        android:id="@+id/chatListFragment"
+        android:name="com.trototvn.trototandroid.ui.main.chat.ChatListFragment"
+        android:label="Messages">
+
+        <action
+            android:id="@+id/action_list_to_detail"
+            app:destination="@id/chatDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -42,6 +47,15 @@
         <argument
             android:name="postId"
             app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatDetailFragment"
+        android:name="com.trototvn.trototandroid.ui.main.chat.ChatFragment"
+        android:label="Chat Detail">
+        <argument
+            android:name="conversationId"
+            app:argType="long" />
     </fragment>
 
 </navigation>
