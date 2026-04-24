@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.trototvn.trototandroid.R;
@@ -61,7 +62,16 @@ public class ProfileFragment extends Fragment {
                     showLogoutConfirmation();
                     break;
                 case EDIT_PROFILE:
-                    // TODO: Implement navigation
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.editProfileFragment);
+                    break;
+                case VIEW_HISTORY:
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.viewHistoryFragment);
+                    break;
+                case SAVED_POSTS:
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.savedPostsFragment);
                     break;
                 case SETTINGS:
                     // TODO: Implement navigation
@@ -94,6 +104,10 @@ public class ProfileFragment extends Fragment {
     private void setupObservers() {
         // Observe profile data
         viewModel.getProfile().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) {
+                return;
+            }
+
             if (resource.getStatus() == Resource.Status.LOADING) {
                 binding.pbLoading.setVisibility(View.VISIBLE);
             } else {
