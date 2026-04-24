@@ -24,13 +24,15 @@
 
         <!-- Bottom Info: Last Update + Image Count -->
         <LinearLayout
+            android:id="@+id/layoutBottomInfo"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:background="#1a000000"
             android:gravity="center"
             android:orientation="horizontal"
             android:paddingHorizontal="4dp"
-            android:paddingVertical="2dp">
+            android:paddingVertical="2dp"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/tvLastUpdate"
@@ -39,7 +41,8 @@
                 android:layout_weight="1"
                 android:text="2p trước"
                 android:textColor="@color/white"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                android:visibility="gone" />
 
             <ImageView
                 android:layout_width="12dp"
@@ -138,11 +141,13 @@
 
         <!-- Poster Info (moved down) -->
         <LinearLayout
+            android:id="@+id/layoutPoster"
             android:layout_width="match_parent"
             android:layout_height="24dp"
             android:layout_marginTop="4dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <ImageView
                 android:id="@+id/ivPosterAvatar"
@@ -177,6 +182,7 @@
         android:contentDescription="Save post"
         android:scaleType="centerInside"
         android:src="@drawable/ic_bookmark"
+        android:visibility="gone"
         app:tint="#FF6B35" />
 
 </LinearLayout>

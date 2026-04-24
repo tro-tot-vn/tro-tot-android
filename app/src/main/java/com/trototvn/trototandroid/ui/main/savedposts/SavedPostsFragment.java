@@ -8,9 +8,12 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.trototvn.trototandroid.data.model.Resource;
+import com.trototvn.trototandroid.data.model.post.Post;
 import com.trototvn.trototandroid.databinding.FragmentSavedPostsBinding;
 import com.trototvn.trototandroid.ui.main.viewhistory.PostItem;
 import com.trototvn.trototandroid.ui.main.viewhistory.ViewHistoryPostAdapter;
@@ -29,6 +32,7 @@ public class SavedPostsFragment extends Fragment {
 
     private FragmentSavedPostsBinding binding;
     private ViewHistoryPostAdapter adapter;
+    private SavedPostsViewModel viewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -41,24 +45,95 @@ public class SavedPostsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Setup back button
+        viewModel = new ViewModelProvider(this).get(SavedPostsViewModel.class);
+
         binding.btnBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
-        // Setup RecyclerView
         setupRecyclerView();
+        setupObservers();
 
-        // Load mock data
-        loadMockData();
+        // Load saved posts from API
+        viewModel.fetchSavedPosts();
     }
 
     private void setupRecyclerView() {
         adapter = new ViewHistoryPostAdapter((post, position) -> {
-            // Show confirmation dialog to remove from saved posts
-            showRemoveConfirmationDialog(post, position);
+            // Navigate to post detail
+            navigateToPostDetail(post.getId());
         });
 
         binding.rvSavedPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSavedPosts.setAdapter(adapter);
+    }
+
+    private void navigateToPostDetail(int postId) {
+        // Implement navigation logic here
+    }
+
+    private void setupObservers() {
+        viewModel.getSavedPostsLiveData().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                if (resource.getData().isEmpty()) {
+                    binding.rvSavedPosts.setVisibility(View.GONE);
+                    binding.emptyState.setVisibility(View.VISIBLE);
+                } else {
+                    binding.rvSavedPosts.setVisibility(View.VISIBLE);
+                    binding.emptyState.setVisibility(View.GONE);
+                    adapter.submitList(convertPostsToPostItems(resource.getData()));
+                }
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                Timber.e("Error loading saved posts: %s", resource.getMessage());
+                binding.rvSavedPosts.setVisibility(View.GONE);
+                binding.emptyState.setVisibility(View.VISIBLE);
+            }
+        });
+
+        viewModel.getUnsaveStatusLiveData().observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null && resource.getStatus() == Resource.Status.SUCCESS) {
+                // Refresh list after unsaving
+                viewModel.fetchSavedPosts();
+            }
+        });
+    }
+
+    private List<PostItem> convertPostsToPostItems(List<Post> posts) {
+        List<PostItem> postItems = new ArrayList<>();
+
+        for (Post post : posts) {
+            String imageUrl = getGoogleDriveImageUrl(post);
+            
+            // Lấy địa chỉ đầy đủ từ ward, district, city
+            String fullLocation = (post.getWard() != null ? post.getWard() + ", " : "") +
+                    (post.getDistrict() != null ? post.getDistrict() + ", " : "") +
+                    (post.getCity() != null ? post.getCity() : "");
+
+            PostItem item = new PostItem(
+                    post.getPostId(),
+                    imageUrl,
+                    post.getTitle(),
+                    post.getPrice(),
+                    (int) post.getAcreage(),
+                    fullLocation
+            );
+            postItems.add(item);
+        }
+
+        return postItems;
+    }
+
+    private String getGoogleDriveImageUrl(Post post) {
+        if (post.getMultimediaFiles() != null && !post.getMultimediaFiles().isEmpty()) {
+            com.trototvn.trototandroid.data.model.post.MultimediaFile file = post.getMultimediaFiles().get(0);
+            if (file != null && file.getFile() != null) {
+                String fileCloudId = file.getFile().getFileCloudId();
+                if (fileCloudId != null && !fileCloudId.isEmpty()) {
+                    return "https://drive.google.com/uc?id=" + fileCloudId + "&export=download";
+                }
+            }
+        }
+        return "";
     }
 
     private void showRemoveConfirmationDialog(PostItem post, int position) {
@@ -66,52 +141,10 @@ public class SavedPostsFragment extends Fragment {
                 .setTitle("Xoá khỏi bài đã lưu")
                 .setMessage("Bạn có chắc chắn muốn xoá \"" + post.getTitle() + "\" khỏi bài đã lưu?")
                 .setPositiveButton("Xoá", (dialog, which) -> {
-                    // Remove from list
-                    List<PostItem> currentList = new ArrayList<>(adapter.getCurrentList());
-                    currentList.remove(position);
-                    adapter.submitList(currentList);
-
-                    Timber.d("Removed from saved - Post: %s", post.getTitle());
-                    // TODO: Call API to unsave post
-
-                    // Show empty state if list is now empty
-                    if (currentList.isEmpty()) {
-                        binding.rvSavedPosts.setVisibility(View.GONE);
-                        binding.emptyState.setVisibility(View.VISIBLE);
-                    }
+                    viewModel.unsavePost(post.getId());
                 })
                 .setNegativeButton("Huỷ", null)
                 .show();
-    }
-
-    private void loadMockData() {
-        List<PostItem> savedPosts = new ArrayList<>();
-
-        // Mock data - only saved posts (isSaved=true)
-        savedPosts.add(new PostItem(2, "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=300&fit=crop", "Căn hộ 2 phòng ngủ view Bitexco",
-                12.0, 65, "Trần Thị B", "", "TP. Hồ Chí Minh", true));
-
-        savedPosts.add(new PostItem(6, "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=300&h=300&fit=crop", "Studio khu vực Landmark 81",
-                8.0, 45, "Đỗ Thị F", "", "TP. Hồ Chí Minh", true));
-
-        savedPosts.add(new PostItem(9, "https://images.unsplash.com/photo-1516214104703-d870798883c5?w=300&h=300&fit=crop", "Phòng tiện nghi gần ga Bình Thái",
-                3.8, 22, "Đinh Văn I", "", "Thành phố Thủ Dầu Một", true));
-
-        savedPosts.add(new PostItem(12, "https://images.unsplash.com/photo-1494145904049-0dca59b4bbad?w=300&h=300&fit=crop", "Studio gác lửng Quận 1",
-                5.5, 28, "Linh Thị L", "", "TP. Hồ Chí Minh", true));
-
-        savedPosts.add(new PostItem(15, "https://images.unsplash.com/photo-1525597099696-06628a4cb8e5?w=300&h=300&fit=crop", "Chung cư cao cấp khu Thảo Điền",
-                14.0, 80, "Phúc Văn O", "", "TP. Hồ Chí Minh", true));
-
-        // Show empty state if no saved posts
-        if (savedPosts.isEmpty()) {
-            binding.rvSavedPosts.setVisibility(View.GONE);
-            binding.emptyState.setVisibility(View.VISIBLE);
-        } else {
-            binding.rvSavedPosts.setVisibility(View.VISIBLE);
-            binding.emptyState.setVisibility(View.GONE);
-            adapter.submitList(savedPosts);
-        }
     }
 
     @Override
@@ -120,4 +153,3 @@ public class SavedPostsFragment extends Fragment {
         binding = null;
     }
 }
-

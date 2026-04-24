@@ -9,22 +9,16 @@ public class PostItem {
     private String title;
     private double price;
     private int area; // in m2
-    private String posterName;
-    private String posterAvatar;
     private String location;
-    private boolean isSaved;
 
     public PostItem(int id, String thumbnail, String title, double price, int area,
-                   String posterName, String posterAvatar, String location, boolean isSaved) {
+                   String location) {
         this.id = id;
         this.thumbnail = thumbnail;
         this.title = title;
         this.price = price;
         this.area = area;
-        this.posterName = posterName;
-        this.posterAvatar = posterAvatar;
         this.location = location;
-        this.isSaved = isSaved;
     }
 
     // Getters and Setters
@@ -48,24 +42,8 @@ public class PostItem {
         return area;
     }
 
-    public String getPosterName() {
-        return posterName;
-    }
-
-    public String getPosterAvatar() {
-        return posterAvatar;
-    }
-
     public String getLocation() {
         return location;
-    }
-
-    public boolean isSaved() {
-        return isSaved;
-    }
-
-    public void setSaved(boolean saved) {
-        isSaved = saved;
     }
 }
 
