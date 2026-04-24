@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.Post;
 import com.trototvn.trototandroid.databinding.FragmentSavedPostsBinding;
@@ -58,16 +59,14 @@ public class SavedPostsFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new ViewHistoryPostAdapter((post, position) -> {
-            // Navigate to post detail
-            navigateToPostDetail(post.getId());
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", post.getId());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.postDetailFragment, bundle);
         });
 
         binding.rvSavedPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSavedPosts.setAdapter(adapter);
-    }
-
-    private void navigateToPostDetail(int postId) {
-        // Implement navigation logic here
     }
 
     private void setupObservers() {
@@ -134,17 +133,6 @@ public class SavedPostsFragment extends Fragment {
             }
         }
         return "";
-    }
-
-    private void showRemoveConfirmationDialog(PostItem post, int position) {
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Xoá khỏi bài đã lưu")
-                .setMessage("Bạn có chắc chắn muốn xoá \"" + post.getTitle() + "\" khỏi bài đã lưu?")
-                .setPositiveButton("Xoá", (dialog, which) -> {
-                    viewModel.unsavePost(post.getId());
-                })
-                .setNegativeButton("Huỷ", null)
-                .show();
     }
 
     @Override

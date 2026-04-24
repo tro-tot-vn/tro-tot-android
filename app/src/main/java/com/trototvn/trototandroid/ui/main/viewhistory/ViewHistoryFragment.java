@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.Post;
 import com.trototvn.trototandroid.databinding.FragmentViewHistoryBinding;
@@ -56,8 +57,10 @@ public class ViewHistoryFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new ViewHistoryPostAdapter((post, position) -> {
-            Timber.d("Item clicked - Post: %s", post.getTitle());
-            // TODO: Navigate to post detail
+            Bundle bundle = new Bundle();
+            bundle.putInt("postId", post.getId());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.postDetailFragment, bundle);
         });
 
         binding.rvViewHistory.setLayoutManager(new LinearLayoutManager(requireContext()));

@@ -78,7 +78,10 @@ public class ViewHistoryPostAdapter extends ListAdapter<PostItem, ViewHistoryPos
             // Load thumbnail with Glide
             Glide.with(binding.ivThumbnail.getContext())
                     .load(post.getThumbnail())
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .centerCrop()
+                    .placeholder(com.trototvn.trototandroid.R.color.md_theme_light_surfaceVariant)
+                    .error(com.trototvn.trototandroid.R.color.md_theme_light_surfaceVariant)
                     .into(binding.ivThumbnail);
 
             // Handle root click (Navigate to detail)
