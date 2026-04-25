@@ -29,7 +29,6 @@ public class ProfileViewModel extends ViewModel {
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     private final MutableLiveData<Resource<CustomerProfile>> profile = new MutableLiveData<>();
-    private final MutableLiveData<Resource<Void>> updateResult = new MutableLiveData<>();
     private final MutableLiveData<Integer> savedPostsCount = new MutableLiveData<>(0);
     private final MutableLiveData<Integer> historyCount = new MutableLiveData<>(0);
     private final MutableLiveData<Integer> subscriptionsCount = new MutableLiveData<>(0);
@@ -44,10 +43,6 @@ public class ProfileViewModel extends ViewModel {
 
     public LiveData<Resource<CustomerProfile>> getProfile() {
         return profile;
-    }
-
-    public LiveData<Resource<Void>> getUpdateResult() {
-        return updateResult;
     }
 
     public LiveData<Integer> getSavedPostsCount() {
@@ -82,31 +77,6 @@ public class ProfileViewModel extends ViewModel {
                                 error -> {
                                     Timber.e(error, "Error loading profile");
                                     profile.setValue(Resource.error("Lỗi tải hồ sơ", null));
-                                }
-                        )
-        );
-    }
-
-    /**
-     * Update user profile
-     */
-    public void updateProfile(CustomerProfile profile) {
-        updateResult.setValue(Resource.loading(null));
-
-        disposable.add(
-                profileRepository.updateProfile(profile)
-                        .subscribe(
-                                resource -> {
-                                    updateResult.setValue(resource);
-                                    if (resource.getStatus() == Resource.Status.SUCCESS) {
-                                        // Reload profile data after successful update
-                                        loadProfile();
-                                        Timber.d("Profile updated successfully");
-                                    }
-                                },
-                                error -> {
-                                    Timber.e(error, "Error updating profile");
-                                    updateResult.setValue(Resource.error("Lỗi cập nhật hồ sơ", null));
                                 }
                         )
         );

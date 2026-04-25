@@ -33,21 +33,6 @@
         android:name="com.trototvn.trototandroid.ui.main.profile.ProfileFragment"
         android:label="Profile" />
 
-    <fragment
-        android:id="@+id/editProfileFragment"
-        android:name="com.trototvn.trototandroid.ui.main.profile.EditProfileFragment"
-        android:label="Edit Profile" />
-
-    <fragment
-        android:id="@+id/viewHistoryFragment"
-        android:name="com.trototvn.trototandroid.ui.main.viewhistory.ViewHistoryFragment"
-        android:label="View History" />
-
-    <fragment
-        android:id="@+id/savedPostsFragment"
-        android:name="com.trototvn.trototandroid.ui.main.savedposts.SavedPostsFragment"
-        android:label="Saved Posts" />
-
     <!-- Feature Fragments -->
 
     <fragment

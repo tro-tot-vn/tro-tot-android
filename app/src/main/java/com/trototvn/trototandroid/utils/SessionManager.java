@@ -112,7 +112,6 @@ public class SessionManager {
         return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
     }
 
-
     /**
      * Clear session (logout)
      */

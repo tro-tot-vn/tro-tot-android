@@ -51,7 +51,7 @@ public interface ProfileApiService {
     
     // ========== Saved Posts ==========
     
-    @GET("api/customer/saved-post")
+    @GET("api/customer/saved-posts")
     Single<ResponseData<List<Post>>> getSavedPosts();
     
     @POST("api/customer/save-post")
@@ -62,7 +62,7 @@ public interface ProfileApiService {
     
     // ========== View History ==========
     
-    @GET("api/customer/history-view-post")
+    @GET("api/customer/view-history")
     Single<ResponseData<List<Post>>> getViewHistory();
     
     // ========== Subscriptions ==========
