@@ -79,5 +79,5 @@ public interface ProfileApiService {
     // ========== Account ==========
     
     @POST("api/auth/change-password")
-    Single<ResponseData<Void>> changePassword(@Body ChangePasswordRequest request);
+    Single<ResponseData<Object>> changePassword(@Body ChangePasswordRequest request);
 }

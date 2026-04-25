@@ -74,7 +74,8 @@ public class ProfileFragment extends Fragment {
                             .navigate(R.id.savedPostsFragment);
                     break;
                 case SETTINGS:
-                    // TODO: Implement navigation
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.accountSettingsFragment);
                     break;
                 // Add other types as needed
             }
