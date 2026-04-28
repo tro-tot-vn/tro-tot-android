@@ -18,6 +18,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import timber.log.Timber;
 
@@ -33,12 +34,33 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Inject
     Gson gson;
 
+    @Inject
+    com.trototvn.trototandroid.data.repository.AuthRepository authRepository;
+
+    private final CompositeDisposable disposables = new CompositeDisposable();
+
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
         Timber.d("New FCM Token: %s", token);
         sessionManager.saveFcmToken(token);
-        // In the future, send this token to your backend if needed
+        
+        if (sessionManager.isLoggedIn()) {
+            disposables.add(
+                authRepository.registerFcmToken(token)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                        () -> Timber.d("FCM Token synced successfully on new token"),
+                        error -> Timber.e(error, "Failed to sync FCM token")
+                    )
+            );
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        disposables.clear();
     }
 
     @Override

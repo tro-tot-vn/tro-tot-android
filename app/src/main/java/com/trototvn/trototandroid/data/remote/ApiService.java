@@ -258,7 +258,7 @@ public interface ApiService {
     /**
      * GET - Lấy danh sách hội thoại.
      */
-    @GET("api/chat/conversations")
+    @GET("api/conversations")
     Single<ResponseData<List<ConversationDto>>> fetchConversations();
 
     /**
@@ -285,4 +285,12 @@ public interface ApiService {
             @Path("conversationId") long conversationId,
             @Part MultipartBody.Part file,
             @Part("content") RequestBody content);
+
+    // ========== Notifications ==========
+
+    /**
+     * POST - Register FCM Token
+     */
+    @POST("api/notifications/tokens")
+    Single<ResponseData<Object>> registerFcmToken(@Body com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request);
 }

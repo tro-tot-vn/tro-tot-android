@@ -78,3 +78,11 @@ Cơ chế xử lý thông báo dưới nền khi app đang bị ẩn (Background
 - **Data Payload**: Server backend bắn một thông báo Push thông qua Firebase Cloud Messaging (FCM). Payload sử dụng cấu trúc `Data Payload` để hệ thống Android chủ động chuyển quyền xử lý cho khối Service `MyFirebaseMessagingService.java` dù ứng dụng ở trạng thái nào. Backend sẽ gửi các key cốt lõi như `conversationId`, `senderName`, `messageContent`.
 - **System Notification (Heads-up)**: Bên trong hàm `onMessageReceived`, hệ thống trích xuất gói data và dùng thư viện `NotificationCompat` cùng với cơ chế `NotificationChannel` (chỉ định Importance HIGH cho Android 8.0 trở lên) ráp thông tin để tạo thành Pop-up nổi Heads-up phía trên màn hình hiển thị ngay lập tức.
 - **Deep-link Điều Hướng Trực Tiếp**: Push Notifications được ràng buộc (wrap) bằng một đối tượng `PendingIntent` hỗ trợ song song 2 cờ bảo mật bắt buộc của Android 12+ API 31: `FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE`. Intent gửi lệnh đánh thức thẳng `MainActivity.class`, chèn thêm Bundle Extra gồm có `conversationId`. Tại Activity khi gọi `onCreate` hoặc `onNewIntent`, nếu túm được key này, Navigation Component (`navController.navigate()`) sẽ tự động ép màn hình bay thẳng (navigate) vào luồng `ChatFragment` đúng nhóm người trò chuyện!
+
+## 6. Luồng đồng bộ FCM Token
+
+Hệ thống cung cấp cơ chế bảo chứng token đa lớp để đảm bảo user luôn nhận được Push Notification bất kể app mới cài đặt hay user chuyển tài khoản:
+
+- **Lưu Local ngay khi có (onNewToken)**: Dù user chưa đăng nhập, Service `MyFirebaseMessagingService` vẫn được Firebase kích hoạt cấp phát ID thiết bị. Token này được lưu vĩnh viễn xuống Local Storage (Shared Preferences qua `SessionManager`).
+- **Gửi bù khi đang Logged In**: Nếu token cấp phát mới diễn ra trong lúc user ĐANG login, hệ thống tự động gọi API `registerFcmToken` trong luồng background `Schedulers.io()` để server map device mới này với user hiện tại. 
+- **Cập nhật bù lúc Login**: Nếu token sinh ra lúc user chưa đăng nhập, sau khi user login thành công (trong `LoginViewModel`), hệ thống sẽ bóc ngược Token từ Local lên và lập tức bắn tiếp API `registerFcmToken`. Mọi Request này đều là Fire-and-forget, không bao giờ được phép Crash tiến trình đăng nhập chính dù xảy ra lỗi mạng.
