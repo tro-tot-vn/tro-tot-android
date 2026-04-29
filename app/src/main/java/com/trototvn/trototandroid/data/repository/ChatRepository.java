@@ -142,7 +142,7 @@ public class ChatRepository {
 
         return chatDao.insertMessage(optimistic)
                 .subscribeOn(Schedulers.io())
-                .andThen(apiService.sendMessage(conversationId, new SendMessageRequest(content, MessageType.TEXT))
+                .andThen(apiService.sendMessage(conversationId, new SendMessageRequest(conversationId, content, MessageType.TEXT))
                         .subscribeOn(Schedulers.io()))
                 .flatMapCompletable(response -> {
                     if (response != null && response.getData() != null) {

@@ -7,13 +7,17 @@ import com.google.gson.annotations.SerializedName;
  */
 public class SendMessageRequest {
 
+    @SerializedName("conversationId")
+    public long conversationId;
+
     @SerializedName("content")
     public String content;
 
     @SerializedName("messageType")
     public String messageType;
 
-    public SendMessageRequest(String content, String messageType) {
+    public SendMessageRequest(long conversationId, String content, String messageType) {
+        this.conversationId = conversationId;
         this.content = content;
         this.messageType = messageType;
     }
