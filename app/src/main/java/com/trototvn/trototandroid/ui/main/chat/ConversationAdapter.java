@@ -40,8 +40,29 @@ public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemCon
     @Override
     protected void bind(ItemConversationBinding binding, ConversationEntity conversation, int position) {
         binding.tvName.setText(conversation.partnerName);
-        binding.tvLastMessage.setText(conversation.lastMessage);
-        binding.tvTime.setText(timeFormat.format(conversation.updatedAt));
+        
+        if (conversation.lastMessage != null && !conversation.lastMessage.trim().isEmpty()) {
+            binding.tvLastMessage.setText(conversation.lastMessage);
+            binding.tvLastMessage.setVisibility(View.VISIBLE);
+        } else {
+            binding.tvLastMessage.setText("Chưa có tin nhắn");
+            binding.tvLastMessage.setVisibility(View.VISIBLE);
+        }
+
+        if (conversation.updatedAt != null) {
+            java.util.Calendar calUpdated = java.util.Calendar.getInstance();
+            calUpdated.setTime(conversation.updatedAt);
+            java.util.Calendar calNow = java.util.Calendar.getInstance();
+
+            if (calUpdated.get(java.util.Calendar.YEAR) == calNow.get(java.util.Calendar.YEAR) &&
+                calUpdated.get(java.util.Calendar.DAY_OF_YEAR) == calNow.get(java.util.Calendar.DAY_OF_YEAR)) {
+                binding.tvTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(conversation.updatedAt));
+            } else {
+                binding.tvTime.setText(new SimpleDateFormat("dd/MM", Locale.getDefault()).format(conversation.updatedAt));
+            }
+        } else {
+            binding.tvTime.setText("");
+        }
 
         // Badge unread
         if (conversation.unreadCount > 0) {

@@ -402,6 +402,9 @@ public class ChatRepository {
                             currentUserId = Long.parseLong(sessionManager.getUserId());
                     } catch (Exception ignored) {}
 
+                    java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                    isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
                     for (ConversationDto dto : response.getData()) {
                         String partnerName = "Người dùng ẩn danh";
                         String partnerAvatar = null;
@@ -422,14 +425,23 @@ public class ChatRepository {
                             }
                         }
 
+                        Date lastDate = dto.updatedAt != null ? dto.updatedAt : new Date();
+                        if (dto.getLastMessageAt() != null && !dto.getLastMessageAt().isEmpty()) {
+                            try {
+                                lastDate = isoFormat.parse(dto.getLastMessageAt());
+                            } catch (Exception e) {
+                                Timber.e(e, "Error parsing lastMessageAt");
+                            }
+                        }
+
                         entities.add(new ConversationEntity(
                                 dto.conversationId,
                                 partnerName,
                                 partnerAvatar,
-                                "", // lastMessage (UI field)
+                                dto.getLastMessage() != null ? dto.getLastMessage() : "", 
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),
-                                dto.updatedAt != null ? dto.updatedAt : new Date()));
+                                lastDate));
                     }
 
                     return chatDao.insertConversations(entities);

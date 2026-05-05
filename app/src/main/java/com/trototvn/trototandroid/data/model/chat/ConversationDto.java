@@ -20,4 +20,26 @@ public class ConversationDto {
 
     @SerializedName("participants")
     public java.util.List<ParticipantDto> participants;
+
+    @SerializedName("lastMessage")
+    private String lastMessage;
+
+    @SerializedName("lastMessageAt")
+    private String lastMessageAt;
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public String getLastMessageAt() {
+        return lastMessageAt;
+    }
+
+    public void setLastMessageAt(String lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
+    }
 }
