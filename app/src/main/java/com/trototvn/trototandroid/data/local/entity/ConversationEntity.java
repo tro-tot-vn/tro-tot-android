@@ -17,6 +17,9 @@ public class ConversationEntity {
     @ColumnInfo(name = "partner_name")
     public String partnerName;
 
+    @ColumnInfo(name = "partner_avatar")
+    public String partnerAvatar;
+
     @ColumnInfo(name = "last_message")
     public String lastMessage;
 
@@ -34,12 +37,14 @@ public class ConversationEntity {
     public ConversationEntity(
             long conversationId,
             String partnerName,
+            String partnerAvatar,
             String lastMessage,
             int unreadCount,
             @NonNull Date createdAt,
             @NonNull Date updatedAt) {
         this.conversationId = conversationId;
         this.partnerName = partnerName;
+        this.partnerAvatar = partnerAvatar;
         this.lastMessage = lastMessage;
         this.unreadCount = unreadCount;
         this.createdAt = createdAt;

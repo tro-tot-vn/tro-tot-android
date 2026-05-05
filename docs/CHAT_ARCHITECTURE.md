@@ -26,7 +26,11 @@ Quá trình tải lên hình ảnh và gửi tin nhắn là atomic (gộp chung 
    - Xóa bỏ file tạm để giải phóng bộ nhớ. Gửi Object thực thể (`MessageEntity`) về lại ViewModel.
 
 4. **Trạng thái Màn Hình (Render Data)**:
-   - Do stream tin nhắn đã được theo dõi chung cho phần hội thoại trước đó (SOT - Single Source of Truth thông qua Flowable của Room `chatMessagesLiveData`), UI sẽ tự động đẩy tin nhắn hình ảnh mới này vào danh sách tin nhắn để hiển thị ra cho người dùng.
+## Luồng đồng bộ dữ liệu (Conversations)
+
+**Cập nhật mới nhất**: Backend đã gộp API lấy danh sách hội thoại (`GET /chat/conversations`). API này trả về trực tiếp mảng `participants` bên trong mỗi `ConversationDto` chứa đầy đủ thông tin đối tác chat (firstName, lastName, avatarId).
+Nhờ cấu trúc gộp này, ứng dụng đã loại bỏ hoàn toàn các luồng RxJava gọi chắp vá phức tạp hay tình trạng N+1 queries. Khi nhận Response, `ChatRepository` chỉ cần chạy 1 vòng lặp để filter `customerId != currentUserId` là tìm ra được `partnerName` và `partnerAvatar`, gộp chung thành thực thể nguyên khối `ConversationEntity` và Insert thẳng vào Room DB.
+UI (`ConversationAdapter`) sẽ dùng Glide để render ngay lập tức URL avatar được mapping sẵn.
 
 ## 2. Áp dụng chuẩn Resource<T> để quản lý State
 

@@ -17,4 +17,7 @@ public class ConversationDto {
 
     @SerializedName("updatedAt")
     public Date updatedAt;
+
+    @SerializedName("participants")
+    public java.util.List<ParticipantDto> participants;
 }

@@ -396,10 +396,36 @@ public class ChatRepository {
                     }
 
                     List<ConversationEntity> entities = new ArrayList<>();
+                    long currentUserId = 0;
+                    try {
+                        if (sessionManager.getUserId() != null)
+                            currentUserId = Long.parseLong(sessionManager.getUserId());
+                    } catch (Exception ignored) {}
+
                     for (ConversationDto dto : response.getData()) {
+                        String partnerName = "Người dùng ẩn danh";
+                        String partnerAvatar = null;
+
+                        if (dto.participants != null) {
+                            for (com.trototvn.trototandroid.data.model.chat.ParticipantDto p : dto.participants) {
+                                if (p.customerId != currentUserId) {
+                                    partnerName = (p.firstName != null ? p.firstName : "") + " " + (p.lastName != null ? p.lastName : "");
+                                    partnerName = partnerName.trim();
+                                    if (partnerName.isEmpty()) {
+                                        partnerName = "Người dùng ẩn danh";
+                                    }
+                                    if (p.avatarId != null) {
+                                        partnerAvatar = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + p.avatarId;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
                         entities.add(new ConversationEntity(
                                 dto.conversationId,
-                                "", // partnerName (UI field)
+                                partnerName,
+                                partnerAvatar,
                                 "", // lastMessage (UI field)
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),

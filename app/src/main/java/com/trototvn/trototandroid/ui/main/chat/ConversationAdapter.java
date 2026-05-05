@@ -61,8 +61,13 @@ public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemCon
             }
         });
 
-        // Avatar Handling (Placeholder hoặc dùng Glide/Coil)
-        // binding.ivAvatar.setImageResource(...)
+        // Avatar Handling
+        com.bumptech.glide.Glide.with(binding.getRoot().getContext())
+                .load(conversation.partnerAvatar)
+                .placeholder(com.trototvn.trototandroid.R.drawable.ic_user)
+                .error(com.trototvn.trototandroid.R.drawable.ic_user)
+                .circleCrop()
+                .into(binding.ivAvatar);
     }
 
     @Override
