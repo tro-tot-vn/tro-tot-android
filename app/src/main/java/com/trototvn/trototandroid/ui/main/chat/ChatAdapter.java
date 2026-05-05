@@ -26,6 +26,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -89,6 +90,7 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
         MessageEntity message = getItem(position);
         if (holder.binding instanceof ItemChatSentBinding) {
             ItemChatSentBinding binding = (ItemChatSentBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Xử lý tick đọc/gửi nếu cần
@@ -122,11 +124,13 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             }
         } else if (holder.binding instanceof ItemChatReceivedBinding) {
             ItemChatReceivedBinding binding = (ItemChatReceivedBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Avatar xử lý sau
         } else if (holder.binding instanceof ItemChatImageSentBinding) {
             ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
             boolean showStatus = MessageStatus.ERROR.equals(message.messageStatus);
@@ -174,6 +178,7 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
         } else if (holder.binding instanceof ItemChatImageReceivedBinding) {
             ItemChatImageReceivedBinding binding = (ItemChatImageReceivedBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
             String url = "";
@@ -190,6 +195,46 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                     .error(new ColorDrawable(Color.RED))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(binding.ivContent);
+        }
+    }
+
+    private void bindDateHeader(com.google.android.material.textview.MaterialTextView tvDateHeader, MessageEntity message, int position) {
+        boolean showHeader = false;
+        if (position == 0) {
+            showHeader = true;
+        } else {
+            MessageEntity prevMessage = getItem(position - 1);
+            Calendar calCurrent = Calendar.getInstance();
+            calCurrent.setTime(message.createdAt);
+            Calendar calPrev = Calendar.getInstance();
+            calPrev.setTime(prevMessage.createdAt);
+            if (calCurrent.get(Calendar.YEAR) != calPrev.get(Calendar.YEAR) ||
+                calCurrent.get(Calendar.DAY_OF_YEAR) != calPrev.get(Calendar.DAY_OF_YEAR)) {
+                showHeader = true;
+            }
+        }
+
+        if (showHeader) {
+            tvDateHeader.setVisibility(View.VISIBLE);
+            
+            Calendar calCurrent = Calendar.getInstance();
+            calCurrent.setTime(message.createdAt);
+            Calendar calNow = Calendar.getInstance();
+
+            if (calCurrent.get(Calendar.YEAR) == calNow.get(Calendar.YEAR) &&
+                calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
+                tvDateHeader.setText("Hôm nay");
+            } else {
+                calNow.add(Calendar.DAY_OF_YEAR, -1);
+                if (calCurrent.get(Calendar.YEAR) == calNow.get(Calendar.YEAR) &&
+                    calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
+                    tvDateHeader.setText("Hôm qua");
+                } else {
+                    tvDateHeader.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(message.createdAt));
+                }
+            }
+        } else {
+            tvDateHeader.setVisibility(View.GONE);
         }
     }
 

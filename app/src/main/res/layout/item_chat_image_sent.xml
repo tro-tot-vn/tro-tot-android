@@ -6,6 +6,25 @@
     android:layout_height="wrap_content"
     android:paddingVertical="@dimen/spacing_tiny">
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvDateHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_small"
+        android:layout_marginBottom="@dimen/spacing_small"
+        android:background="@drawable/bg_date_header"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:textColor="#555555"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Hôm nay"
+        tools:visibility="visible" />
+
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivContent"
         android:layout_width="wrap_content"
@@ -19,7 +38,7 @@
         android:minHeight="120dp"
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDateHeader"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.App.ChatBubble.Sent"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
