@@ -164,21 +164,18 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
-                AttachmentDto attachment = message.getAttachments().get(0);
-                String fileId = attachment.cloudFileId;
-                if (fileId == null || fileId.isEmpty()) {
-                    if (attachment.fileUrl != null && !attachment.fileUrl.isEmpty()) {
-                        String[] parts = attachment.fileUrl.split("/");
-                        fileId = parts[parts.length - 1];
-                    }
-                }
+                fileUrl = message.getAttachments().get(0).fileUrl;
+            }
 
-                if (fileId != null && !fileId.isEmpty()) {
-                    String baseUrl = Constants.BASE_URL;
-                    if (baseUrl.endsWith("/")) {
-                        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-                    }
-                    fileUrl = baseUrl + "/api/files/" + fileId;
+            if (fileUrl != null && !fileUrl.isEmpty() && !fileUrl.startsWith("http")) {
+                String baseUrl = Constants.BASE_URL;
+
+                if (baseUrl.endsWith("/") && fileUrl.startsWith("/")) {
+                    fileUrl = baseUrl + fileUrl.substring(1);
+                } else if (!baseUrl.endsWith("/") && !fileUrl.startsWith("/")) {
+                    fileUrl = baseUrl + "/" + fileUrl;
+                } else {
+                    fileUrl = baseUrl + fileUrl;
                 }
             }
 
@@ -197,21 +194,18 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
-                AttachmentDto attachment = message.getAttachments().get(0);
-                String fileId = attachment.cloudFileId;
-                if (fileId == null || fileId.isEmpty()) {
-                    if (attachment.fileUrl != null && !attachment.fileUrl.isEmpty()) {
-                        String[] parts = attachment.fileUrl.split("/");
-                        fileId = parts[parts.length - 1];
-                    }
-                }
+                fileUrl = message.getAttachments().get(0).fileUrl;
+            }
 
-                if (fileId != null && !fileId.isEmpty()) {
-                    String baseUrl = Constants.BASE_URL;
-                    if (baseUrl.endsWith("/")) {
-                        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-                    }
-                    fileUrl = baseUrl + "/api/files/" + fileId;
+            if (fileUrl != null && !fileUrl.isEmpty() && !fileUrl.startsWith("http")) {
+                String baseUrl = Constants.BASE_URL;
+
+                if (baseUrl.endsWith("/") && fileUrl.startsWith("/")) {
+                    fileUrl = baseUrl + fileUrl.substring(1);
+                } else if (!baseUrl.endsWith("/") && !fileUrl.startsWith("/")) {
+                    fileUrl = baseUrl + "/" + fileUrl;
+                } else {
+                    fileUrl = baseUrl + fileUrl;
                 }
             }
 
@@ -236,25 +230,25 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             Calendar calPrev = Calendar.getInstance();
             calPrev.setTime(prevMessage.createdAt);
             if (calCurrent.get(Calendar.YEAR) != calPrev.get(Calendar.YEAR) ||
-                calCurrent.get(Calendar.DAY_OF_YEAR) != calPrev.get(Calendar.DAY_OF_YEAR)) {
+                    calCurrent.get(Calendar.DAY_OF_YEAR) != calPrev.get(Calendar.DAY_OF_YEAR)) {
                 showHeader = true;
             }
         }
 
         if (showHeader) {
             tvDateHeader.setVisibility(View.VISIBLE);
-            
+
             Calendar calCurrent = Calendar.getInstance();
             calCurrent.setTime(message.createdAt);
             Calendar calNow = Calendar.getInstance();
 
             if (calCurrent.get(Calendar.YEAR) == calNow.get(Calendar.YEAR) &&
-                calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
+                    calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
                 tvDateHeader.setText("Hôm nay");
             } else {
                 calNow.add(Calendar.DAY_OF_YEAR, -1);
                 if (calCurrent.get(Calendar.YEAR) == calNow.get(Calendar.YEAR) &&
-                    calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
+                        calCurrent.get(Calendar.DAY_OF_YEAR) == calNow.get(Calendar.DAY_OF_YEAR)) {
                     tvDateHeader.setText("Hôm qua");
                 } else {
                     tvDateHeader.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(message.createdAt));
