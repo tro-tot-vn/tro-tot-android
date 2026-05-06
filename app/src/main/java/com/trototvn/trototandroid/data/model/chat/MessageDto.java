@@ -25,7 +25,7 @@ public class MessageDto {
     @SerializedName("messageType")
     public String messageType; // "TEXT" | "IMAGE" | "FILE"
 
-    @SerializedName("messageStatus")
+    @SerializedName("status")
     public String messageStatus; // "SENT" | "DELIVERED" | "READ"
 
     @SerializedName("createdAt")

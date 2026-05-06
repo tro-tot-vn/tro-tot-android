@@ -93,36 +93,37 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             ItemChatSentBinding binding = (ItemChatSentBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
-            binding.tvTime.setText(timeFormat.format(message.createdAt));
-            // Xử lý tick đọc/gửi nếu cần
-
-            boolean showStatus = MessageStatus.ERROR.equals(message.messageStatus);
-            if (!showStatus) {
-                if (position == getItemCount() - 1) {
-                    showStatus = true;
-                } else {
-                    MessageEntity nextMsg = getItem(position + 1);
-                    if (nextMsg.senderId != message.senderId) {
-                        showStatus = true;
-                    }
+            
+            String timeString = timeFormat.format(message.createdAt);
+            String statusText = "";
+            String rawStatus = message.messageStatus;
+            
+            if (rawStatus != null) {
+                switch (rawStatus.toUpperCase()) {
+                    case "READ":
+                        statusText = " • Đã xem";
+                        break;
+                    case "DELIVERED":
+                        statusText = " • Đã nhận";
+                        break;
+                    case "ERROR":
+                        statusText = " • Lỗi";
+                        break;
+                    case "SENT":
+                    default:
+                        statusText = " • Đã gửi";
+                        break;
                 }
             }
-
-            if (showStatus) {
-                binding.tvMessageStatus.setVisibility(View.VISIBLE);
-                if (MessageStatus.ERROR.equals(message.messageStatus)) {
-                    binding.tvMessageStatus.setText("Gửi không thành công!");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#F44336"));
-                } else if (MessageStatus.READ.equals(message.messageStatus)) {
-                    binding.tvMessageStatus.setText("Đã xem");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
-                } else {
-                    binding.tvMessageStatus.setText("Đã gửi");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
-                }
+            binding.tvTime.setText(timeString + statusText);
+            
+            if ("ERROR".equalsIgnoreCase(rawStatus)) {
+                binding.tvTime.setTextColor(Color.parseColor("#F44336"));
             } else {
-                binding.tvMessageStatus.setVisibility(View.GONE);
+                binding.tvTime.setTextColor(Color.parseColor("#888888"));
             }
+            
+            binding.tvMessageStatus.setVisibility(View.GONE);
         } else if (holder.binding instanceof ItemChatReceivedBinding) {
             ItemChatReceivedBinding binding = (ItemChatReceivedBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
@@ -132,35 +133,37 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
         } else if (holder.binding instanceof ItemChatImageSentBinding) {
             ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
-            binding.tvTime.setText(timeFormat.format(message.createdAt));
 
-            boolean showStatus = MessageStatus.ERROR.equals(message.messageStatus);
-            if (!showStatus) {
-                if (position == getItemCount() - 1) {
-                    showStatus = true;
-                } else {
-                    MessageEntity nextMsg = getItem(position + 1);
-                    if (nextMsg.senderId != message.senderId) {
-                        showStatus = true;
-                    }
+            String timeString = timeFormat.format(message.createdAt);
+            String statusText = "";
+            String rawStatus = message.messageStatus;
+            
+            if (rawStatus != null) {
+                switch (rawStatus.toUpperCase()) {
+                    case "READ":
+                        statusText = " • Đã xem";
+                        break;
+                    case "DELIVERED":
+                        statusText = " • Đã nhận";
+                        break;
+                    case "ERROR":
+                        statusText = " • Lỗi";
+                        break;
+                    case "SENT":
+                    default:
+                        statusText = " • Đã gửi";
+                        break;
                 }
             }
-
-            if (showStatus) {
-                binding.tvMessageStatus.setVisibility(View.VISIBLE);
-                if (MessageStatus.ERROR.equals(message.messageStatus)) {
-                    binding.tvMessageStatus.setText("Gửi không thành công!");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#F44336"));
-                } else if (MessageStatus.READ.equals(message.messageStatus)) {
-                    binding.tvMessageStatus.setText("Đã xem");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
-                } else {
-                    binding.tvMessageStatus.setText("Đã gửi");
-                    binding.tvMessageStatus.setTextColor(Color.parseColor("#888888"));
-                }
+            binding.tvTime.setText(timeString + statusText);
+            
+            if ("ERROR".equalsIgnoreCase(rawStatus)) {
+                binding.tvTime.setTextColor(Color.parseColor("#F44336"));
             } else {
-                binding.tvMessageStatus.setVisibility(View.GONE);
+                binding.tvTime.setTextColor(Color.parseColor("#888888"));
             }
+            
+            binding.tvMessageStatus.setVisibility(View.GONE);
 
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {

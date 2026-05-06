@@ -50,9 +50,11 @@
         android:layout_marginEnd="@dimen/spacing_small"
         android:textAppearance="@style/TextAppearance.App.Caption"
         android:textSize="11sp"
+        android:maxLines="1"
+        android:singleLine="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/ivContent"
-        tools:text="15:30" />
+        tools:text="15:30 • Đã gửi" />
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivStatus"
