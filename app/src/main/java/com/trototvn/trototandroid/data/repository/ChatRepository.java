@@ -141,6 +141,7 @@ public class ChatRepository {
                 null);
 
         return chatDao.insertMessage(optimistic)
+                .andThen(chatDao.updateConversationLastMessage(conversationId, content, now))
                 .subscribeOn(Schedulers.io())
                 .andThen(apiService.sendMessage(conversationId, new SendMessageRequest(conversationId, content, MessageType.TEXT))
                         .subscribeOn(Schedulers.io()))
@@ -200,6 +201,7 @@ public class ChatRepository {
 
         return chatDao.insertMessage(message)
                 .andThen(chatDao.insertAttachment(attachment))
+                .andThen(chatDao.updateConversationLastMessage(conversationId, MessageType.IMAGE.equals(messageType) ? "[Hình ảnh]" : (content != null && !content.isEmpty() ? content : "[Tập tin đính kèm]"), now))
                 .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> {
                     // Emit socket FILE_SENT event
@@ -233,6 +235,7 @@ public class ChatRepository {
                 MessageType.IMAGE, MessageStatus.SENT, now, now, null);
 
         return chatDao.insertMessage(optimistic)
+                .andThen(chatDao.updateConversationLastMessage(conversationId, "[Hình ảnh]", now))
                 .subscribeOn(Schedulers.io())
                 .andThen(Single.fromCallable(() -> {
                     ContentResolver resolver = context.getContentResolver();
@@ -256,7 +259,11 @@ public class ChatRepository {
 
                     return tempFile;
                 }).flatMap(tempFile -> {
-                    RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), tempFile);
+                    String mimeType = java.net.URLConnection.guessContentTypeFromName(tempFile.getName());
+                    if (mimeType == null) {
+                        mimeType = tempFile.getName().toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+                    }
+                    RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), tempFile);
                     MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", tempFile.getName(), requestFile);
 
                     RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), caption != null ? caption : "");
@@ -438,11 +445,20 @@ public class ChatRepository {
                             }
                         }
 
+                        String lastMsg = dto.getLastMessage();
+                        if (lastMsg == null || lastMsg.trim().isEmpty()) {
+                            if (dto.getLastMessageAt() != null && !dto.getLastMessageAt().isEmpty()) {
+                                lastMsg = "[Hình ảnh]";
+                            } else {
+                                lastMsg = "";
+                            }
+                        }
+
                         entities.add(new ConversationEntity(
                                 dto.conversationId,
                                 partnerName,
                                 partnerAvatar,
-                                dto.getLastMessage() != null ? dto.getLastMessage() : "", 
+                                lastMsg, 
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),
                                 lastDate));

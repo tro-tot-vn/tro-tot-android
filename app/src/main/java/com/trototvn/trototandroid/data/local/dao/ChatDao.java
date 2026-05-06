@@ -67,6 +67,9 @@ public interface ChatDao {
     @Query("UPDATE messages SET deleted_at = :deletedAt, updated_at = :updatedAt WHERE message_id = :messageId")
     Completable softDeleteMessage(long messageId, long deletedAt, long updatedAt);
 
+    @Query("UPDATE conversations SET last_message = :lastMessage, updated_at = :updatedAt WHERE conversation_id = :conversationId")
+    Completable updateConversationLastMessage(long conversationId, String lastMessage, java.util.Date updatedAt);
+
     // ─────────────────────────────────────────────────────────────
     // QUERY – observe (Flowable = real-time updates for UI)
     // ─────────────────────────────────────────────────────────────
