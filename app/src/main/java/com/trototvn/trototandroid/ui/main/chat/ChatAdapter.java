@@ -11,6 +11,7 @@ import androidx.viewbinding.ViewBinding;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
 import com.trototvn.trototandroid.databinding.ItemChatImageReceivedBinding;
 import com.trototvn.trototandroid.databinding.ItemChatImageSentBinding;
 import com.trototvn.trototandroid.databinding.ItemChatReceivedBinding;
@@ -161,31 +162,32 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 binding.tvMessageStatus.setVisibility(View.GONE);
             }
 
-            String url = "";
+            String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
-                url = message.getAttachments().get(0).fileUrl;
-            }
-            if (url != null && !url.isEmpty()) {
-                if (!url.startsWith("http")) {
+                AttachmentDto attachment = message.getAttachments().get(0);
+                String fileId = attachment.cloudFileId;
+                if (fileId == null || fileId.isEmpty()) {
+                    if (attachment.fileUrl != null && !attachment.fileUrl.isEmpty()) {
+                        String[] parts = attachment.fileUrl.split("/");
+                        fileId = parts[parts.length - 1];
+                    }
+                }
+
+                if (fileId != null && !fileId.isEmpty()) {
                     String baseUrl = Constants.BASE_URL;
                     if (baseUrl.endsWith("/")) {
                         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
                     }
-                    if (!url.startsWith("/")) {
-                        url = "/" + url;
-                    }
-                    url = baseUrl + url;
+                    fileUrl = baseUrl + "/api/files/" + fileId;
                 }
-                // Fallback sửa lỗi URL gãy
-                url = url.replace("3333//api", "3333/api");
-                url = url.replace("net//api", "net/api");
             }
 
             Glide.with(binding.getRoot().getContext())
-                    .load(url)
+                    .load(fileUrl)
                     .placeholder(new ColorDrawable(Color.LTGRAY))
                     .error(new ColorDrawable(Color.RED))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                     .into(binding.ivContent);
 
         } else if (holder.binding instanceof ItemChatImageReceivedBinding) {
@@ -193,31 +195,32 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
-            String url = "";
+            String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
-                url = message.getAttachments().get(0).fileUrl;
-            }
-            if (url != null && !url.isEmpty()) {
-                if (!url.startsWith("http")) {
+                AttachmentDto attachment = message.getAttachments().get(0);
+                String fileId = attachment.cloudFileId;
+                if (fileId == null || fileId.isEmpty()) {
+                    if (attachment.fileUrl != null && !attachment.fileUrl.isEmpty()) {
+                        String[] parts = attachment.fileUrl.split("/");
+                        fileId = parts[parts.length - 1];
+                    }
+                }
+
+                if (fileId != null && !fileId.isEmpty()) {
                     String baseUrl = Constants.BASE_URL;
                     if (baseUrl.endsWith("/")) {
                         baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
                     }
-                    if (!url.startsWith("/")) {
-                        url = "/" + url;
-                    }
-                    url = baseUrl + url;
+                    fileUrl = baseUrl + "/api/files/" + fileId;
                 }
-                // Fallback sửa lỗi URL gãy
-                url = url.replace("3333//api", "3333/api");
-                url = url.replace("net//api", "net/api");
             }
 
             Glide.with(binding.getRoot().getContext())
-                    .load(url)
+                    .load(fileUrl)
                     .placeholder(new ColorDrawable(Color.LTGRAY))
                     .error(new ColorDrawable(Color.RED))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                     .into(binding.ivContent);
         }
     }
