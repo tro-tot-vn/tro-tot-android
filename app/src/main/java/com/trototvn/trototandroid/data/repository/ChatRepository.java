@@ -418,7 +418,11 @@ public class ChatRepository {
                                         partnerName = "Người dùng ẩn danh";
                                     }
                                     if (p.avatarId != null) {
-                                        partnerAvatar = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + p.avatarId;
+                                        String baseUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL;
+                                        if (baseUrl.endsWith("/")) {
+                                            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+                                        }
+                                        partnerAvatar = baseUrl + "/api/files/" + p.avatarId;
                                     }
                                     break;
                                 }

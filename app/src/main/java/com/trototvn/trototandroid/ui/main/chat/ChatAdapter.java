@@ -165,8 +165,20 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
                 url = message.getAttachments().get(0).fileUrl;
             }
-            if (url != null && !url.isEmpty() && !url.startsWith("http")) {
-                url = Constants.BASE_URL + url;
+            if (url != null && !url.isEmpty()) {
+                if (!url.startsWith("http")) {
+                    String baseUrl = Constants.BASE_URL;
+                    if (baseUrl.endsWith("/")) {
+                        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+                    }
+                    if (!url.startsWith("/")) {
+                        url = "/" + url;
+                    }
+                    url = baseUrl + url;
+                }
+                // Fallback sửa lỗi URL gãy
+                url = url.replace("3333//api", "3333/api");
+                url = url.replace("net//api", "net/api");
             }
 
             Glide.with(binding.getRoot().getContext())
@@ -185,8 +197,20 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
                 url = message.getAttachments().get(0).fileUrl;
             }
-            if (url != null && !url.isEmpty() && !url.startsWith("http")) {
-                url = Constants.BASE_URL + url;
+            if (url != null && !url.isEmpty()) {
+                if (!url.startsWith("http")) {
+                    String baseUrl = Constants.BASE_URL;
+                    if (baseUrl.endsWith("/")) {
+                        baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+                    }
+                    if (!url.startsWith("/")) {
+                        url = "/" + url;
+                    }
+                    url = baseUrl + url;
+                }
+                // Fallback sửa lỗi URL gãy
+                url = url.replace("3333//api", "3333/api");
+                url = url.replace("net//api", "net/api");
             }
 
             Glide.with(binding.getRoot().getContext())
