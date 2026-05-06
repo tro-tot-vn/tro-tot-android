@@ -36,13 +36,23 @@ public class ChatListViewModel extends BaseViewModel {
     /**
      * Đồng bộ danh sách hội thoại từ server về Room DB.
      */
-    private void fetchConversationsFromApi() {
+    public void fetchConversationsFromApi(Runnable onComplete) {
         addDisposable(chatRepository.fetchConversations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        () -> Timber.d("Fetched conversations successfully"),
-                        error -> Timber.e(error, "Failed to fetch conversations")));
+                        () -> {
+                            Timber.d("Fetched conversations successfully");
+                            if (onComplete != null) onComplete.run();
+                        },
+                        error -> {
+                            Timber.e(error, "Failed to fetch conversations");
+                            if (onComplete != null) onComplete.run();
+                        }));
+    }
+
+    private void fetchConversationsFromApi() {
+        fetchConversationsFromApi(null);
     }
 
     /**

@@ -37,6 +37,13 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding>
         adapter = new ConversationAdapter(this);
         binding.rvConversations.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvConversations.setAdapter(adapter);
+
+        // Pull to refresh
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            viewModel.fetchConversationsFromApi(() -> {
+                binding.swipeRefreshLayout.setRefreshing(false);
+            });
+        });
     }
 
     @Override
