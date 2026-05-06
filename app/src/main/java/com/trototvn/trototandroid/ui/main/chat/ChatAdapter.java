@@ -1,5 +1,6 @@
 package com.trototvn.trototandroid.ui.main.chat;
 
+import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -14,10 +15,10 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.viewbinding.ViewBinding;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.textview.MaterialTextView;
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
-import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
-import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
 import com.trototvn.trototandroid.databinding.ItemChatImageReceivedBinding;
 import com.trototvn.trototandroid.databinding.ItemChatImageSentBinding;
 import com.trototvn.trototandroid.databinding.ItemChatReceivedBinding;
@@ -31,6 +32,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -220,13 +222,21 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 }
             }
 
-            Glide.with(binding.getRoot().getContext())
-                    .load(fileUrl)
-                    .placeholder(new ColorDrawable(Color.LTGRAY))
-                    .error(new ColorDrawable(Color.RED))
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
-                    .into(binding.ivContent);
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                Glide.with(binding.getRoot().getContext()).clear(binding.ivContent);
+                binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
+            } else {
+                Glide.with(binding.getRoot().getContext())
+                        .load(fileUrl)
+                        .placeholder(new ColorDrawable(Color.LTGRAY))
+                        .error(new ColorDrawable(Color.RED))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+                        .into(binding.ivContent);
+
+                String finalUrl = fileUrl;
+                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), finalUrl));
+            }
 
         } else if (holder.binding instanceof ItemChatImageReceivedBinding) {
             ItemChatImageReceivedBinding binding = (ItemChatImageReceivedBinding) holder.binding;
@@ -255,17 +265,25 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 }
             }
 
-            Glide.with(binding.getRoot().getContext())
-                    .load(fileUrl)
-                    .placeholder(new ColorDrawable(Color.LTGRAY))
-                    .error(new ColorDrawable(Color.RED))
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
-                    .into(binding.ivContent);
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                Glide.with(binding.getRoot().getContext()).clear(binding.ivContent);
+                binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
+            } else {
+                Glide.with(binding.getRoot().getContext())
+                        .load(fileUrl)
+                        .placeholder(new ColorDrawable(Color.LTGRAY))
+                        .error(new ColorDrawable(Color.RED))
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+                        .into(binding.ivContent);
+
+                String finalUrl = fileUrl;
+                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), finalUrl));
+            }
         }
     }
 
-    private void bindDateHeader(com.google.android.material.textview.MaterialTextView tvDateHeader, MessageEntity message, int position) {
+    private void bindDateHeader(MaterialTextView tvDateHeader, MessageEntity message, int position) {
         boolean showHeader = false;
         if (position == 0) {
             showHeader = true;
@@ -357,11 +375,19 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             String rawStatus = message.getMessageStatus();
             if (rawStatus != null) {
                 switch (rawStatus.toUpperCase()) {
-                    case "READ": statusText = " • Đã xem"; break;
-                    case "DELIVERED": statusText = " • Đã nhận"; break;
-                    case "ERROR": statusText = " • Lỗi gửi"; break;
+                    case "READ":
+                        statusText = " • Đã xem";
+                        break;
+                    case "DELIVERED":
+                        statusText = " • Đã nhận";
+                        break;
+                    case "ERROR":
+                        statusText = " • Lỗi gửi";
+                        break;
                     case "SENT":
-                    default: statusText = " • Đã gửi"; break;
+                    default:
+                        statusText = " • Đã gửi";
+                        break;
                 }
             }
         }
@@ -411,6 +437,26 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
         // 6. Hiển thị Dialog
         dialog.setContentView(layout);
+        dialog.show();
+    }
+
+    private void showFullScreenImage(Context context, String imageUrl) {
+        Dialog dialog = new android.app.Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        ImageView imageView = new ImageView(context);
+        imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        Glide.with(context)
+                .load(imageUrl)
+                .placeholder(new ColorDrawable(Color.LTGRAY))
+                .error(new ColorDrawable(Color.RED))
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(imageView);
+
+        imageView.setOnClickListener(v -> dialog.dismiss());
+        dialog.setContentView(imageView);
         dialog.show();
     }
 }
