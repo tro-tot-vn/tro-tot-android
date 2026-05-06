@@ -65,6 +65,33 @@ public class MessageEntity {
         this.attachments = attachments;
     }
 
+    @NonNull
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(@NonNull Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @NonNull
+    public String getMessageStatus() {
+        return messageStatus;
+    }
+
+    public void setMessageStatus(@NonNull String messageStatus) {
+        this.messageStatus = messageStatus;
+    }
+
+    @NonNull
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(@NonNull String content) {
+        this.content = content;
+    }
+
     public MessageEntity(
             long messageId,
             long conversationId,

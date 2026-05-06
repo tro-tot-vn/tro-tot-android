@@ -1,5 +1,10 @@
 package com.trototvn.trototandroid.ui.main.chat;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.graphics.Typeface;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.viewbinding.ViewBinding;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
@@ -25,6 +31,9 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -93,77 +102,106 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             ItemChatSentBinding binding = (ItemChatSentBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
-            
+
+            boolean isLastMessage = (position == getItemCount() - 1);
             String timeString = timeFormat.format(message.createdAt);
-            String statusText = "";
-            String rawStatus = message.messageStatus;
-            
-            if (rawStatus != null) {
-                switch (rawStatus.toUpperCase()) {
-                    case "READ":
-                        statusText = " • Đã xem";
-                        break;
-                    case "DELIVERED":
-                        statusText = " • Đã nhận";
-                        break;
-                    case "ERROR":
-                        statusText = " • Lỗi";
-                        break;
-                    case "SENT":
-                    default:
-                        statusText = " • Đã gửi";
-                        break;
+
+            if (isLastMessage) {
+                String statusText = "";
+                String rawStatus = message.messageStatus;
+
+                if (rawStatus != null) {
+                    switch (rawStatus.toUpperCase()) {
+                        case "READ":
+                            statusText = " • Đã xem";
+                            break;
+                        case "DELIVERED":
+                            statusText = " • Đã nhận";
+                            break;
+                        case "ERROR":
+                            statusText = " • Lỗi";
+                            break;
+                        case "SENT":
+                        default:
+                            statusText = " • Đã gửi";
+                            break;
+                    }
                 }
-            }
-            binding.tvTime.setText(timeString + statusText);
-            
-            if ("ERROR".equalsIgnoreCase(rawStatus)) {
-                binding.tvTime.setTextColor(Color.parseColor("#F44336"));
+                binding.tvTime.setText(timeString + statusText);
+
+                if ("ERROR".equalsIgnoreCase(rawStatus)) {
+                    binding.tvTime.setTextColor(Color.parseColor("#F44336"));
+                } else {
+                    binding.tvTime.setTextColor(Color.parseColor("#888888"));
+                }
             } else {
+                binding.tvTime.setText(timeString);
                 binding.tvTime.setTextColor(Color.parseColor("#888888"));
             }
-            
+
             binding.tvMessageStatus.setVisibility(View.GONE);
+
+            binding.cvMessage.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, true);
+                return true;
+            });
         } else if (holder.binding instanceof ItemChatReceivedBinding) {
             ItemChatReceivedBinding binding = (ItemChatReceivedBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
             // Avatar xử lý sau
+
+            binding.cvMessage.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, false);
+                return true;
+            });
         } else if (holder.binding instanceof ItemChatImageSentBinding) {
             ItemChatImageSentBinding binding = (ItemChatImageSentBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
 
+            boolean isLastMessage = (position == getItemCount() - 1);
             String timeString = timeFormat.format(message.createdAt);
-            String statusText = "";
-            String rawStatus = message.messageStatus;
-            
-            if (rawStatus != null) {
-                switch (rawStatus.toUpperCase()) {
-                    case "READ":
-                        statusText = " • Đã xem";
-                        break;
-                    case "DELIVERED":
-                        statusText = " • Đã nhận";
-                        break;
-                    case "ERROR":
-                        statusText = " • Lỗi";
-                        break;
-                    case "SENT":
-                    default:
-                        statusText = " • Đã gửi";
-                        break;
+
+            if (isLastMessage) {
+                String statusText = "";
+                String rawStatus = message.messageStatus;
+
+                if (rawStatus != null) {
+                    switch (rawStatus.toUpperCase()) {
+                        case "READ":
+                            statusText = " • Đã xem";
+                            break;
+                        case "DELIVERED":
+                            statusText = " • Đã nhận";
+                            break;
+                        case "ERROR":
+                            statusText = " • Lỗi";
+                            break;
+                        case "SENT":
+                        default:
+                            statusText = " • Đã gửi";
+                            break;
+                    }
                 }
-            }
-            binding.tvTime.setText(timeString + statusText);
-            
-            if ("ERROR".equalsIgnoreCase(rawStatus)) {
-                binding.tvTime.setTextColor(Color.parseColor("#F44336"));
+                binding.tvTime.setText(timeString + statusText);
+
+                if ("ERROR".equalsIgnoreCase(rawStatus)) {
+                    binding.tvTime.setTextColor(Color.parseColor("#F44336"));
+                } else {
+                    binding.tvTime.setTextColor(Color.parseColor("#888888"));
+                }
             } else {
+                binding.tvTime.setText(timeString);
                 binding.tvTime.setTextColor(Color.parseColor("#888888"));
             }
-            
+
             binding.tvMessageStatus.setVisibility(View.GONE);
+
+            binding.ivContent.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, true);
+                return true;
+            });
 
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
@@ -194,6 +232,11 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             ItemChatImageReceivedBinding binding = (ItemChatImageReceivedBinding) holder.binding;
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
+
+            binding.ivContent.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, false);
+                return true;
+            });
 
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
@@ -289,5 +332,85 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                         oldItem.messageStatus.equals(newItem.messageStatus);
             }
         };
+    }
+
+    // =======================================================
+    // MENU BOTTOM SHEET CHO TIN NHẮN (NHẤN GIỮ)
+    // =======================================================
+    private void showMessageContextMenu(Context context, MessageEntity message, boolean isSentByMe) {
+        BottomSheetDialog dialog = new BottomSheetDialog(context);
+
+        // 1. Tạo Layout chứa các thành phần
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(60, 50, 60, 50);
+
+        // 2. Định dạng ngày giờ và trạng thái cho Header
+        String dateTimeString = "Không rõ thời gian";
+        if (message.getCreatedAt() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            dateTimeString = sdf.format(message.getCreatedAt());
+        }
+
+        String statusText = "";
+        if (isSentByMe) {
+            String rawStatus = message.getMessageStatus();
+            if (rawStatus != null) {
+                switch (rawStatus.toUpperCase()) {
+                    case "READ": statusText = " • Đã xem"; break;
+                    case "DELIVERED": statusText = " • Đã nhận"; break;
+                    case "ERROR": statusText = " • Lỗi gửi"; break;
+                    case "SENT":
+                    default: statusText = " • Đã gửi"; break;
+                }
+            }
+        }
+
+        // 3. Tạo TextView Header (Ngày giờ + Status)
+        TextView tvHeader = new TextView(context);
+        tvHeader.setText(dateTimeString + statusText);
+        tvHeader.setTextSize(14);
+        tvHeader.setTypeface(null, Typeface.BOLD);
+        tvHeader.setGravity(Gravity.CENTER);
+        tvHeader.setTextColor(Color.GRAY);
+        tvHeader.setPadding(0, 0, 0, 60);
+        layout.addView(tvHeader);
+
+        // 4. Tạo nút Copy (Chỉ copy text, nếu là ảnh thì báo không hỗ trợ)
+        TextView tvCopy = new TextView(context);
+        tvCopy.setText("Sao chép tin nhắn");
+        tvCopy.setTextSize(16);
+        tvCopy.setPadding(0, 40, 0, 40);
+        tvCopy.setOnClickListener(v -> {
+            if (message.getContent() != null && !message.getContent().isEmpty()) {
+                // Logic copy text vào Clipboard
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Copied Message", message.getContent());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(context, "Đã sao chép vào khay nhớ tạm", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "Chỉ hỗ trợ sao chép văn bản", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+        layout.addView(tvCopy);
+
+        // 5. Tạo nút Delete (Màu đỏ)
+        if (isSentByMe) {
+            android.widget.TextView tvDelete = new android.widget.TextView(context);
+            tvDelete.setText("Xóa tin nhắn");
+            tvDelete.setTextSize(16);
+            tvDelete.setTextColor(android.graphics.Color.parseColor("#F44336")); // Màu đỏ
+            tvDelete.setPadding(0, 40, 0, 40);
+            tvDelete.setOnClickListener(v -> {
+                android.widget.Toast.makeText(context, "Chức năng xóa đang phát triển", android.widget.Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+            layout.addView(tvDelete);
+        }
+
+        // 6. Hiển thị Dialog
+        dialog.setContentView(layout);
+        dialog.show();
     }
 }
