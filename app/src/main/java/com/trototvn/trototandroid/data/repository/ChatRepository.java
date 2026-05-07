@@ -43,6 +43,9 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import timber.log.Timber;
 
 /**
@@ -407,7 +410,8 @@ public class ChatRepository {
                     try {
                         if (sessionManager.getUserId() != null)
                             currentUserId = Long.parseLong(sessionManager.getUserId());
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
 
                     java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
                     isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
@@ -458,7 +462,7 @@ public class ChatRepository {
                                 dto.conversationId,
                                 partnerName,
                                 partnerAvatar,
-                                lastMsg, 
+                                lastMsg,
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),
                                 lastDate));
@@ -525,6 +529,34 @@ public class ChatRepository {
     public Completable updateMessageStatus(long messageId, @MessageStatus String status) {
         return chatDao.updateMessageStatus(messageId, status, System.currentTimeMillis())
                 .subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Gọi API xóa tin nhắn. Nếu thành công, xóa cứng khỏi Room Database.
+     */
+    public Completable deleteMessage(long messageId) {
+        return Completable.create(emitter -> {
+            apiService.deleteMessage(messageId).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful() || response.code() == 204) {
+                        chatDao.deleteMessageLocally(messageId)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> emitter.onComplete(),
+                                        emitter::onError
+                                );
+                    } else {
+                        emitter.onError(new Exception("Lỗi xóa tin nhắn API: " + response.code()));
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    emitter.onError(t);
+                }
+            });
+        });
     }
 
     // ─────────────────────────────────────────────────────────────

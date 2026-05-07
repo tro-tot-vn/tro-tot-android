@@ -30,6 +30,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
@@ -275,6 +276,12 @@ public interface ApiService {
     @POST("api/chat/messages/read")
     Single<ResponseData<Void>> markAsRead(
             @Body MarkReadRequest request);
+
+    /**
+     * DELETE - Xóa tin nhắn.
+     */
+    @DELETE("api/chat/messages/{messageId}")
+    Call<Void> deleteMessage(@Path("messageId") long messageId);
 
     /**
      * POST - Gửi file/ảnh trong hội thoại.

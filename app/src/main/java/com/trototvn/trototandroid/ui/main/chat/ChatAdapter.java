@@ -57,6 +57,16 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
     private final long currentUserId;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
+    public interface OnMessageDeleteListener {
+        void onDelete(MessageEntity message);
+    }
+
+    private OnMessageDeleteListener deleteListener;
+
+    public void setOnMessageDeleteListener(OnMessageDeleteListener listener) {
+        this.deleteListener = listener;
+    }
+
     public ChatAdapter(long currentUserId) {
         this.currentUserId = currentUserId;
     }
@@ -423,13 +433,17 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
 
         // 5. Tạo nút Delete (Màu đỏ)
         if (isSentByMe) {
-            android.widget.TextView tvDelete = new android.widget.TextView(context);
+            TextView tvDelete = new TextView(context);
             tvDelete.setText("Xóa tin nhắn");
             tvDelete.setTextSize(16);
-            tvDelete.setTextColor(android.graphics.Color.parseColor("#F44336")); // Màu đỏ
+            tvDelete.setTextColor(Color.parseColor("#F44336")); // Màu đỏ
             tvDelete.setPadding(0, 40, 0, 40);
             tvDelete.setOnClickListener(v -> {
-                android.widget.Toast.makeText(context, "Chức năng xóa đang phát triển", android.widget.Toast.LENGTH_SHORT).show();
+                if (deleteListener != null) {
+                    deleteListener.onDelete(message);
+                } else {
+                    Toast.makeText(context, "Chức năng xóa chưa được thiết lập", Toast.LENGTH_SHORT).show();
+                }
                 dialog.dismiss();
             });
             layout.addView(tvDelete);

@@ -187,6 +187,20 @@ public class ChatViewModel extends BaseViewModel {
         );
     }
 
+    /**
+     * Xóa tin nhắn (gọi Repository để thực hiện API + Room)
+     */
+    public void deleteMessage(long messageId) {
+        addDisposable(chatRepository.deleteMessage(messageId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        () -> Timber.d("Đã xóa tin nhắn: %d", messageId),
+                        error -> Timber.e(error, "Xóa tin nhắn thất bại")
+                )
+        );
+    }
+
     // Getters
     public LiveData<Resource<List<MessageEntity>>> getChatMessagesLiveData() {
         return chatMessagesLiveData;

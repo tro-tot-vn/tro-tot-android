@@ -104,6 +104,9 @@ public interface ChatDao {
     @Query("DELETE FROM conversations WHERE conversation_id = :conversationId")
     Completable deleteConversation(long conversationId);
 
+    @Query("DELETE FROM messages WHERE message_id = :messageId")
+    Completable deleteMessageLocally(long messageId);
+
     // ─────────────────────────────────────────────────────────────
     // CLEANUP – giữ bảng Room gọn nhẹ
     // ─────────────────────────────────────────────────────────────

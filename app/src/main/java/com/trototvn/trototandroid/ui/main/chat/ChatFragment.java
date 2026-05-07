@@ -99,6 +99,9 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
         }
 
         adapter = new ChatAdapter(currentUserId);
+        adapter.setOnMessageDeleteListener(message -> {
+            viewModel.deleteMessage(message.messageId);
+        });
 
         // RecyclerView Setup
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
