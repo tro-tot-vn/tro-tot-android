@@ -19,6 +19,9 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class ChatListFragment extends BaseFragment<FragmentChatListBinding>
         implements ConversationAdapter.OnConversationClickListener {
 
+    @javax.inject.Inject
+    com.trototvn.trototandroid.utils.SessionManager sessionManager;
+
     private ChatListViewModel viewModel;
     private ConversationAdapter adapter;
 
@@ -33,8 +36,15 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding>
         // Toolbar
         binding.toolbar.setTitle("Tin nhắn");
 
+        long myUserId = 0;
+        try {
+            if (sessionManager.getUserId() != null) {
+                myUserId = Long.parseLong(sessionManager.getUserId());
+            }
+        } catch (NumberFormatException ignored) {}
+
         // Adapter & RecyclerView
-        adapter = new ConversationAdapter(this);
+        adapter = new ConversationAdapter(myUserId, this);
         binding.rvConversations.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvConversations.setAdapter(adapter);
 

@@ -71,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
 
             // 2. Bật kết nối Socket
             socketIOManager.connect(sessionManager.getUserId());
+
+            // 3. Lắng nghe socket events globally
+            chatRepository.observeIncomingMessages();
         }
 
         handleIntent(getIntent());
@@ -136,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
      * Call this from fragments to logout
      */
     public void logout() {
+        chatRepository.stopObservingIncomingMessages();
         socketIOManager.disconnect();
         sessionManager.clearSession();
 

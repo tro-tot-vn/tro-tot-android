@@ -103,8 +103,8 @@ public class ChatRepository {
      * Trả về Flowable real-time danh sách hội thoại từ Room.
      * ViewModel subscribe trên IO, observe trên Main.
      */
-    public Flowable<List<ConversationEntity>> observeConversations() {
-        return chatDao.getAllConversations()
+    public Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> observeConversations() {
+        return chatDao.getConversationsWithStatus()
                 .subscribeOn(Schedulers.io());
     }
 

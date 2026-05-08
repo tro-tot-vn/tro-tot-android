@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
+import com.trototvn.trototandroid.data.local.entity.ConversationUIModel;
 import com.trototvn.trototandroid.databinding.ItemConversationBinding;
 import com.trototvn.trototandroid.ui.base.BaseAdapter;
 import com.trototvn.trototandroid.ui.base.BaseDiffCallback;
@@ -19,16 +20,18 @@ import java.util.Locale;
  * ConversationAdapter - Hiển thị danh sách các cuộc hội thoại (Inbox).
  * Kiến trúc: Kế thừa BaseAdapter và BaseDiffCallback.
  */
-public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemConversationBinding> {
+public class ConversationAdapter extends BaseAdapter<ConversationUIModel, ItemConversationBinding> {
 
     private final OnConversationClickListener listener;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private final long myUserId;
 
     public interface OnConversationClickListener {
         void onConversationClick(long conversationId, String partnerName);
     }
 
-    public ConversationAdapter(OnConversationClickListener listener) {
+    public ConversationAdapter(long myUserId, OnConversationClickListener listener) {
+        this.myUserId = myUserId;
         this.listener = listener;
     }
 
@@ -38,7 +41,8 @@ public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemCon
     }
 
     @Override
-    protected void bind(ItemConversationBinding binding, ConversationEntity conversation, int position) {
+    protected void bind(ItemConversationBinding binding, ConversationUIModel item, int position) {
+        ConversationEntity conversation = item.conversation;
         binding.tvName.setText(conversation.partnerName);
         
         if (conversation.lastMessage != null && !conversation.lastMessage.trim().isEmpty()) {
@@ -64,16 +68,30 @@ public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemCon
             binding.tvTime.setText("");
         }
 
-        // Badge unread
-        if (conversation.unreadCount > 0) {
-            binding.badgeUnread.setVisibility(View.VISIBLE);
-            binding.badgeUnread.setText(String.valueOf(conversation.unreadCount));
-            // Phông chữ đậm cho tên và tin nhắn khi chưa đọc (optional style)
+        // Unread highlighting
+        boolean isUnread = false;
+        if (item.lastMessageSenderId != null && item.lastMessageSenderId != myUserId) {
+            isUnread = !"Read".equalsIgnoreCase(item.lastMessageStatus);
+        }
+                           
+        if (isUnread || conversation.unreadCount > 0) {
+            if (conversation.unreadCount > 0) {
+                binding.badgeUnread.setVisibility(View.VISIBLE);
+                binding.badgeUnread.setText(String.valueOf(conversation.unreadCount));
+            } else {
+                binding.badgeUnread.setVisibility(View.GONE);
+            }
+            
+            binding.tvLastMessage.setTypeface(null, android.graphics.Typeface.BOLD);
+            binding.tvLastMessage.setTextColor(android.graphics.Color.BLACK);
+            binding.tvName.setTypeface(null, android.graphics.Typeface.BOLD);
             binding.tvName.setAlpha(1.0f);
             binding.tvLastMessage.setAlpha(1.0f);
         } else {
             binding.badgeUnread.setVisibility(View.GONE);
-            // Làm mờ nhẹ text nếu đã đọc (optional)
+            binding.tvLastMessage.setTypeface(null, android.graphics.Typeface.NORMAL);
+            binding.tvLastMessage.setTextColor(android.graphics.Color.GRAY);
+            binding.tvName.setTypeface(null, android.graphics.Typeface.NORMAL);
         }
 
         binding.getRoot().setOnClickListener(v -> {
@@ -92,18 +110,20 @@ public class ConversationAdapter extends BaseAdapter<ConversationEntity, ItemCon
     }
 
     @Override
-    protected DiffUtil.Callback createDiffCallback(List<ConversationEntity> oldList, List<ConversationEntity> newList) {
-        return new BaseDiffCallback<ConversationEntity>(oldList, newList) {
+    protected DiffUtil.Callback createDiffCallback(List<ConversationUIModel> oldList, List<ConversationUIModel> newList) {
+        return new BaseDiffCallback<ConversationUIModel>(oldList, newList) {
             @Override
-            protected boolean areItemsTheSame(ConversationEntity oldItem, ConversationEntity newItem) {
-                return oldItem.conversationId == newItem.conversationId;
+            protected boolean areItemsTheSame(ConversationUIModel oldItem, ConversationUIModel newItem) {
+                return oldItem.conversation.conversationId == newItem.conversation.conversationId;
             }
 
             @Override
-            protected boolean areContentsTheSame(ConversationEntity oldItem, ConversationEntity newItem) {
-                return oldItem.updatedAt.equals(newItem.updatedAt) &&
-                        oldItem.unreadCount == newItem.unreadCount &&
-                        oldItem.lastMessage.equals(newItem.lastMessage);
+            protected boolean areContentsTheSame(ConversationUIModel oldItem, ConversationUIModel newItem) {
+                return oldItem.conversation.updatedAt.equals(newItem.conversation.updatedAt) &&
+                        oldItem.conversation.unreadCount == newItem.conversation.unreadCount &&
+                        oldItem.conversation.lastMessage.equals(newItem.conversation.lastMessage) &&
+                        java.util.Objects.equals(oldItem.lastMessageSenderId, newItem.lastMessageSenderId) &&
+                        java.util.Objects.equals(oldItem.lastMessageStatus, newItem.lastMessageStatus);
             }
         };
     }

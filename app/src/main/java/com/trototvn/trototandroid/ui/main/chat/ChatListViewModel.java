@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
+import com.trototvn.trototandroid.data.local.entity.ConversationUIModel;
 import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
 
@@ -24,7 +25,7 @@ public class ChatListViewModel extends BaseViewModel {
 
     private final ChatRepository chatRepository;
 
-    private final MutableLiveData<List<ConversationEntity>> conversationsLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<ConversationUIModel>> conversationsLiveData = new MutableLiveData<>();
 
     @Inject
     public ChatListViewModel(ChatRepository chatRepository) {
@@ -67,7 +68,7 @@ public class ChatListViewModel extends BaseViewModel {
                         error -> Timber.e(error, "Observe conversations error")));
     }
 
-    public LiveData<List<ConversationEntity>> getConversationsLiveData() {
+    public LiveData<List<ConversationUIModel>> getConversationsLiveData() {
         return conversationsLiveData;
     }
 }
