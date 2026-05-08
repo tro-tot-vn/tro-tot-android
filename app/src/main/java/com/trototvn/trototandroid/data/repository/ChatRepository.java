@@ -319,21 +319,34 @@ public class ChatRepository {
         Disposable d = socketIOManager.getMessageReceived()
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        raw -> {
-                            try {
-                                SocketMessageEvent event = gson.fromJson(raw.toString(), SocketMessageEvent.class);
-                                MessageEntity entity = mapSocketEventToEntity(event);
-                                chatDao.insertMessage(entity)
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                () -> Timber.d("Inserted incoming message: %s", entity.messageId),
-                                                err -> Timber.e(err, "Insert incoming message failed"));
-                            } catch (Exception e) {
-                                Timber.e(e, "Parse socket message failed: %s", raw);
-                            }
-                        },
+                        raw -> saveIncomingMessage(raw.toString()),
                         error -> Timber.e(error, "Socket message stream error"));
         socketDisposables.add(d);
+    }
+
+    /**
+     * Lưu tin nhắn nhận được từ Socket vào Room DB và cập nhật hội thoại.
+     */
+    public void saveIncomingMessage(String jsonPayload) {
+        Single.fromCallable(() -> {
+            MessageDto dto = gson.fromJson(jsonPayload, MessageDto.class);
+            return mapDtoToEntity(dto);
+        })
+        .flatMapCompletable(entity -> {
+            String content = entity.content;
+            if (MessageType.IMAGE.equals(entity.messageType)) {
+                content = "[Hình ảnh]";
+            } else if (MessageType.FILE.equals(entity.messageType)) {
+                content = "[Tập tin đính kèm]";
+            }
+            return chatDao.insertMessage(entity)
+                    .andThen(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
+        })
+        .subscribeOn(Schedulers.io())
+        .subscribe(
+                () -> Timber.d("Saved incoming message & updated conversation"),
+                err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage())
+        );
     }
 
     public void stopObservingIncomingMessages() {
@@ -470,6 +483,60 @@ public class ChatRepository {
 
                     return chatDao.insertConversations(entities);
                 });
+    }
+
+    /**
+     * Đồng bộ tin nhắn bị lỡ khi offline (Handshake Sync).
+     */
+    public void performHandshakeSync() {
+        Single.fromCallable(() -> {
+            java.util.Date latestDate = chatDao.getLatestMessageTimestampSync();
+            if (latestDate != null) {
+                java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                return isoFormat.format(latestDate);
+            }
+            return "";
+        })
+        .flatMap(since -> apiService.syncMissedMessages(since, 100))
+        .flatMapCompletable(response -> {
+            if (response == null || response.getData() == null || response.getData().isEmpty()) {
+                return Completable.complete();
+            }
+            
+            List<MessageDto> dtos = response.getData();
+            List<MessageEntity> entities = new ArrayList<>();
+            List<MessageAttachmentEntity> attachments = new ArrayList<>();
+            List<Completable> updates = new ArrayList<>();
+
+            for (MessageDto dto : dtos) {
+                MessageEntity entity = mapDtoToEntity(dto);
+                entities.add(entity);
+                if (dto.attachments != null) {
+                    for (AttachmentDto att : dto.attachments) {
+                        attachments.add(mapAttachmentDtoToEntity(att));
+                    }
+                }
+                
+                String content = entity.content;
+                if (MessageType.IMAGE.equals(entity.messageType)) {
+                    content = "[Hình ảnh]";
+                } else if (MessageType.FILE.equals(entity.messageType)) {
+                    content = "[Tập tin đính kèm]";
+                }
+                
+                updates.add(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
+            }
+            
+            return chatDao.insertMessages(entities)
+                .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
+                .andThen(Completable.merge(updates));
+        })
+        .subscribeOn(Schedulers.io())
+        .subscribe(
+            () -> Timber.d("Handshake sync completed successfully"),
+            error -> Timber.e(error, "Handshake sync failed")
+        );
     }
 
     // ─────────────────────────────────────────────────────────────

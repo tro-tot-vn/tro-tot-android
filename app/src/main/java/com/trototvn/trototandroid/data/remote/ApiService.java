@@ -257,6 +257,14 @@ public interface ApiService {
             @Query("offset") int offset);
 
     /**
+     * GET - Sync missed messages when offline.
+     */
+    @GET("api/conversations/sync")
+    Single<ResponseData<List<MessageDto>>> syncMissedMessages(
+            @Query("since") String since,
+            @Query("limit") int limit);
+
+    /**
      * GET - Lấy danh sách hội thoại.
      */
     @GET("api/conversations")

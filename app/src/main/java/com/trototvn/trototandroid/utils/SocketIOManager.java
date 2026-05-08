@@ -21,6 +21,7 @@ import timber.log.Timber;
 public class SocketIOManager {
 
     private final Gson gson;
+    private final SessionManager sessionManager;
     private Socket socket;
 
     private final PublishSubject<String> connectionStatusSubject = PublishSubject.create();
@@ -29,8 +30,9 @@ public class SocketIOManager {
     private final PublishSubject<Object> userStatusSubject = PublishSubject.create();
 
     @Inject
-    public SocketIOManager(Gson gson) {
+    public SocketIOManager(Gson gson, SessionManager sessionManager) {
         this.gson = gson;
+        this.sessionManager = sessionManager;
     }
 
     /**
@@ -55,12 +57,24 @@ public class SocketIOManager {
             // Pass userId in query as per backend implementation
             options.query = "userId=" + userId;
 
-            // Also attempt handshake auth if supported by client version
-            // options.auth = Collections.singletonMap("userId", userId);
+            // Thêm Token vào quá trình xác thực Socket
+            String token = sessionManager.getToken();
+            if (token != null) {
+                // Cách 1: Truyền qua Auth Map (Chuẩn Socket.IO v3/v4)
+                java.util.Map<String, String> auth = new java.util.HashMap<>();
+                auth.put("token", token);
+                options.auth = auth;
+
+                // Cách 2: Truyền qua Extra Headers (Nếu Backend yêu cầu Header)
+                java.util.Map<String, java.util.List<String>> headers = new java.util.HashMap<>();
+                headers.put("Authorization", java.util.Collections.singletonList("Bearer " + token));
+                options.extraHeaders = headers;
+            }
 
             socket = IO.socket(Constants.BASE_URL, options);
 
             setupListeners();
+            Timber.d("Connecting socket with token...");
             socket.connect();
 
             Timber.d("Starting Socket.IO connection for user: %s", userId);

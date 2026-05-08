@@ -8,9 +8,11 @@ import com.trototvn.trototandroid.data.remote.ApiClient;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.data.remote.AuthInterceptor;
 import com.trototvn.trototandroid.data.remote.NetworkInterceptor;
+import com.trototvn.trototandroid.data.remote.ProfileApiService;
 import com.trototvn.trototandroid.data.remote.TokenAuthenticator;
 import com.trototvn.trototandroid.utils.Constants;
 import com.trototvn.trototandroid.utils.SessionManager;
+import com.trototvn.trototandroid.utils.SocketIOManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -110,13 +112,13 @@ public class NetworkModule {
 
     @Provides
     @Singleton
-    public com.trototvn.trototandroid.data.remote.ProfileApiService provideProfileApiService(Retrofit retrofit) {
-        return retrofit.create(com.trototvn.trototandroid.data.remote.ProfileApiService.class);
+    public ProfileApiService provideProfileApiService(Retrofit retrofit) {
+        return retrofit.create(ProfileApiService.class);
     }
 
     @Provides
     @Singleton
-    public com.trototvn.trototandroid.utils.SocketIOManager provideSocketIOManager(Gson gson) {
-        return new com.trototvn.trototandroid.utils.SocketIOManager(gson);
+    public SocketIOManager provideSocketIOManager(Gson gson, SessionManager sessionManager) {
+        return new SocketIOManager(gson, sessionManager);
     }
 }

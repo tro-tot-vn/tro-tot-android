@@ -15,10 +15,12 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.trototvn.trototandroid.R;
+import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.databinding.ActivityMainBinding;
 import com.trototvn.trototandroid.ui.auth.AuthActivity;
 import com.trototvn.trototandroid.ui.splash.SplashActivity;
 import com.trototvn.trototandroid.utils.SessionManager;
+import com.trototvn.trototandroid.utils.SocketIOManager;
 
 import javax.inject.Inject;
 
@@ -38,7 +40,10 @@ public class MainActivity extends AppCompatActivity {
     SessionManager sessionManager;
 
     @Inject
-    com.trototvn.trototandroid.utils.SocketIOManager socketIOManager;
+    SocketIOManager socketIOManager;
+
+    @Inject
+    ChatRepository chatRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Connect socket if logged in
         if (sessionManager.isLoggedIn()) {
+            // 1. Bắt đầu kéo dữ liệu offline về DB
+            chatRepository.performHandshakeSync();
+
+            // 2. Bật kết nối Socket
             socketIOManager.connect(sessionManager.getUserId());
         }
 
@@ -81,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     long conversationId = Long.parseLong(conversationIdStr);
                     String partnerName = intent.getStringExtra("partnerName");
-                    if (partnerName == null) partnerName = "Chat Partner";
+                    if (partnerName == null)
+                        partnerName = "Chat Partner";
 
                     Bundle bundle = new Bundle();
                     bundle.putLong("conversationId", conversationId);

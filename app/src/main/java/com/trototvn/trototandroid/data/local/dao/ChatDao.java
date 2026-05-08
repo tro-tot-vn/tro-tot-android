@@ -85,6 +85,9 @@ public interface ChatDao {
     @Query("SELECT * FROM conversations ORDER BY updated_at DESC")
     Flowable<List<ConversationEntity>> getAllConversations();
 
+    @Query("SELECT MAX(created_at) FROM messages")
+    java.util.Date getLatestMessageTimestampSync();
+
     @Query("SELECT * FROM messages WHERE message_id = :messageId LIMIT 1")
     Single<MessageEntity> getMessageById(long messageId);
 
