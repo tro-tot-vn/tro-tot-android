@@ -3,7 +3,6 @@ package com.trototvn.trototandroid.utils;
 import com.google.gson.Gson;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -12,7 +11,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.socket.client.IO;
 import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 import timber.log.Timber;
 
 /**
@@ -23,6 +21,7 @@ import timber.log.Timber;
 public class SocketIOManager {
 
     private final Gson gson;
+    private final SessionManager sessionManager;
     private Socket socket;
 
     private final PublishSubject<String> connectionStatusSubject = PublishSubject.create();
@@ -31,13 +30,14 @@ public class SocketIOManager {
     private final PublishSubject<Object> userStatusSubject = PublishSubject.create();
 
     @Inject
-    public SocketIOManager(Gson gson) {
+    public SocketIOManager(Gson gson, SessionManager sessionManager) {
         this.gson = gson;
+        this.sessionManager = sessionManager;
     }
 
     /**
      * Connect to Socket.IO server
-     * 
+     *
      * @param userId Current user ID for authentication
      */
     public void connect(String userId) {
@@ -57,12 +57,24 @@ public class SocketIOManager {
             // Pass userId in query as per backend implementation
             options.query = "userId=" + userId;
 
-            // Also attempt handshake auth if supported by client version
-            // options.auth = Collections.singletonMap("userId", userId);
+            // Thêm Token vào quá trình xác thực Socket
+            String token = sessionManager.getToken();
+            if (token != null) {
+                // Cách 1: Truyền qua Auth Map (Chuẩn Socket.IO v3/v4)
+                java.util.Map<String, String> auth = new java.util.HashMap<>();
+                auth.put("token", token);
+                options.auth = auth;
+
+                // Cách 2: Truyền qua Extra Headers (Nếu Backend yêu cầu Header)
+                java.util.Map<String, java.util.List<String>> headers = new java.util.HashMap<>();
+                headers.put("Authorization", java.util.Collections.singletonList("Bearer " + token));
+                options.extraHeaders = headers;
+            }
 
             socket = IO.socket(Constants.BASE_URL, options);
 
             setupListeners();
+            Timber.d("Connecting socket with token...");
             socket.connect();
 
             Timber.d("Starting Socket.IO connection for user: %s", userId);
@@ -116,7 +128,7 @@ public class SocketIOManager {
     /**
      * Emit join conversation event
      */
-    public void joinConversation(int conversationId) {
+    public void joinConversation(long conversationId) {
         if (socket != null && socket.connected()) {
             socket.emit(SocketEvents.JOIN_CONVERSATION, conversationId);
             Timber.d("Joined conversation: %d", conversationId);
@@ -126,7 +138,7 @@ public class SocketIOManager {
     /**
      * Emit leave conversation event
      */
-    public void leaveConversation(int conversationId) {
+    public void leaveConversation(long conversationId) {
         if (socket != null && socket.connected()) {
             socket.emit(SocketEvents.LEAVE_CONVERSATION, conversationId);
             Timber.d("Left conversation: %d", conversationId);
@@ -136,7 +148,7 @@ public class SocketIOManager {
     /**
      * Emit message sent event
      */
-    public void sendMessage(int conversationId, String content) {
+    public void sendMessage(long conversationId, String content) {
         if (socket != null && socket.connected()) {
             // Create data structure as expected by backend (MessageSentEvent)
             // { conversationId, content, messageType }
@@ -153,7 +165,7 @@ public class SocketIOManager {
     /**
      * Emit typing status
      */
-    public void setTyping(int conversationId, boolean isTyping) {
+    public void setTyping(long conversationId, boolean isTyping) {
         if (socket != null && socket.connected()) {
             com.google.gson.JsonObject data = new com.google.gson.JsonObject();
             data.addProperty("conversationId", conversationId);

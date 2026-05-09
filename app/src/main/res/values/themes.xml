@@ -70,4 +70,23 @@
         <item name="android:textColor">@color/white</item>
         <item name="cornerRadius">8dp</item>
     </style>
+
+    <!-- Shape Appearances -->
+    <style name="ShapeAppearance.App.Circle" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearance.App.ChatBubble.Sent" parent="">
+        <item name="cornerSizeTopLeft">18dp</item>
+        <item name="cornerSizeTopRight">18dp</item>
+        <item name="cornerSizeBottomLeft">18dp</item>
+        <item name="cornerSizeBottomRight">2dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.ChatBubble.Received" parent="">
+        <item name="cornerSizeTopLeft">18dp</item>
+        <item name="cornerSizeTopRight">18dp</item>
+        <item name="cornerSizeBottomLeft">2dp</item>
+        <item name="cornerSizeBottomRight">18dp</item>
+    </style>
 </resources>

@@ -13,6 +13,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
@@ -102,6 +103,19 @@ public class LoginViewModel extends BaseViewModel {
             sessionManager.saveIdentifier(identifier);
         } else {
             sessionManager.saveIdentifier(null);
+        }
+
+        // Sync FCM Token after login
+        String fcmToken = sessionManager.getFcmToken();
+        if (fcmToken != null && !fcmToken.isEmpty()) {
+            addDisposable(
+                authRepository.registerFcmToken(fcmToken)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                        () -> Timber.d("FCM Token synced successfully after login"),
+                        error -> Timber.e(error, "Failed to sync FCM token after login")
+                    )
+            );
         }
     }
 

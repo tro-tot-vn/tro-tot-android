@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -115,5 +116,22 @@ public class AuthRepository {
      */
     public boolean isLoggedIn() {
         return sessionManager.isLoggedIn();
+    }
+
+    /**
+     * Sync FCM Token to Backend
+     */
+    public Completable registerFcmToken(String token) {
+        if (token == null || token.isEmpty()) {
+            return Completable.complete();
+        }
+
+        com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request =
+                new com.trototvn.trototandroid.data.model.notification.FcmTokenRequest(token);
+
+        return apiService.registerFcmToken(request)
+                .subscribeOn(Schedulers.io())
+                .ignoreElement()
+                .onErrorComplete(); // Fire-and-forget, swallow error if it fails
     }
 }

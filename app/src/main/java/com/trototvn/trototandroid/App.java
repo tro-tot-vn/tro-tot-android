@@ -11,6 +11,8 @@ import timber.log.Timber;
 @HiltAndroidApp
 public class App extends Application {
 
+    public static String activeConversationId = null;
+
     @Override
     public void onCreate() {
         super.onCreate();
