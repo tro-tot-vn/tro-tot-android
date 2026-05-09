@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.trototvn.trototandroid.App;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.model.Resource;
@@ -44,7 +45,7 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
     private ChatAdapter adapter;
     private long conversationId;
     private boolean isInitialLoad = true;
-    
+
     private ActivityResultLauncher<String> imagePicker;
 
     /**
@@ -68,7 +69,7 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
             conversationId = getArguments().getLong(ARG_CONVERSATION_ID);
             viewModel.init(conversationId);
         }
-        
+
         imagePicker = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null && getContext() != null) {
                 viewModel.sendImage(getContext(), uri);
@@ -129,7 +130,7 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
                 binding.etMessage.setText("");
             }
         });
-        
+
         binding.btnAttach.setOnClickListener(v -> {
             imagePicker.launch("image/*");
         });
@@ -162,7 +163,8 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
                         if (uid != null) {
                             currentUserId = Long.parseLong(uid);
                         }
-                    } catch (NumberFormatException ignored) {}
+                    } catch (NumberFormatException ignored) {
+                    }
 
                     List<Long> unreadIds = new ArrayList<>();
                     for (MessageEntity msg : messages) {
@@ -185,7 +187,7 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
                 // Hiển thị thanh loading ở trên cùng nếu bạn có
             }
         });
-        
+
         // Observe upload state
         viewModel.getUploadState().observe(getViewLifecycleOwner(), resource -> {
             switch (resource.getStatus()) {
@@ -218,5 +220,17 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
 
         int lastVisiblePosition = layoutManager.findLastCompletelyVisibleItemPosition();
         return lastVisiblePosition >= adapter.getItemCount() - 2;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        App.activeConversationId = String.valueOf(conversationId);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        App.activeConversationId = null;
     }
 }

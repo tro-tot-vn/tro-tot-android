@@ -1,14 +1,24 @@
 package com.trototvn.trototandroid.services;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.ui.main.MainActivity;
 import com.trototvn.trototandroid.utils.NotificationHelper;
 import com.trototvn.trototandroid.utils.SessionManager;
 
@@ -44,15 +54,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         super.onNewToken(token);
         Timber.d("New FCM Token: %s", token);
         sessionManager.saveFcmToken(token);
-        
+
         if (sessionManager.isLoggedIn()) {
             disposables.add(
-                authRepository.registerFcmToken(token)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                        () -> Timber.d("FCM Token synced successfully on new token"),
-                        error -> Timber.e(error, "Failed to sync FCM token")
-                    )
+                    authRepository.registerFcmToken(token)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> Timber.d("FCM Token synced successfully on new token"),
+                                    error -> Timber.e(error, "Failed to sync FCM token")
+                            )
             );
         }
     }
@@ -96,7 +106,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     if (content == null) content = data.get("body");
 
                     if (conversationIdStr != null && content != null) {
-                        notificationHelper.showChatNotification(conversationIdStr, senderName, content);
+                        // Check if the user is currently in this conversation
+                        if (conversationIdStr.equals(com.trototvn.trototandroid.App.activeConversationId)) {
+                            Timber.d("User is in the chat detail, skipping notification");
+                        } else {
+                            sendNotification(senderName, content, conversationIdStr);
+                        }
                     }
                 }
             } else {
@@ -181,6 +196,45 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 return MessageStatus.READ;
             default:
                 return MessageStatus.SENT;
+        }
+    }
+
+    private void sendNotification(String senderName, String messageBody, String conversationId) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("conversationId", conversationId);
+        intent.putExtra("partnerName", senderName);
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        int flags = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+
+        String channelId = "chat_channel_id";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Tin nhắn mới",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            NotificationManager notificationManager = getSystemService(android.app.NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.mipmap.ic_trotot_logo_app)
+                .setContentTitle(senderName)
+                .setContentText(messageBody)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent);
+
+        int notificationId = conversationId != null ? conversationId.hashCode() : (int) System.currentTimeMillis();
+
+        try {
+            NotificationManagerCompat.from(this).notify(notificationId, builder.build());
+        } catch (SecurityException e) {
+            Timber.e(e, "No permission to show notification");
         }
     }
 }
