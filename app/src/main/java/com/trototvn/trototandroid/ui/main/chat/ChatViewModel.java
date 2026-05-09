@@ -58,8 +58,6 @@ public class ChatViewModel extends BaseViewModel {
         this.conversationId = conversationId;
         fetchInitialHistory();
         observeChatData();
-        // Bắt đầu lắng nghe tin nhắn mới qua socket
-        chatRepository.observeIncomingMessages();
     }
 
     /**
@@ -220,12 +218,5 @@ public class ChatViewModel extends BaseViewModel {
 
     public String getCurrentUserId() {
         return sessionManager.getUserId();
-    }
-
-    @Override
-    protected void onCleared() {
-        super.onCleared();
-        // Dừng lắng nghe socket khi ViewModel bị hủy
-        chatRepository.stopObservingIncomingMessages();
     }
 }
