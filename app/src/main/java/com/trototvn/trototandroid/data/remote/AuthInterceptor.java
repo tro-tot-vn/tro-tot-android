@@ -29,10 +29,17 @@ public class AuthInterceptor implements Interceptor {
         Request original = chain.request();
         Request.Builder requestBuilder = original.newBuilder();
 
-        // Add token if available
-        String token = sessionManager.getToken();
-        if (token != null && !token.isEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer " + token);
+        // Add token if available (skip for auth endpoints to prevent sending expired tokens)
+        String path = original.url().encodedPath();
+        boolean isAuthPath = path.contains("/auth/login")
+                || path.contains("/auth/register")
+                || path.contains("/auth/refresh-token");
+
+        if (!isAuthPath) {
+            String token = sessionManager.getToken();
+            if (token != null && !token.isEmpty()) {
+                requestBuilder.addHeader("Authorization", "Bearer " + token);
+            }
         }
 
         // Add other common headers
