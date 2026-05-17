@@ -49,6 +49,20 @@ public class TokenAuthenticator implements Authenticator {
             return null;
         }
 
+        // If the access token is invalid/tampered (not just expired), log out immediately without refreshing
+        try {
+            okhttp3.ResponseBody responseBody = response.peekBody(1024 * 1024);
+            if (responseBody != null) {
+                String bodyString = responseBody.string();
+                if (bodyString.contains("INVALID_ACCESS_TOKEN")) {
+                    sessionManager.clearSession();
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            // Ignore peeking error
+        }
+
         String refreshToken = sessionManager.getRefreshToken();
         if (refreshToken == null) {
             return null; // No refresh token available, let user login agained
