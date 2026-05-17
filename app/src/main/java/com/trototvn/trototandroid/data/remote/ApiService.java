@@ -68,13 +68,13 @@ public interface ApiService {
          * GET - Get Latest Posts
          * Returns 4 latest approved posts for home screen
          */
-        @GET("api/post/latest-post")
+        @GET("api/posts/latest")
         Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
 
         /**
          * GET - Post Detail by ID
          */
-        @GET("api/post/{postId}/detail")
+        @GET("api/posts/{postId}")
         Single<ResponseData<PostDetail>> getPostDetail(@Path("postId") int postId);
 
         /**
