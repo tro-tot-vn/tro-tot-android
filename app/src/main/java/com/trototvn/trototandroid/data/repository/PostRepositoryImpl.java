@@ -110,8 +110,8 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> logSearchClick(int searchLogId, int postId) {
-        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, postId))
+    public Single<Resource<Void>> logSearchClick(int searchLogId, int searchLogItemId) {
+        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, searchLogItemId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
@@ -122,9 +122,9 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment) {
+    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment) {
         return apiService
-                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, null, comment))
+                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, issues, comment))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))

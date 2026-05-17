@@ -179,13 +179,26 @@ public class SearchViewModel extends ViewModel {
     /**
      * Log a click on a search result
      */
-    public void logClick(int postId) {
+    public void logClick(int searchLogItemId) {
         if (searchLogId != null) {
             disposable.add(
-                    postRepository.logSearchClick(searchLogId, postId)
+                    postRepository.logSearchClick(searchLogId, searchLogItemId)
                             .subscribe(
                                     resource -> Timber.d("Click logged successfully"),
                                     error -> Timber.e(error, "Failed to log click")));
+        }
+    }
+
+    /**
+     * Submit feedback for a search
+     */
+    public void submitFeedback(boolean isHelpful, java.util.List<String> issues, String comment) {
+        if (searchLogId != null) {
+            disposable.add(
+                    postRepository.submitSearchFeedback(searchLogId, isHelpful, issues, comment)
+                            .subscribe(
+                                    resource -> Timber.d("Feedback submitted successfully"),
+                                    error -> Timber.e(error, "Failed to submit feedback")));
         }
     }
 

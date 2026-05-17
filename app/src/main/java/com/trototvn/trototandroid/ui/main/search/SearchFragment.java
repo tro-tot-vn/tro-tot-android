@@ -98,7 +98,9 @@ public class SearchFragment extends Fragment {
     private void setupRecyclerView() {
         adapter = new PostAdapter(post -> {
             // Log click tracking
-            viewModel.logClick(post.getPostId());
+            if (post.getSearchLogItemId() != null) {
+                viewModel.logClick(post.getSearchLogItemId());
+            }
 
             // Navigate to detail (bundle usage as previously defined)
             Bundle bundle = new Bundle();

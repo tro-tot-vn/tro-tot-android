@@ -45,10 +45,10 @@ public interface PostRepository {
     /**
      * Log a click on a search result
      */
-    Single<Resource<Void>> logSearchClick(int searchLogId, int postId);
+    Single<Resource<Void>> logSearchClick(int searchLogId, int searchLogItemId);
 
     /**
      * Submit feedback for a search
      */
-    Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment);
+    Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment);
 }

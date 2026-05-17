@@ -34,12 +34,12 @@ public class SearchInteractionRequest {
         private final boolean isHelpful;
 
         @SerializedName("issues")
-        private final String issues;
+        private final java.util.List<String> issues;
 
         @SerializedName("comment")
         private final String comment;
 
-        public Feedback(int searchLogId, boolean isHelpful, String issues, String comment) {
+        public Feedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment) {
             this.searchLogId = searchLogId;
             this.isHelpful = isHelpful;
             this.issues = issues;
