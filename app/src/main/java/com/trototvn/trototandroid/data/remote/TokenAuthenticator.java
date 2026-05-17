@@ -42,6 +42,13 @@ public class TokenAuthenticator implements Authenticator {
             return null;
         }
 
+        // If the request itself is the refresh-token endpoint, the refresh token is expired or invalid.
+        // Clear session and return null to prevent infinite loop.
+        if (response.request().url().encodedPath().contains("/auth/refresh-token")) {
+            sessionManager.clearSession();
+            return null;
+        }
+
         String refreshToken = sessionManager.getRefreshToken();
         if (refreshToken == null) {
             return null; // No refresh token available, let user login agained
