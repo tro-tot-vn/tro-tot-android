@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.trototvn.trototandroid.R;
@@ -75,7 +75,7 @@ public class HomeFragment extends Fragment {
                     .navigate(R.id.postDetailFragment, bundle);
         });
 
-        binding.rvLatestPosts.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        binding.rvLatestPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvLatestPosts.setAdapter(latestPostsAdapter);
         binding.rvLatestPosts.setNestedScrollingEnabled(false);
 
@@ -87,7 +87,7 @@ public class HomeFragment extends Fragment {
                     .navigate(R.id.postDetailFragment, bundle);
         });
 
-        binding.rvRecommendations.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        binding.rvRecommendations.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvRecommendations.setAdapter(recommendationsAdapter);
         binding.rvRecommendations.setNestedScrollingEnabled(false);
     }

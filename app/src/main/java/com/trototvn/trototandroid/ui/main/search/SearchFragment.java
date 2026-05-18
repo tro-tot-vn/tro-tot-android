@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentSearchBinding;
@@ -109,7 +109,7 @@ public class SearchFragment extends Fragment {
                     .navigate(com.trototvn.trototandroid.R.id.postDetailFragment, bundle);
         });
 
-        binding.rvSearchResults.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        binding.rvSearchResults.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSearchResults.setAdapter(adapter);
     }
 
