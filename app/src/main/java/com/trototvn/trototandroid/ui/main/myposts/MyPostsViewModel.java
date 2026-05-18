@@ -84,10 +84,10 @@ public class MyPostsViewModel extends ViewModel {
 
         if (status == null) {
             // Fetch all 4 statuses in parallel and combine/sort them descending
-            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> appSig = postRepository.getMyPosts("Approved", nextCursor, LIMIT);
-            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> penSig = postRepository.getMyPosts("Pending", nextCursor, LIMIT);
-            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> rejSig = postRepository.getMyPosts("Rejected", nextCursor, LIMIT);
-            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> hidSig = postRepository.getMyPosts("Hidden", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> appSig = postRepository.getMyPosts("APPROVED", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> penSig = postRepository.getMyPosts("PENDING", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> rejSig = postRepository.getMyPosts("REJECTED", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> hidSig = postRepository.getMyPosts("HIDDEN", nextCursor, LIMIT);
 
             disposable.add(io.reactivex.rxjava3.core.Single.zip(appSig, penSig, rejSig, hidSig, (rA, rP, rR, rH) -> {
                 List<MyPost> combinedList = new ArrayList<>();

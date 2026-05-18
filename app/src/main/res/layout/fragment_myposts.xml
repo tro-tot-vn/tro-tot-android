@@ -23,7 +23,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/arrow_small_left"
+            app:srcCompat="@drawable/arrow_small_left"
             app:tint="?attr/colorOnSurface" />
 
         <!-- Title & Subtitle Info -->
@@ -60,7 +60,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/icons8_create"
+            app:srcCompat="@drawable/icons8_create"
             app:tint="?attr/colorOnSurface" />
     </LinearLayout>
 
@@ -157,10 +157,10 @@
             android:padding="32dp"
             android:visibility="gone">
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_post"
+                app:srcCompat="@drawable/ic_post"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView

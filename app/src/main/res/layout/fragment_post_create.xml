@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,7 +8,7 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
-    <!-- Minimalist X-Inspired Toolbar Header -->
+    <!-- Minimalist Premium Toolbar Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -54,122 +55,217 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Section 1: Media Files Selection -->
+            <!-- Section 1: Media Files Upload & Management -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="HÌNH ẢNH &amp; VIDEO"
+                android:text="HÌNH ẢNH &amp; VIDEO TRỌ"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.08"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Media Selector Grid -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Dashed Style Selector Cards Row -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="0dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <!-- Upload Images Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btnUploadImagesCard"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_camera"
+                            app:tint="?attr/colorOnSurface" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tải ảnh lên"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:id="@+id/tvImagesCardCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ĐĂNG TỐI ĐA 12 HÌNH"
+                            android:textSize="9sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Upload Video Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btnUploadVideoCard"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="8dp">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_video"
+                            app:tint="?attr/colorOnSurface" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tải video lên"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:id="@+id/tvVideoCardStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ĐĂNG TỐI ĐA 01 VIDEO"
+                            android:textSize="9sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Section 1A: Newly Selected Images -->
+            <LinearLayout
+                android:id="@+id/llNewImagesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hình ảnh đã chọn"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvNewImages"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:orientation="horizontal"
+                    tools:listitem="@layout/item_selected_media" />
+            </LinearLayout>
+
+            <!-- Section 1B: Video Preview Card (16:9 Aspect Video Player View) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/mcvVideoPreviewCard"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="?attr/colorOutline"
                 app:strokeWidth="1dp"
-                android:layout_marginBottom="24dp">
+                android:visibility="gone"
+                android:layout_marginBottom="24dp"
+                tools:visibility="visible">
 
-                <LinearLayout
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="12dp">
+                    android:layout_height="match_parent">
 
-                    <!-- Images Selection -->
-                    <LinearLayout
+                    <ImageView
+                        android:id="@+id/ivVideoThumbnail"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_height="match_parent"
+                        android:background="#1A1A1A"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Video Thumbnail" />
 
-                        <TextView
-                            android:id="@+id/tvImagesLabel"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Hình ảnh (0/12)"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textStyle="bold" />
+                    <!-- Play circle button overlay -->
+                    <ImageView
+                        android:id="@+id/ivPlayVideoBtn"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_play_circle"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnAddImage"
-                            style="@style/Widget.Material3.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="+ Thêm ảnh"
-                            android:textColor="?attr/colorOnSurface" />
-                    </LinearLayout>
-
-                    <!-- Horizontal Images Row -->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvSelectedImages"
-                        android:layout_width="match_parent"
-                        android:layout_height="80dp"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp"
-                        tools:listitem="@layout/item_my_post" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="?attr/colorOutline"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Video Selection -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:id="@+id/tvVideoLabel"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Video đính kèm (Tối đa 1)"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textStyle="bold" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnAddVideo"
-                            style="@style/Widget.Material3.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="+ Thêm video"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnRemoveVideo"
-                            style="@style/Widget.Material3.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Xóa"
-                            android:textColor="?attr/colorError"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
+                    <!-- Bottom label -->
                     <TextView
-                        android:id="@+id/tvSelectedVideoPath"
-                        android:layout_width="match_parent"
+                        android:id="@+id/tvVideoNameLabel"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        android:layout_marginTop="4dp"
-                        tools:text="video_sample.mp4"
-                        tools:visibility="visible" />
-                </LinearLayout>
+                        android:layout_gravity="bottom|start"
+                        android:layout_margin="12dp"
+                        android:text="Video đính kèm"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:background="#99000000"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="4dp" />
+
+                    <!-- Delete button in top-right corner -->
+                    <FrameLayout
+                        android:id="@+id/btnRemoveVideoCard"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="8dp"
+                        android:background="#B3000000"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/icons8_close"
+                            app:tint="#FFFFFF" />
+                    </FrameLayout>
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Section 2: Address Information -->
+            <!-- Section 2: Unified Address Card Trigger -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -181,219 +277,63 @@
                 android:layout_marginBottom="8dp" />
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/mcvAddressPickerCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="?attr/colorOutline"
                 app:strokeWidth="1dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:padding="16dp">
 
-                    <!-- Dropdowns Selection Grid -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <!-- City Spinner Trigger -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tỉnh / Thành phố *"
-                            android:textSize="12sp"
+                            android:text="Vị trí nhà trọ *"
+                            android:textSize="11sp"
                             android:textColor="?attr/colorOnSurfaceVariant"
-                            android:layout_marginBottom="4dp" />
+                            android:textStyle="bold" />
 
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/btnSelectCity"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="0dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="1dp"
-                            app:strokeColor="?attr/colorOutline"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:layout_marginBottom="12dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:paddingHorizontal="12dp">
-
-                                <TextView
-                                    android:id="@+id/tvSelectedCity"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Chọn Tỉnh / Thành phố"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                                <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
-                                    android:src="@drawable/ic_dropdown_menu"
-                                    app:tint="?attr/colorOnSurface" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <!-- District Spinner Trigger -->
                         <TextView
+                            android:id="@+id/tvFullAddress"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Quận / Huyện *"
-                            android:textSize="12sp"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:layout_marginBottom="4dp" />
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/btnSelectDistrict"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="0dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="1dp"
-                            app:strokeColor="?attr/colorOutline"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:layout_marginBottom="12dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:paddingHorizontal="12dp">
-
-                                <TextView
-                                    android:id="@+id/tvSelectedDistrict"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Chọn Quận / Huyện"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                                <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
-                                    android:src="@drawable/ic_dropdown_menu"
-                                    app:tint="?attr/colorOnSurface" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <!-- Ward Spinner Trigger -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Phường / Xã *"
-                            android:textSize="12sp"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:layout_marginBottom="4dp" />
-
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/btnSelectWard"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            app:cardCornerRadius="0dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="1dp"
-                            app:strokeColor="?attr/colorOutline"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:layout_marginBottom="16dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:paddingHorizontal="12dp">
-
-                                <TextView
-                                    android:id="@+id/tvSelectedWard"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="Chọn Phường / Xã"
-                                    android:textColor="?attr/colorOnSurface" />
-
-                                <ImageView
-                                    android:layout_width="20dp"
-                                    android:layout_height="20dp"
-                                    android:src="@drawable/ic_dropdown_menu"
-                                    app:tint="?attr/colorOnSurface" />
-                            </LinearLayout>
-                        </com.google.android.material.card.MaterialCardView>
+                            android:text="Chưa thiết lập địa chỉ trọ"
+                            android:textSize="14sp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
                     </LinearLayout>
 
-                    <!-- Street inputs -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/tilStreetNumber"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="120dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="12dp"
-                            android:hint="Số nhà *"
-                            app:boxCornerRadiusBottomEnd="0dp"
-                            app:boxCornerRadiusBottomStart="0dp"
-                            app:boxCornerRadiusTopEnd="0dp"
-                            app:boxCornerRadiusTopStart="0dp"
-                            app:boxStrokeColor="?attr/colorOnSurface"
-                            app:hintTextColor="?attr/colorOnSurface">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etStreetNumber"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="text"
-                                android:maxLines="1"
-                                android:textColor="?attr/colorOnSurface" />
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/tilStreet"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Tên đường *"
-                            app:boxCornerRadiusBottomEnd="0dp"
-                            app:boxCornerRadiusBottomStart="0dp"
-                            app:boxCornerRadiusTopEnd="0dp"
-                            app:boxCornerRadiusTopStart="0dp"
-                            app:boxStrokeColor="?attr/colorOnSurface"
-                            app:hintTextColor="?attr/colorOnSurface">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etStreet"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="text"
-                                android:maxLines="1"
-                                android:textColor="?attr/colorOnSurface" />
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/arrow_small_left"
+                        android:rotation="180"
+                        app:tint="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Section 3: Room Properties -->
+            <!-- Section 3: Room Detailed Properties -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="THÔNG TIN CHI TIẾT"
+                android:text="THÔNG TIN BÀI VIẾT"
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -403,7 +343,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="0dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="?attr/colorOutline"
                 app:strokeWidth="1dp"
@@ -415,22 +355,18 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Title field -->
+                    <!-- Title input with length constraints -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilTitle"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Tiêu đề tin đăng *"
-                        app:boxCornerRadiusBottomEnd="0dp"
-                        app:boxCornerRadiusBottomStart="0dp"
-                        app:boxCornerRadiusTopEnd="0dp"
-                        app:boxCornerRadiusTopStart="0dp"
-                        app:counterEnabled="true"
-                        app:counterMaxLength="70"
+                        android:hint="Tiêu đề bài đăng *"
                         app:boxStrokeColor="?attr/colorOnSurface"
                         app:hintTextColor="?attr/colorOnSurface"
-                        android:layout_marginBottom="12dp">
+                        app:counterEnabled="true"
+                        app:counterMaxLength="70"
+                        android:layout_marginBottom="16dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etTitle"
@@ -441,25 +377,24 @@
                             android:textColor="?attr/colorOnSurface" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Price & Acreage Row -->
+                    <!-- Price & Acreage input row with suffix labels -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginBottom="16dp">
 
+                        <!-- Rent Price -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/tilPrice"
                             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="12dp"
-                            android:hint="Giá thuê (đ/tháng) *"
-                            app:boxCornerRadiusBottomEnd="0dp"
-                            app:boxCornerRadiusBottomStart="0dp"
-                            app:boxCornerRadiusTopEnd="0dp"
-                            app:boxCornerRadiusTopStart="0dp"
+                            android:layout_weight="1.2"
+                            android:layout_marginEnd="8dp"
+                            android:hint="Giá thuê *"
+                            app:suffixText="đ/tháng"
+                            app:suffixTextColor="?attr/colorOnSurfaceVariant"
                             app:boxStrokeColor="?attr/colorOnSurface"
                             app:hintTextColor="?attr/colorOnSurface">
 
@@ -472,17 +407,16 @@
                                 android:textColor="?attr/colorOnSurface" />
                         </com.google.android.material.textfield.TextInputLayout>
 
+                        <!-- Room Acreage -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:id="@+id/tilAcreage"
                             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="Diện tích (m²) *"
-                            app:boxCornerRadiusBottomEnd="0dp"
-                            app:boxCornerRadiusBottomStart="0dp"
-                            app:boxCornerRadiusTopEnd="0dp"
-                            app:boxCornerRadiusTopStart="0dp"
+                            android:layout_weight="0.8"
+                            android:hint="Diện tích *"
+                            app:suffixText="m²"
+                            app:suffixTextColor="?attr/colorOnSurfaceVariant"
                             app:boxStrokeColor="?attr/colorOnSurface"
                             app:hintTextColor="?attr/colorOnSurface">
 
@@ -496,13 +430,14 @@
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
-                    <!-- Interior Selector Chips -->
+                    <!-- Interior choice segment chips -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tình trạng nội thất *"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textStyle="bold"
                         android:layout_marginBottom="6dp" />
 
                     <com.google.android.material.chip.ChipGroup
@@ -518,7 +453,7 @@
                             style="@style/Widget.Material3.Chip.Filter"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Đầy đủ"
+                            android:text="Đầy đủ nội thất"
                             app:chipMinHeight="36dp" />
 
                         <com.google.android.material.chip.Chip
@@ -530,26 +465,23 @@
                             app:chipMinHeight="36dp" />
                     </com.google.android.material.chip.ChipGroup>
 
-                    <!-- Description field -->
+                    <!-- Room Description with length counter limits -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilDescription"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Mô tả chi tiết *"
-                        app:boxCornerRadiusBottomEnd="0dp"
-                        app:boxCornerRadiusBottomStart="0dp"
-                        app:boxCornerRadiusTopEnd="0dp"
-                        app:boxCornerRadiusTopStart="0dp"
-                        app:counterEnabled="true"
-                        app:counterMaxLength="1000"
+                        android:hint="Mô tả chi tiết phòng trọ *"
                         app:boxStrokeColor="?attr/colorOnSurface"
-                        app:hintTextColor="?attr/colorOnSurface">
+                        app:hintTextColor="?attr/colorOnSurface"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="999"
+                        android:layout_marginBottom="8dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDescription"
                             android:layout_width="match_parent"
-                            android:layout_height="120dp"
+                            android:layout_height="140dp"
                             android:gravity="top"
                             android:inputType="textMultiLine"
                             android:textColor="?attr/colorOnSurface" />
@@ -557,7 +489,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Error Banner -->
+            <!-- Character / Field error banner -->
             <TextView
                 android:id="@+id/tvFormErrorText"
                 android:layout_width="match_parent"
@@ -566,21 +498,21 @@
                 android:textSize="13sp"
                 android:visibility="gone"
                 android:layout_marginBottom="16dp"
-                tools:text="Vui lòng kiểm tra lại thông tin nhập liệu."
+                tools:text="Vui lòng điền đầy đủ các thông tin bắt buộc."
                 tools:visibility="visible" />
 
-            <!-- Submit Button (X-Style Solid Black) -->
+            <!-- Solid Orange Submit Action Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubmitPost"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:text="ĐĂNG TIN NGAY"
-                android:textColor="?android:attr/colorBackground"
+                android:textColor="#FFFFFF"
                 android:textStyle="bold"
-                android:backgroundTint="?attr/colorOnSurface"
-                app:cornerRadius="0dp"
+                android:backgroundTint="#FF6D0B"
+                app:cornerRadius="4dp"
                 app:elevation="0dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="24dp" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -69,11 +69,11 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <ImageView
+                    <androidx.appcompat.widget.AppCompatImageView
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:contentDescription="Location Icon"
-                        android:src="@android:drawable/ic_menu_mylocation"
+                        app:srcCompat="@android:drawable/ic_menu_mylocation"
                         app:tint="?attr/colorOnSurfaceVariant" />
 
                     <TextView
@@ -149,11 +149,11 @@
                 android:orientation="horizontal"
                 android:padding="10dp">
 
-                <ImageView
+                <androidx.appcompat.widget.AppCompatImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:contentDescription="Error Icon"
-                    android:src="@android:drawable/ic_dialog_alert"
+                    app:srcCompat="@android:drawable/ic_dialog_alert"
                     app:tint="?attr/colorError" />
 
                 <TextView
