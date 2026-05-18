@@ -44,7 +44,7 @@
                     android:layout_marginTop="@dimen/spacing_sm"
                     android:text="@string/thousands_of_rooms"
                     android:textAlignment="center"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -63,7 +63,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/latest_posts"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -101,7 +101,7 @@
                     android:id="@+id/tvLatestError"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     tools:text="Không thể tải bài đăng" />
 
                 <com.google.android.material.button.MaterialButton
@@ -131,7 +131,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/recommendations_for_you"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 

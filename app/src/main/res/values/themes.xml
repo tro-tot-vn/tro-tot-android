@@ -38,6 +38,7 @@
         
         <!-- Outline -->
         <item name="colorOutline">@color/md_theme_light_outline</item>
+        <item name="colorOutlineVariant">@color/md_theme_light_outlineVariant</item>
         
         <!-- Status Bar -->
         <item name="android:statusBarColor">@color/md_theme_light_background</item>
