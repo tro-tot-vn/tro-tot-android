@@ -3,6 +3,8 @@ package com.trototvn.trototandroid.data.model.post;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.trototvn.trototandroid.utils.Constants;
+
 /**
  * Post Detail model - matches backend GetDetailPostResponse
  */
@@ -108,7 +110,7 @@ public class PostDetail {
         if (multimediaFiles != null) {
             for (MultimediaFileDetail mf : multimediaFiles) {
                 if (mf != null && mf.getFileType() == FileType.IMAGE) {
-                    urls.add("https://storage.googleapis.com/tro-tot-vn-storage/" + mf.getFileId());
+                    urls.add(Constants.BASE_URL + "api/files/" + mf.getFileId());
                 }
             }
         }

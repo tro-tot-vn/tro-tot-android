@@ -74,7 +74,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         
         if (profile.getBirthday() != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-            profileData.put("birthDate", sdf.format(profile.getBirthday()));
+            profileData.put("birthday", sdf.format(profile.getBirthday()));
         }
         
         profileData.put("currentCity", profile.getCurrentCity());
@@ -104,7 +104,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         RequestBody gender = RequestBody.create(MediaType.parse("text/plain"), profile.getGender());
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        RequestBody birthDate = RequestBody.create(MediaType.parse("text/plain"), 
+        RequestBody birthday = RequestBody.create(MediaType.parse("text/plain"), 
                 profile.getBirthday() != null ? sdf.format(profile.getBirthday()) : "");
         
         RequestBody city = RequestBody.create(MediaType.parse("text/plain"), 
@@ -119,7 +119,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         MultipartBody.Part avatar = MultipartBody.Part.createFormData("avatarFile", avatarFile.getName(), requestFile);
 
         return apiService.updateProfileWithAvatar(
-                        firstName, lastName, email, bio, gender, birthDate, city, district, job, avatar
+                        firstName, lastName, email, bio, gender, birthday, city, district, job, avatar
                 )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -153,10 +153,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
 
     @Override
     public Single<Resource<Void>> savePost(int postId) {
-        Map<String, Integer> body = new HashMap<>();
-        body.put("postId", postId);
-
-        return apiService.savePost(body)
+        return apiService.savePost(postId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
@@ -168,10 +165,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
 
     @Override
     public Single<Resource<Void>> unsavePost(int postId) {
-        Map<String, Integer> body = new HashMap<>();
-        body.put("postId", postId);
-
-        return apiService.unsavePost(body)
+        return apiService.unsavePost(postId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
