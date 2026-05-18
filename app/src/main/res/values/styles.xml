@@ -1,36 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <!-- Button Styles -->
+    <!-- Button Styles (Pill shape, 999dp corner radius, dynamic contrast colors) -->
     <style name="Widget.App.Button" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/button_height</item>
-        <item name="android:textSize">@dimen/text_size_body_large</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">@dimen/corner_radius_medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">@dimen/corner_radius_pill</item>
+        <item name="elevation">0dp</item>
     </style>
     
+    <!-- Primary CTA: Light Mode: black bg + white text | Dark Mode: white bg + black text -->
     <style name="Widget.App.Button.Primary" parent="Widget.App.Button">
-        <item name="backgroundTint">?attr/colorPrimary</item>
-        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="backgroundTint">?attr/colorOnSurface</item>
+        <item name="android:textColor">?attr/colorSurface</item>
     </style>
     
+    <!-- Secondary Button: transparent background, 1dp border, pill shape -->
     <style name="Widget.App.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/button_height</item>
-        <item name="android:textSize">@dimen/text_size_body_large</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">@dimen/corner_radius_medium</item>
-        <item name="strokeColor">?attr/colorPrimary</item>
-        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:textStyle">normal</item>
+        <item name="cornerRadius">@dimen/corner_radius_pill</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="elevation">0dp</item>
     </style>
     
     <style name="Widget.App.Button.Text" parent="Widget.Material3.Button.TextButton">
         <item name="android:minHeight">@dimen/button_height</item>
-        <item name="android:textSize">@dimen/text_size_body_large</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
     
-    <!-- Text Input Styles -->
+    <!-- Text Input Styles (Form items use 8dp rounded box - Level 2 Hybrid X Style) -->
     <style name="Widget.App.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxCornerRadiusTopStart">@dimen/corner_radius_medium</item>
         <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_medium</item>
@@ -43,6 +49,19 @@
     <style name="Widget.App.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
         <item name="android:textSize">@dimen/text_size_body_large</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Search Input Layout (Level 2: Pill-shaped 999dp - X 2026 specs) -->
+    <style name="Widget.App.TextInputLayout.Search" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/corner_radius_pill</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_pill</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/corner_radius_pill</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/corner_radius_pill</item>
+        <item name="boxStrokeColor">@android:color/transparent</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+        <item name="boxBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="hintTextColor">?attr/colorOnSurfaceVariant</item>
     </style>
     
     <!-- Card Styles -->
@@ -71,6 +90,14 @@
     <style name="TextAppearance.App.Caption" parent="TextAppearance.Material3.LabelSmall">
         <item name="android:textSize">@dimen/text_size_caption</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="CircleImageView" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="RoundedImageView" parent="">
+        <item name="cornerSize">@dimen/corner_radius_medium</item>
     </style>
     
 </resources>

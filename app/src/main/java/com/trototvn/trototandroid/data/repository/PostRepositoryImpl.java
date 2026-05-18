@@ -16,6 +16,8 @@ import javax.inject.Singleton;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import timber.log.Timber;
 
 /**
@@ -110,8 +112,8 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> logSearchClick(int searchLogId, int postId) {
-        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, postId))
+    public Single<Resource<Void>> logSearchClick(int searchLogId, int searchLogItemId) {
+        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, searchLogItemId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
@@ -122,15 +124,187 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment) {
+    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment) {
         return apiService
-                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, null, comment))
+                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, issues, comment))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error submitting search feedback");
                     return Resource.error("Không thể gửi phản hồi", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<com.trototvn.trototandroid.data.model.post.MyPostsResponse>> getMyPosts(String status, Integer cursor, int limit) {
+        return apiService.getMyPosts(status, cursor, limit)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200 && response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<com.trototvn.trototandroid.data.model.post.MyPostsResponse>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể tải danh sách bài đăng",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error fetching my posts");
+                    return Resource.error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> hidePost(int postId) {
+        return apiService.hidePost(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể ẩn bài viết",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error hiding post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> unhidePost(int postId) {
+        return apiService.unhidePost(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể hiện bài viết",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error unhiding post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<com.trototvn.trototandroid.data.model.location.WardListResponse>> getWards(String districtId) {
+        return apiService.getWards(districtId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response != null && "SUCCESS".equals(response.getCode())) {
+                        return Resource.success(response);
+                    } else {
+                        return Resource.<com.trototvn.trototandroid.data.model.location.WardListResponse>error(
+                                "Không thể tải danh sách phường/xã", null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error loading wards");
+                    return Resource.error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> createPost(
+            RequestBody title,
+            RequestBody description,
+            RequestBody price,
+            RequestBody acreage,
+            RequestBody streetNumber,
+            RequestBody street,
+            RequestBody ward,
+            RequestBody district,
+            RequestBody city,
+            RequestBody interiorStatus,
+            List<MultipartBody.Part> images,
+            MultipartBody.Part video) {
+        return apiService.createPost(title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, images, video)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Đăng tin thất bại", null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error creating post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> editPost(
+            int postId,
+            RequestBody title,
+            RequestBody description,
+            RequestBody price,
+            RequestBody acreage,
+            RequestBody streetNumber,
+            RequestBody street,
+            RequestBody ward,
+            RequestBody district,
+            RequestBody city,
+            RequestBody interiorStatus,
+            RequestBody oldFiles,
+            List<MultipartBody.Part> images,
+            MultipartBody.Part video) {
+        return apiService.editPost(postId, title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, oldFiles, images, video)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Cập nhật tin thất bại", null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error editing post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<com.trototvn.trototandroid.data.model.post.PostDetail>> getDetailMyPost(int postId) {
+        return apiService.getDetailMyPost(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200 && response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<com.trototvn.trototandroid.data.model.post.PostDetail>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể tải chi tiết tin đăng", null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error getting my post detail");
+                    return Resource.error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
                 });
     }
 }

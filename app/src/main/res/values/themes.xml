@@ -38,10 +38,11 @@
         
         <!-- Outline -->
         <item name="colorOutline">@color/md_theme_light_outline</item>
+        <item name="colorOutlineVariant">@color/md_theme_light_outlineVariant</item>
         
         <!-- Status Bar -->
-        <item name="android:statusBarColor">@color/md_theme_light_primary</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/md_theme_light_background</item>
+        <item name="android:windowLightStatusBar">true</item>
         
         <!-- Navigation Bar -->
         <item name="android:navigationBarColor">@color/md_theme_light_surface</item>
@@ -66,8 +67,8 @@
     <style name="AppTheme.Button.Primary" parent="Widget.MaterialComponents.Button">
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="backgroundTint">@color/orange_500</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
         <item name="cornerRadius">8dp</item>
     </style>
 

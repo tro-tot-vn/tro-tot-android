@@ -73,4 +73,18 @@
             app:argType="long" />
     </fragment>
 
+    <fragment
+        android:id="@+id/postCreateFragment"
+        android:name="com.trototvn.trototandroid.ui.main.myposts.PostCreateFragment"
+        android:label="Đăng tin" />
+
+    <fragment
+        android:id="@+id/postEditFragment"
+        android:name="com.trototvn.trototandroid.ui.main.myposts.PostEditFragment"
+        android:label="Chỉnh sửa tin">
+        <argument
+            android:name="postId"
+            app:argType="integer" />
+    </fragment>
+
 </navigation>
