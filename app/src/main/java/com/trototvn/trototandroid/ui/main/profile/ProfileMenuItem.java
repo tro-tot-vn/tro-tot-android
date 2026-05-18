@@ -10,7 +10,7 @@ public class ProfileMenuItem {
         SAVED_POSTS,
         VIEW_HISTORY,
         SUBSCRIPTIONS,
-        SETTINGS,
+        CHANGE_PASSWORD,
         LOGOUT
     }
     

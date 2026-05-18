@@ -58,6 +58,11 @@
         android:name="com.trototvn.trototandroid.ui.main.accountsettings.ChangePasswordFragment"
         android:label="Change Password" />
 
+    <fragment
+        android:id="@+id/subscriptionsFragment"
+        android:name="com.trototvn.trototandroid.ui.main.subscriptions.SubscriptionsFragment"
+        android:label="Subscriptions" />
+
     <!-- Feature Fragments -->
 
     <fragment

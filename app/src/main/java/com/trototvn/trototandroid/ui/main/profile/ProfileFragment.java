@@ -73,9 +73,13 @@ public class ProfileFragment extends Fragment {
                     NavHostFragment.findNavController(this)
                             .navigate(R.id.savedPostsFragment);
                     break;
-                case SETTINGS:
+                case SUBSCRIPTIONS:
                     NavHostFragment.findNavController(this)
-                            .navigate(R.id.accountSettingsFragment);
+                            .navigate(R.id.subscriptionsFragment);
+                    break;
+                case CHANGE_PASSWORD:
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.changePasswordFragment);
                     break;
                 // Add other types as needed
             }
@@ -178,12 +182,12 @@ public class ProfileFragment extends Fragment {
                 subsCount != null && subsCount > 0 ? subsCount + " khu vực" : null,
                 ProfileMenuItem.ItemType.SUBSCRIPTIONS));
 
-        // Settings
+        // Change Password
         menuItems.add(new ProfileMenuItem(
-                R.drawable.ic_settings,
-                getString(R.string.account_settings),
+                R.drawable.ic_lock,
+                getString(R.string.change_password),
                 null,
-                ProfileMenuItem.ItemType.SETTINGS));
+                ProfileMenuItem.ItemType.CHANGE_PASSWORD));
 
         // Logout
         menuItems.add(new ProfileMenuItem(
