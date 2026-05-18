@@ -62,8 +62,10 @@ public class MyPostsFragment extends Fragment {
         binding.tvHeaderSubtitle.setText("Đang tải...");
         
         binding.btnCreatePost.setOnClickListener(v -> {
-            // Navigate back to home tab as a fallback for creating posts
-            NavHostFragment.findNavController(this).navigate(R.id.homeFragment);
+            NavHostFragment.findNavController(this).navigate(R.id.postCreateFragment);
+        });
+        binding.ivToolbarCreate.setOnClickListener(v -> {
+            NavHostFragment.findNavController(this).navigate(R.id.postCreateFragment);
         });
     }
 
@@ -80,6 +82,14 @@ public class MyPostsFragment extends Fragment {
             @Override
             public void onToggleHide(MyPost post) {
                 viewModel.togglePostVisibility(post);
+            }
+
+            @Override
+            public void onEditPost(MyPost post) {
+                Bundle bundle = new Bundle();
+                bundle.putInt("postId", post.getPostId());
+                NavHostFragment.findNavController(MyPostsFragment.this)
+                        .navigate(R.id.postEditFragment, bundle);
             }
         });
 
@@ -117,13 +127,13 @@ public class MyPostsFragment extends Fragment {
             String status = null;
 
             if (checkedId == R.id.chipActive) {
-                status = "APPROVED";
+                status = "Approved";
             } else if (checkedId == R.id.chipPending) {
-                status = "PENDING";
+                status = "Pending";
             } else if (checkedId == R.id.chipRejected) {
-                status = "REJECTED";
+                status = "Rejected";
             } else if (checkedId == R.id.chipHidden) {
-                status = "HIDDEN";
+                status = "Hidden";
             }
 
             viewModel.setFilterStatus(status);

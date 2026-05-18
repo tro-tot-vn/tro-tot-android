@@ -82,30 +82,102 @@ public class MyPostsViewModel extends ViewModel {
 
         String status = filterStatusLiveData.getValue();
 
-        disposable.add(postRepository.getMyPosts(status, nextCursor, LIMIT)
-                .subscribe(resource -> {
-                    isLoading = false;
-                    if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                        MyPostsResponse response = resource.getData();
-                        List<MyPost> newPosts = response.getDataPag();
-                        nextCursor = response.getNextCursor();
-                        hasMore = response.isHasMore();
+        if (status == null) {
+            // Fetch all 4 statuses in parallel and combine/sort them descending
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> appSig = postRepository.getMyPosts("Approved", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> penSig = postRepository.getMyPosts("Pending", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> rejSig = postRepository.getMyPosts("Rejected", nextCursor, LIMIT);
+            io.reactivex.rxjava3.core.Single<Resource<MyPostsResponse>> hidSig = postRepository.getMyPosts("Hidden", nextCursor, LIMIT);
 
-                        if (isRefresh) {
-                            currentList.clear();
-                        }
-                        if (newPosts != null) {
-                            currentList.addAll(newPosts);
-                        }
-                        postsLiveData.setValue(Resource.success(new ArrayList<>(currentList)));
-                    } else {
-                        postsLiveData.setValue(Resource.error(resource.getMessage(), isRefresh ? null : new ArrayList<>(currentList)));
+            disposable.add(io.reactivex.rxjava3.core.Single.zip(appSig, penSig, rejSig, hidSig, (rA, rP, rR, rH) -> {
+                List<MyPost> combinedList = new ArrayList<>();
+                boolean success = rA.getStatus() == Resource.Status.SUCCESS ||
+                                  rP.getStatus() == Resource.Status.SUCCESS ||
+                                  rR.getStatus() == Resource.Status.SUCCESS ||
+                                  rH.getStatus() == Resource.Status.SUCCESS;
+
+                if (success) {
+                    if (rA.getData() != null && rA.getData().getDataPag() != null) combinedList.addAll(rA.getData().getDataPag());
+                    if (rP.getData() != null && rP.getData().getDataPag() != null) combinedList.addAll(rP.getData().getDataPag());
+                    if (rR.getData() != null && rR.getData().getDataPag() != null) combinedList.addAll(rR.getData().getDataPag());
+                    if (rH.getData() != null && rH.getData().getDataPag() != null) combinedList.addAll(rH.getData().getDataPag());
+
+                    // Sort combined list by postId descending
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        combinedList.sort((p1, p2) -> Integer.compare(p2.getPostId(), p1.getPostId()));
                     }
-                }, throwable -> {
-                    isLoading = false;
-                    Timber.e(throwable, "Error loading user posts");
-                    postsLiveData.setValue(Resource.error(throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", isRefresh ? null : new ArrayList<>(currentList)));
-                }));
+
+                    boolean anyHasMore = (rA.getData() != null && rA.getData().isHasMore()) ||
+                                         (rP.getData() != null && rP.getData().isHasMore()) ||
+                                         (rR.getData() != null && rR.getData().isHasMore()) ||
+                                         (rH.getData() != null && rH.getData().isHasMore());
+
+                    Integer minPostId = null;
+                    if (!combinedList.isEmpty()) {
+                        minPostId = combinedList.get(combinedList.size() - 1).getPostId();
+                    }
+
+                    MyPostsResponse mergedResponse = new MyPostsResponse();
+                    mergedResponse.setDataPag(combinedList);
+                    mergedResponse.setHasMore(anyHasMore);
+                    mergedResponse.setNextCursor(minPostId);
+
+                    return Resource.success(mergedResponse);
+                } else {
+                    return Resource.<MyPostsResponse>error(rA.getMessage() != null ? rA.getMessage() : "Lỗi kết nối", null);
+                }
+            })
+            .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+            .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+            .subscribe(resource -> {
+                isLoading = false;
+                if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                    MyPostsResponse response = resource.getData();
+                    List<MyPost> newPosts = response.getDataPag();
+                    nextCursor = response.getNextCursor();
+                    hasMore = response.isHasMore();
+
+                    if (isRefresh) {
+                        currentList.clear();
+                    }
+                    if (newPosts != null) {
+                        currentList.addAll(newPosts);
+                    }
+                    postsLiveData.setValue(Resource.success(new ArrayList<>(currentList)));
+                } else {
+                    postsLiveData.setValue(Resource.error(resource.getMessage(), isRefresh ? null : new ArrayList<>(currentList)));
+                }
+            }, throwable -> {
+                isLoading = false;
+                Timber.e(throwable, "Error zipping user posts");
+                postsLiveData.setValue(Resource.error(throwable.getMessage(), isRefresh ? null : new ArrayList<>(currentList)));
+            }));
+        } else {
+            disposable.add(postRepository.getMyPosts(status, nextCursor, LIMIT)
+                    .subscribe(resource -> {
+                        isLoading = false;
+                        if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                            MyPostsResponse response = resource.getData();
+                            List<MyPost> newPosts = response.getDataPag();
+                            nextCursor = response.getNextCursor();
+                            hasMore = response.isHasMore();
+
+                            if (isRefresh) {
+                                currentList.clear();
+                            }
+                            if (newPosts != null) {
+                                currentList.addAll(newPosts);
+                            }
+                            postsLiveData.setValue(Resource.success(new ArrayList<>(currentList)));
+                        } else {
+                            postsLiveData.setValue(Resource.error(resource.getMessage(), isRefresh ? null : new ArrayList<>(currentList)));
+                        }
+                    }, throwable -> {
+                        isLoading = false;
+                        Timber.e(throwable, "Error loading user posts");
+                        postsLiveData.setValue(Resource.error(throwable.getMessage(), isRefresh ? null : new ArrayList<>(currentList)));
+                    }));
+        }
     }
 
     /**

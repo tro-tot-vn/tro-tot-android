@@ -22,16 +22,22 @@ import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.data.model.rating.AddRatingRequest;
 import com.trototvn.trototandroid.data.model.search.SearchInteractionRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
+import com.trototvn.trototandroid.data.model.location.WardListResponse;
+import com.trototvn.trototandroid.data.model.post.PostDetail;
 
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -181,23 +187,77 @@ public interface ApiService {
         /**
          * GET - Get my posts with status filter and pagination
          */
-        @GET("api/post/my-posts")
+        @GET("api/posts/me")
         Single<ResponseData<MyPostsResponse>> getMyPosts(
                         @Query("status") String status,
                         @Query("cursor") Integer cursor,
                         @Query("limit") int limit);
 
         /**
-         * POST - Hide my post
+         * POST - Hide my post using path parameter
          */
-        @POST("api/post/hide")
-        Single<ResponseData<Void>> hidePost(@Body HidePostRequest request);
+        @POST("api/posts/{postId}/hide")
+        Single<ResponseData<Void>> hidePost(@Path("postId") int postId);
 
         /**
-         * POST - Unhide my post
+         * POST - Unhide my post using path parameter
          */
-        @POST("api/post/unhide")
-        Single<ResponseData<Void>> unhidePost(@Body HidePostRequest request);
+        @POST("api/posts/{postId}/unhide")
+        Single<ResponseData<Void>> unhidePost(@Path("postId") int postId);
+
+        // ========== Create & Edit Post ==========
+
+        /**
+         * GET - Get Wards by District ID (proxy to Cho Tot API)
+         */
+        @GET("api/location/wards/{districtId}")
+        Single<WardListResponse> getWards(@Path("districtId") String districtId);
+
+        /**
+         * POST - Create rental post (multipart/form-data)
+         */
+        @Multipart
+        @POST("api/posts")
+        Single<ResponseData<Void>> createPost(
+                @Part("title") RequestBody title,
+                @Part("description") RequestBody description,
+                @Part("price") RequestBody price,
+                @Part("acreage") RequestBody acreage,
+                @Part("streetNumber") RequestBody streetNumber,
+                @Part("street") RequestBody street,
+                @Part("ward") RequestBody ward,
+                @Part("district") RequestBody district,
+                @Part("city") RequestBody city,
+                @Part("interiorStatus") RequestBody interiorStatus,
+                @Part List<MultipartBody.Part> images,
+                @Part MultipartBody.Part video);
+
+        /**
+         * PUT - Update rental post (multipart/form-data)
+         */
+        @Multipart
+        @PUT("api/posts/{postId}")
+        Single<ResponseData<Void>> editPost(
+                @Path("postId") int postId,
+                @Part("title") RequestBody title,
+                @Part("description") RequestBody description,
+                @Part("price") RequestBody price,
+                @Part("acreage") RequestBody acreage,
+                @Part("streetNumber") RequestBody streetNumber,
+                @Part("street") RequestBody street,
+                @Part("ward") RequestBody ward,
+                @Part("district") RequestBody district,
+                @Part("city") RequestBody city,
+                @Part("interiorStatus") RequestBody interiorStatus,
+                @Part("oldFiles") RequestBody oldFiles,
+                @Part List<MultipartBody.Part> images,
+                @Part MultipartBody.Part video);
+
+        /**
+         * GET - Get details of my post for editing
+         */
+        @GET("api/posts/me/{postId}")
+        Single<ResponseData<PostDetail>> getDetailMyPost(@Path("postId") int postId);
 
         // ========== Example CRUD operations for User ==========
 

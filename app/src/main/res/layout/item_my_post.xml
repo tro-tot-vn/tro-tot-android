@@ -198,6 +198,22 @@
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditPost"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="16dp"
+                android:text="Sửa tin"
+                android:textAllCaps="false"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="12sp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnToggleHide"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"

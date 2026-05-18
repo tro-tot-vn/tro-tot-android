@@ -9,6 +9,8 @@ import com.trototvn.trototandroid.data.model.search.SearchResponse;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Single;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 /**
  * Repository interface for Post operations
@@ -57,13 +59,58 @@ public interface PostRepository {
      */
     Single<Resource<com.trototvn.trototandroid.data.model.post.MyPostsResponse>> getMyPosts(String status, Integer cursor, int limit);
 
-    /**
-     * Hide my post from public view
-     */
     Single<Resource<Void>> hidePost(int postId);
 
     /**
      * Unhide my post to make it public
      */
     Single<Resource<Void>> unhidePost(int postId);
+
+    /**
+     * Get dynamic list of Wards by District ID
+     */
+    Single<Resource<com.trototvn.trototandroid.data.model.location.WardListResponse>> getWards(String districtId);
+
+    /**
+     * Create new post (multipart/form-data)
+     */
+    Single<Resource<Void>> createPost(
+        RequestBody title,
+        RequestBody description,
+        RequestBody price,
+        RequestBody acreage,
+        RequestBody streetNumber,
+        RequestBody street,
+        RequestBody ward,
+        RequestBody district,
+        RequestBody city,
+        RequestBody interiorStatus,
+        List<MultipartBody.Part> images,
+        MultipartBody.Part video
+    );
+
+    /**
+     * Edit existing post (multipart/form-data)
+     */
+    Single<Resource<Void>> editPost(
+        int postId,
+        RequestBody title,
+        RequestBody description,
+        RequestBody price,
+        RequestBody acreage,
+        RequestBody streetNumber,
+        RequestBody street,
+        RequestBody ward,
+        RequestBody district,
+        RequestBody city,
+        RequestBody interiorStatus,
+        RequestBody oldFiles,
+        List<MultipartBody.Part> images,
+        MultipartBody.Part video
+    );
+
+    /**
+     * Get details of my post for editing
+     */
+    Single<Resource<com.trototvn.trototandroid.data.model.post.PostDetail>> getDetailMyPost(int postId);
 }

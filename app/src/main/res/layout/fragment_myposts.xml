@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
@@ -13,25 +13,24 @@
         android:layout_height="56dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="8dp">
 
-        <!-- Back Button -->
-        <ImageView
+        <!-- Back Button using AppCompatImageView with HSL styling -->
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivBack"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:contentDescription="Quay lại"
             android:focusable="true"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/arrow_small_left"
             app:tint="?attr/colorOnSurface" />
 
         <!-- Title & Subtitle Info -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -52,15 +51,25 @@
                 android:textSize="11sp"
                 tools:text="0 bài đăng" />
         </LinearLayout>
+
+        <!-- Create Button using AppCompatImageView with HSL styling -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivToolbarCreate"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/icons8_create"
+            app:tint="?attr/colorOnSurface" />
     </LinearLayout>
 
-    <!-- Subtle 1dp border line separating header -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?attr/colorOutline" />
 
-    <!-- Filter Chips Horizontal Scroll Row -->
+    <!-- Filter Chips Row -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -82,49 +91,42 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Tất cả"
-                app:chipMinHeight="32dp" />
+                android:text="Tất cả" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipActive"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đang hoạt động"
-                app:chipMinHeight="32dp" />
+                android:text="Đang hoạt động" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPending"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chờ duyệt"
-                app:chipMinHeight="32dp" />
+                android:text="Chờ duyệt" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRejected"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Bị từ chối"
-                app:chipMinHeight="32dp" />
+                android:text="Bị từ chối" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipHidden"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đã ẩn"
-                app:chipMinHeight="32dp" />
+                android:text="Đã ẩn" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
-    <!-- Main List & Content State Container -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Pull To Refresh List Container -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
@@ -139,17 +141,13 @@
                 tools:listitem="@layout/item_my_post" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <!-- Loading Spinner -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:indeterminateTint="?attr/colorOnSurface"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            android:visibility="gone" />
 
-        <!-- Empty State Container -->
         <LinearLayout
             android:id="@+id/layoutEmpty"
             android:layout_width="match_parent"
@@ -157,8 +155,7 @@
             android:gravity="center"
             android:orientation="vertical"
             android:padding="32dp"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="64dp"
@@ -167,7 +164,6 @@
                 app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView
-                android:id="@+id/tvEmptyTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -176,26 +172,14 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvEmptyMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="Các bài viết của bạn thuộc bộ lọc này sẽ hiển thị ở đây."
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp" />
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCreatePost"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="Đăng tin ngay"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
                 app:backgroundTint="?attr/colorOnSurface"
-                app:cornerRadius="4dp" />
+                android:textColor="?attr/colorSurface" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

@@ -35,6 +35,7 @@ public class MyPostsAdapter extends ListAdapter<MyPost, MyPostsAdapter.ViewHolde
     public interface OnPostActionListener {
         void onViewDetail(MyPost post);
         void onToggleHide(MyPost post);
+        void onEditPost(MyPost post);
     }
 
     private final OnPostActionListener actionListener;
@@ -122,6 +123,7 @@ public class MyPostsAdapter extends ListAdapter<MyPost, MyPostsAdapter.ViewHolde
             }
 
             binding.btnToggleHide.setOnClickListener(v -> actionListener.onToggleHide(post));
+            binding.btnEditPost.setOnClickListener(v -> actionListener.onEditPost(post));
         }
 
         private void bindStatusBadge(String status) {
