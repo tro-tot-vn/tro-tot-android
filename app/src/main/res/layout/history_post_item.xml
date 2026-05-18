@@ -101,7 +101,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     tools:text="5.0 triệu/tháng" />

@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/find_your_room"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
