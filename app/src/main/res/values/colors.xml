@@ -80,4 +80,5 @@
     <!-- Custom colors / compat aliases -->
     <color name="gray_300">#EFF3F4</color>
     <color name="gray_600">#536471</color>
+    <color name="orange_500">#FF9800</color>
 </resources>

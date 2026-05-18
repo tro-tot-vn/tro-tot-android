@@ -8,6 +8,11 @@ import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenResponse;
 import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
+import com.trototvn.trototandroid.data.model.chat.ConversationDto;
+import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
+import com.trototvn.trototandroid.data.model.chat.MessageDto;
+import com.trototvn.trototandroid.data.model.chat.SendMessageRequest;
+import com.trototvn.trototandroid.data.model.location.WardListResponse;
 import com.trototvn.trototandroid.data.model.post.ContactLogRequest;
 import com.trototvn.trototandroid.data.model.post.MyPostsResponse;
 import com.trototvn.trototandroid.data.model.post.Post;
@@ -25,11 +30,16 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
