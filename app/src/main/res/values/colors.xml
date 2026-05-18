@@ -78,7 +78,6 @@
     <color name="text_secondary">@color/md_theme_light_onSurfaceVariant</color>
     
     <!-- Custom colors / compat aliases -->
-    <color name="orange_500">#1D9BF0</color>
     <color name="gray_300">#EFF3F4</color>
     <color name="gray_600">#536471</color>
 </resources>
