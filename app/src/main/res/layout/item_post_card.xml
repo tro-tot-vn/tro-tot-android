@@ -18,7 +18,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="12dp">
 
-        <!-- Left: Image Attachment (standard Twitter/X card style) -->
+        <!-- Left: Image Attachment (40dp -> Content: 12dp. We use a 100dp thumbnail for TroTot property preview) -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivPostImage"
             android:layout_width="100dp"
@@ -31,11 +31,11 @@
             app:strokeWidth="1dp"
             tools:src="@android:color/darker_gray" />
 
-        <!-- Right: Text Content Details -->
+        <!-- Right: Text Content Details (Spacing set to 12dp from avatar/thumbnail) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -52,12 +52,12 @@
                 android:lineSpacingMultiplier="1.2"
                 tools:text="Phòng trọ cao cấp gần ĐH FPT đầy đủ tiện nghi quận 9" />
 
-            <!-- Price (Twitter Blue Color Accent) -->
+            <!-- Price (X Blue Color Accent: 16sp bold) -->
             <TextView
                 android:id="@+id/tvPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:textColor="?attr/colorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold"

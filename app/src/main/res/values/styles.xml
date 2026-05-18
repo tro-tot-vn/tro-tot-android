@@ -1,29 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <!-- Button Styles -->
+    <!-- Button Styles (X-Inspired) -->
     <style name="Widget.App.Button" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/button_height</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textStyle">bold</item>
-        <item name="cornerRadius">@dimen/corner_radius_large</item>
+        <item name="cornerRadius">@dimen/corner_radius_full</item>
     </style>
     
+    <!-- Primary CTA (Light: Black/White, Dark: White/Black) -->
     <style name="Widget.App.Button.Primary" parent="Widget.App.Button">
-        <item name="backgroundTint">?attr/colorPrimary</item>
-        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="backgroundTint">?android:attr/textColorPrimary</item>
+        <item name="android:textColor">?android:attr/colorBackground</item>
     </style>
     
+    <!-- Secondary Button (Transparent, 1dp outline border, Pill shape) -->
     <style name="Widget.App.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">@dimen/button_height</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">@dimen/corner_radius_large</item>
+        <item name="cornerRadius">@dimen/corner_radius_full</item>
         <item name="strokeColor">?attr/colorPrimary</item>
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
     
+    <!-- Text Button -->
     <style name="Widget.App.Button.Text" parent="Widget.Material3.Button.TextButton">
         <item name="android:minHeight">@dimen/button_height</item>
         <item name="android:textSize">14sp</item>
@@ -31,7 +34,7 @@
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
     
-    <!-- Text Input Styles -->
+    <!-- Text Input Styles (Level 2 Hybrid) -->
     <style name="Widget.App.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxCornerRadiusTopStart">@dimen/corner_radius_medium</item>
         <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_medium</item>
@@ -41,16 +44,28 @@
         <item name="hintTextColor">?attr/colorPrimary</item>
     </style>
     
+    <!-- Search Pill Input Style (999dp corner radius, secondary background) -->
+    <style name="Widget.App.SearchInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">20dp</item>
+        <item name="boxCornerRadiusTopEnd">20dp</item>
+        <item name="boxCornerRadiusBottomStart">20dp</item>
+        <item name="boxCornerRadiusBottomEnd">20dp</item>
+        <item name="boxStrokeColor">@android:color/transparent</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+        <item name="boxBackgroundColor">?attr/colorSurfaceVariant</item>
+    </style>
+    
     <style name="Widget.App.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
         <item name="android:textSize">@dimen/text_size_body_large</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
     
-    <!-- Card Styles -->
+    <!-- Flat Card Styles (0dp elevation/corner radius) -->
     <style name="Widget.App.CardView" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardCornerRadius">@dimen/corner_radius_medium</item>
+        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
         <item name="cardElevation">@dimen/card_elevation</item>
-        <item name="contentPadding">@dimen/spacing_medium</item>
+        <item name="contentPadding">@dimen/spacing_md</item>
     </style>
     
     <!-- Text Appearance Styles -->

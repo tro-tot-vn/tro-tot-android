@@ -24,7 +24,7 @@
             <!-- Search Bar (Standard Input Fields specs) -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilSearch"
-                style="@style/Widget.App.TextInputLayout"
+                style="@style/Widget.App.SearchInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/search_hint"

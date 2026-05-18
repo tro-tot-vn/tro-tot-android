@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Standard spacing (8dp grid base) -->
+    <!-- Standard Spacing Grid (strictly 4dp base) -->
     <dimen name="spacing_xs">4dp</dimen>
     <dimen name="spacing_sm">8dp</dimen>
     <dimen name="spacing_md">12dp</dimen>
@@ -16,47 +16,46 @@
     <dimen name="spacing_xlarge">32dp</dimen>
     <dimen name="spacing_xxlarge">48dp</dimen>
     
-    <!-- Text sizes -->
-    <dimen name="text_size_caption">11sp</dimen>
-    <dimen name="text_size_body">14sp</dimen>
+    <!-- Typography Scale (X-Inspired) -->
+    <dimen name="text_size_caption">12sp</dimen>
+    <dimen name="text_size_metadata">13sp</dimen>
+    <dimen name="text_size_body">15sp</dimen>
     <dimen name="text_size_body_large">16sp</dimen>
+    <dimen name="text_size_section">20sp</dimen>
     <dimen name="text_size_title">24sp</dimen>
     <dimen name="text_size_headline">28sp</dimen>
-    <dimen name="text_size_display">32sp</dimen>
     
-    <!-- Component sizes -->
-    <dimen name="button_height">48dp</dimen>
-    <dimen name="button_height_small">40dp</dimen>
-    <dimen name="input_height">44dp</dimen>
+    <!-- Touch Targets (min 48dp, preferred 48-52dp) -->
+    <dimen name="touch_target_min">48dp</dimen>
+    <dimen name="touch_target_preferred">50dp</dimen>
+    
+    <!-- Component Sizing -->
+    <dimen name="button_height">40dp</dimen>
+    <dimen name="button_height_small">36dp</dimen>
+    <dimen name="input_height">40dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
     <dimen name="card_elevation">0dp</dimen>
     <dimen name="fab_size">56dp</dimen>
     
-    <!-- Corner radius (FLAT for Cards, 12dp for Primary Buttons) -->
+    <!-- Corner Radiuses (Pill 999dp for buttons, Flat 0dp for Feeds/Cards) -->
     <dimen name="corner_radius_small">4dp</dimen>
     <dimen name="corner_radius_medium">8dp</dimen>
     <dimen name="corner_radius_large">12dp</dimen>
     <dimen name="corner_radius_xlarge">24dp</dimen>
-    <dimen name="corner_radius_full">50dp</dimen>
+    <dimen name="corner_radius_full">999dp</dimen>
     <dimen name="card_corner_radius">0dp</dimen>
     
-    <!-- Icon sizes -->
+    <!-- Standard Icon Sizes -->
     <dimen name="icon_size_small">16dp</dimen>
     <dimen name="icon_size_medium">20dp</dimen>
     <dimen name="icon_size_large">24dp</dimen>
     <dimen name="icon_size_xlarge">48dp</dimen>
     
-    <!-- Avatar sizes -->
-    <dimen name="avatar_large">56dp</dimen>
+    <!-- Standard Avatar Sizes -->
+    <dimen name="avatar_large">48dp</dimen>
     <dimen name="avatar_medium">40dp</dimen>
     <dimen name="avatar_small">32dp</dimen>
     
-    <!-- Image sizes -->
-    <dimen name="image_thumbnail">64dp</dimen>
-    <dimen name="image_small">80dp</dimen>
-    <dimen name="image_medium">120dp</dimen>
-    <dimen name="image_large">200dp</dimen>
-    
-    <!-- Divider -->
+    <!-- Layout Dimensions -->
     <dimen name="divider_height">1dp</dimen>
 </resources>
