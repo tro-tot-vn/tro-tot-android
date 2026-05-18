@@ -16,32 +16,35 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/spacing_medium"
-            app:cardCornerRadius="@dimen/card_corner_radius"
-            app:cardElevation="@dimen/card_elevation">
+            android:layout_margin="@dimen/spacing_lg"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="@dimen/spacing_large">
+                android:padding="@dimen/spacing_lg">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/find_your_room"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_small"
+                    android:layout_marginTop="@dimen/spacing_sm"
                     android:text="@string/thousands_of_rooms"
                     android:textAlignment="center"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -50,14 +53,17 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_medium"
+            android:layout_marginTop="@dimen/spacing_md"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/spacing_medium">
+            android:paddingHorizontal="0dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="8dp"
                 android:text="@string/latest_posts"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -66,7 +72,6 @@
                 android:id="@+id/rvLatestPosts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_small"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_post_card" />
@@ -77,7 +82,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginVertical="@dimen/spacing_large"
+                android:layout_marginVertical="@dimen/spacing_lg"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -86,7 +91,7 @@
                 android:id="@+id/layoutLatestError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/spacing_large"
+                android:layout_marginVertical="@dimen/spacing_lg"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:visibility="gone"
@@ -96,7 +101,7 @@
                     android:id="@+id/tvLatestError"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     tools:text="Không thể tải bài đăng" />
 
                 <com.google.android.material.button.MaterialButton
@@ -104,7 +109,7 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_small"
+                    android:layout_marginTop="@dimen/spacing_sm"
                     android:text="@string/retry" />
             </LinearLayout>
         </LinearLayout>
@@ -114,16 +119,19 @@
             android:id="@+id/layoutRecommendations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_large"
+            android:layout_marginTop="@dimen/spacing_xxl"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/spacing_medium"
+            android:paddingHorizontal="0dp"
             android:visibility="gone"
             tools:visibility="visible">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="8dp"
                 android:text="@string/recommendations_for_you"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -132,7 +140,6 @@
                 android:id="@+id/rvRecommendations"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_small"
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_post_card" />
@@ -140,11 +147,11 @@
             <!-- Load More Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLoadMore"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.App.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="@dimen/spacing_medium"
+                android:layout_marginTop="@dimen/spacing_lg"
                 android:text="@string/load_more"
                 android:visibility="gone"
                 tools:visibility="visible" />
@@ -155,7 +162,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginVertical="@dimen/spacing_large"
+                android:layout_marginVertical="@dimen/spacing_lg"
                 android:visibility="gone"
                 tools:visibility="gone" />
         </LinearLayout>
@@ -163,7 +170,7 @@
         <!-- Bottom Spacing -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="@dimen/spacing_large" />
+            android:layout_height="@dimen/spacing_lg" />
 
     </LinearLayout>
 

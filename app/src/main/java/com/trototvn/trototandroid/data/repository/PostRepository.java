@@ -45,10 +45,25 @@ public interface PostRepository {
     /**
      * Log a click on a search result
      */
-    Single<Resource<Void>> logSearchClick(int searchLogId, int postId);
+    Single<Resource<Void>> logSearchClick(int searchLogId, int searchLogItemId);
 
     /**
      * Submit feedback for a search
      */
-    Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment);
+    Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment);
+
+    /**
+     * Get user's own posts with cursor pagination and status filter
+     */
+    Single<Resource<com.trototvn.trototandroid.data.model.post.MyPostsResponse>> getMyPosts(String status, Integer cursor, int limit);
+
+    /**
+     * Hide my post from public view
+     */
+    Single<Resource<Void>> hidePost(int postId);
+
+    /**
+     * Unhide my post to make it public
+     */
+    Single<Resource<Void>> unhidePost(int postId);
 }

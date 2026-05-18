@@ -64,7 +64,7 @@ public class NotificationHelper {
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         @ColorInt
-        int brandColor = ContextCompat.getColor(context, R.color.orange_500);
+        int brandColor = ContextCompat.getColor(context, R.color.primary);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_message) // Vector silhouette

@@ -68,13 +68,13 @@ public interface ApiService {
          * GET - Get Latest Posts
          * Returns 4 latest approved posts for home screen
          */
-        @GET("api/post/latest-post")
+        @GET("api/posts/latest")
         Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
 
         /**
          * GET - Post Detail by ID
          */
-        @GET("api/post/{postId}/detail")
+        @GET("api/posts/{postId}")
         Single<ResponseData<PostDetail>> getPostDetail(@Path("postId") int postId);
 
         /**
@@ -141,7 +141,7 @@ public interface ApiService {
          * POST - Add rating to post
          * Requires authentication
          */
-        @POST("api/customer/rate/{postId}")
+        @POST("api/customer/posts/{postId}/rate")
         Single<ResponseData<Void>> addRating(
                         @Path("postId") int postId,
                         @Body AddRatingRequest request);
@@ -149,7 +149,7 @@ public interface ApiService {
         /**
          * GET - Get ratings list with cursor pagination
          */
-        @GET("api/customer/rate/{postId}")
+        @GET("api/customer/posts/{postId}/rates")
         Single<ResponseData<RatingListResponse>> getRatings(
                         @Path("postId") int postId,
                         @Query("limit") int limit,
@@ -160,20 +160,20 @@ public interface ApiService {
          * GET - Get my rating on specific post
          * Requires authentication
          */
-        @GET("api/customer/my-rate/{postId}")
+        @GET("api/customer/posts/{postId}/rate")
         Single<ResponseData<Rating>> getMyRating(@Path("postId") int postId);
 
         /**
          * DELETE - Delete my rating
          * Requires authentication
          */
-        @DELETE("api/customer/my-rate/{postId}")
+        @DELETE("api/customer/posts/{postId}/rate")
         Single<ResponseData<Void>> deleteMyRating(@Path("postId") int postId);
 
         /**
          * GET - Get rating statistics (avg, count)
          */
-        @GET("api/customer/avg-rate/{postId}")
+        @GET("api/customer/posts/{postId}/rate-avg")
         Single<ResponseData<RatingStats>> getRatingStats(@Path("postId") int postId);
 
         // ========== My Posts ==========

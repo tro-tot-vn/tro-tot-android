@@ -110,8 +110,8 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> logSearchClick(int searchLogId, int postId) {
-        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, postId))
+    public Single<Resource<Void>> logSearchClick(int searchLogId, int searchLogItemId) {
+        return apiService.logSearchClick(new SearchInteractionRequest.Click(searchLogId, searchLogItemId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
@@ -122,15 +122,81 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, String comment) {
+    public Single<Resource<Void>> submitSearchFeedback(int searchLogId, boolean isHelpful, java.util.List<String> issues, String comment) {
         return apiService
-                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, null, comment))
+                .submitSearchFeedback(new SearchInteractionRequest.Feedback(searchLogId, isHelpful, issues, comment))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error submitting search feedback");
                     return Resource.error("Không thể gửi phản hồi", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<com.trototvn.trototandroid.data.model.post.MyPostsResponse>> getMyPosts(String status, Integer cursor, int limit) {
+        return apiService.getMyPosts(status, cursor, limit)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200 && response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<com.trototvn.trototandroid.data.model.post.MyPostsResponse>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể tải danh sách bài đăng",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error fetching my posts");
+                    return Resource.error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> hidePost(int postId) {
+        return apiService.hidePost(new com.trototvn.trototandroid.data.model.post.HidePostRequest(postId))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể ẩn bài viết",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error hiding post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> unhidePost(int postId) {
+        return apiService.unhidePost(new com.trototvn.trototandroid.data.model.post.HidePostRequest(postId))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getStatus() == 200) {
+                        return Resource.<Void>success(null);
+                    } else {
+                        return Resource.<Void>error(
+                                response.getMessage() != null ? response.getMessage() : "Không thể hiện bài viết",
+                                null);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error unhiding post");
+                    return Resource.<Void>error(
+                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối",
+                            null);
                 });
     }
 }

@@ -11,19 +11,21 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Top Drag Indicator -->
         <View
             android:layout_width="40dp"
             android:layout_height="4dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
-            android:background="@color/gray_300" />
+            android:background="?attr/colorOutline" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:text="@string/filter"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <!-- Location Selection -->
@@ -32,20 +34,27 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="@string/location"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            style="@style/Widget.App.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="@string/city">
+            android:hint="@string/city"
+            app:endIconMode="dropdown_menu">
 
             <AutoCompleteTextView
                 android:id="@+id/spinnerCity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none" />
+                android:inputType="none"
+                android:paddingStart="16dp"
+                android:paddingEnd="48dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Price Range -->
@@ -54,6 +63,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="@string/price"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -63,7 +74,7 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -72,13 +83,14 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPriceMin"
+                    style="@style/Widget.App.TextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -86,6 +98,7 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPriceMax"
+                    style="@style/Widget.App.TextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
@@ -98,6 +111,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="@string/acreage"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -107,7 +122,7 @@
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -116,13 +131,14 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etAcreageMin"
+                    style="@style/Widget.App.TextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.TextInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -130,6 +146,7 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etAcreageMax"
+                    style="@style/Widget.App.TextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="number" />
@@ -142,6 +159,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="@string/interior_condition"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <com.google.android.material.chip.ChipGroup
@@ -153,40 +172,40 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipNoInterior"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.Material3.Chip.Suggestion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nội thất cơ bản" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipFullInterior"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+                style="@style/Widget.Material3.Chip.Suggestion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Đầy đủ nội thất" />
         </com.google.android.material.chip.ChipGroup>
 
-        <!-- Buttons -->
+        <!-- Buttons (Action row with 12dp corner radius buttons) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnReset"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                style="@style/Widget.App.Button.Text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/clear_all"
-                android:textColor="@color/gray_600" />
+                android:textColor="?android:attr/textColorSecondary" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnApply"
-                style="@style/AppTheme.Button.Primary"
+                style="@style/Widget.App.Button.Primary"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:text="@string/apply" />
         </LinearLayout>

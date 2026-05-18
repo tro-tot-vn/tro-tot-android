@@ -5,9 +5,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_small"
-    app:cardCornerRadius="@dimen/card_corner_radius"
-    app:cardElevation="1dp">
+    android:layout_marginBottom="0dp"
+    app:cardBackgroundColor="?android:attr/colorBackground"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutline">
 
     <LinearLayout
         android:id="@+id/layoutMenuItem"
@@ -17,42 +20,45 @@
         android:clickable="true"
         android:focusable="true"
         android:orientation="horizontal"
-        android:padding="@dimen/spacing_medium">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp">
 
-        <!-- Icon -->
+        <!-- Icon (Standard 20dp, centered touch target compat) -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivIcon"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/profile"
+            app:tint="?attr/colorPrimary"
             tools:src="@drawable/ic_bookmark" />
 
-        <!-- Text Container -->
+        <!-- Text Container (Left margin spacing_medium 16dp) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="@dimen/spacing_medium"
+            android:layout_marginStart="16dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Title -->
+            <!-- Title (Roboto Medium 15sp) -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif-medium"
                 tools:text="Tin đã lưu" />
 
-            <!-- Subtitle (Count) -->
+            <!-- Subtitle/Count (Caption 12sp) -->
             <TextView
                 android:id="@+id/tvSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="@color/text_secondary"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="12sp"
                 android:visibility="gone"
                 tools:text="12 tin"
@@ -60,15 +66,15 @@
 
         </LinearLayout>
 
-        <!-- Arrow -->
+        <!-- Arrow (Muted gray) -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivArrow"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/profile"
             android:src="@android:drawable/ic_menu_more"
-            app:tint="@color/text_secondary" />
+            app:tint="?android:attr/textColorSecondary" />
 
     </LinearLayout>
 

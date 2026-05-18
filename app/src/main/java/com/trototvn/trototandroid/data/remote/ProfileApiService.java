@@ -28,21 +28,21 @@ public interface ProfileApiService {
     
     // ========== Profile ==========
     
-    @GET("api/customer/my-profile")
+    @GET("api/customer/me")
     Single<ResponseData<CustomerProfile>> getMyProfile();
     
-    @PUT("api/customer/my-profile")
+    @POST("api/customer/me")
     Single<ResponseData<Void>> updateProfile(@Body Map<String, Object> profileData);
     
     @Multipart
-    @PUT("api/customer/my-profile")
+    @POST("api/customer/me")
     Single<ResponseData<Void>> updateProfileWithAvatar(
             @Part("firstName") okhttp3.RequestBody firstName,
             @Part("lastName") okhttp3.RequestBody lastName,
             @Part("email") okhttp3.RequestBody email,
             @Part("bio") okhttp3.RequestBody bio,
             @Part("gender") okhttp3.RequestBody gender,
-            @Part("birthDate") okhttp3.RequestBody birthDate,
+            @Part("birthday") okhttp3.RequestBody birthday,
             @Part("currentCity") okhttp3.RequestBody currentCity,
             @Part("currentDistrict") okhttp3.RequestBody currentDistrict,
             @Part("currentJob") okhttp3.RequestBody currentJob,
@@ -51,18 +51,18 @@ public interface ProfileApiService {
     
     // ========== Saved Posts ==========
     
-    @GET("api/customer/saved-post")
+    @GET("api/customer/saved-posts")
     Single<ResponseData<List<Post>>> getSavedPosts();
     
-    @POST("api/customer/save-post")
-    Single<ResponseData<Void>> savePost(@Body Map<String, Integer> body);
+    @POST("api/customer/saved-posts/{postId}")
+    Single<ResponseData<Void>> savePost(@Path("postId") int postId);
     
-    @HTTP(method = "DELETE", path = "api/customer/unsave-post", hasBody = true)
-    Single<ResponseData<Void>> unsavePost(@Body Map<String, Integer> body);
+    @DELETE("api/customer/saved-posts/{postId}")
+    Single<ResponseData<Void>> unsavePost(@Path("postId") int postId);
     
     // ========== View History ==========
     
-    @GET("api/customer/history-view-post")
+    @GET("api/customer/view-history")
     Single<ResponseData<List<Post>>> getViewHistory();
     
     // ========== Subscriptions ==========
