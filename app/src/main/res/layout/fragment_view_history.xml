@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#f5f5f5">
+    android:background="?android:attr/colorBackground">
 
-    <!-- Toolbar -->
+    <!-- Header Toolbar (56dp height, flat surface, 1dp bottom border) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -14,15 +14,16 @@
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:background="@color/white">
+        android:background="?android:attr/colorBackground">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="?attr/selectableItemBackground"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:scaleType="centerInside"
+            app:tint="?attr/colorPrimary"
             android:contentDescription="Back" />
 
         <TextView
@@ -32,19 +33,24 @@
             android:text="Lịch sử xem"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="?android:attr/textColorPrimary"
             android:paddingStart="16dp" />
     </LinearLayout>
 
-    <!-- RecyclerView -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutline" />
+
+    <!-- RecyclerView (Edge-to-Edge List spacing) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvViewHistory"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="false" />
+        android:padding="0dp"
+        android:clipToPadding="false"
+        android:background="?android:attr/colorBackground" />
 
     <!-- Empty State -->
     <LinearLayout
@@ -53,13 +59,14 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
+        android:background="?android:attr/colorBackground"
         android:visibility="gone">
 
         <ImageView
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@drawable/ic_time_past"
-            app:tint="#ccc" />
+            app:tint="?android:attr/textColorTertiary" />
 
         <TextView
             android:layout_width="match_parent"
@@ -67,10 +74,9 @@
             android:text="Chưa có bài đăng nào"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#999"
+            android:textColor="?android:attr/textColorSecondary"
             android:gravity="center"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 
 </LinearLayout>
-

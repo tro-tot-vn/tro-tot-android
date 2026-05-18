@@ -4,73 +4,74 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/spacing_medium">
+        android:padding="0dp">
 
-        <!-- Profile Header Card -->
+        <!-- Profile Header Card (Flat border-bottom, edge-to-edge) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_medium"
-            app:cardCornerRadius="@dimen/card_corner_radius"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="?android:attr/colorBackground"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutline">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="@dimen/spacing_large">
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="20dp">
 
-                <!-- Avatar -->
-                <ImageView
+                <!-- Left-aligned Avatar with Circle Crop Overlay -->
+                <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivAvatar"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_gravity="center_horizontal"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
                     android:contentDescription="@string/profile"
                     android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp"
                     android:src="@drawable/ic_user"
-                    app:tint="?attr/colorOnSurfaceVariant" />
+                    app:tint="?attr/colorPrimary" />
 
-                <!-- Name -->
+                <!-- Left-aligned Profile Details -->
                 <TextView
                     android:id="@+id/tvName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="@dimen/spacing_small"
-                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="12dp"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     tools:text="Nguyễn Văn A" />
 
-                <!-- Email -->
                 <TextView
                     android:id="@+id/tvEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="14sp"
                     tools:text="nguyenvana@gmail.com" />
 
-                <!-- Member Since -->
                 <TextView
                     android:id="@+id/tvMemberSince"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="6dp"
+                    android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp"
-                    tools:text="Thành viên từ 3 tháng" />
+                    tools:text="Thành viên từ 3 tháng trước" />
 
                 <!-- Loading Indicator -->
                 <ProgressBar
@@ -78,7 +79,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="@dimen/spacing_medium"
+                    android:layout_marginTop="16dp"
                     android:visibility="gone"
                     tools:visibility="visible" />
 
@@ -86,7 +87,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Menu Items -->
+        <!-- Menu Items RecyclerView (Stretches edge-to-edge) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMenuItems"
             android:layout_width="match_parent"

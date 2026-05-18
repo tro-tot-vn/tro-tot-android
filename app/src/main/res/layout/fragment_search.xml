@@ -4,34 +4,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.main.search.SearchFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
+        android:background="?android:attr/colorBackground"
         app:elevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/spacing_medium">
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
 
-            <!-- Search Bar -->
+            <!-- Search Bar (Standard Input Fields specs) -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilSearch"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.App.TextInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/search_hint"
                 app:endIconDrawable="@android:drawable/ic_menu_search"
                 app:endIconMode="custom"
-                app:startIconDrawable="@android:drawable/ic_menu_search">
+                app:startIconDrawable="@android:drawable/ic_menu_search"
+                app:startIconTint="?android:attr/textColorSecondary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etSearch"
+                    style="@style/Widget.App.TextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:imeOptions="actionSearch"
@@ -40,35 +44,55 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Filter Chip -->
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipFilter"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
+            <!-- Filter Row with Spacing Grid spacing_md -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_small"
-                android:text="@string/filter"
-                android:checkable="false"
-                app:chipIcon="@android:drawable/ic_menu_manage" />
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- Clear Filters Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnClearFilters"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="@string/clear_filters"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipFilter"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter"
+                    android:checkable="false"
+                    app:chipIcon="@android:drawable/ic_menu_manage"
+                    app:chipIconTint="?android:attr/textColorSecondary" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <!-- Clear Filters Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnClearFilters"
+                    style="@style/Widget.App.Button.Text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/clear_filters"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
 
         </LinearLayout>
+
+        <!-- Bottom Header Divider (1dp colorOutline) -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/colorOutline" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -76,13 +100,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Results RecyclerView -->
+            <!-- Results RecyclerView (Edge-to-Edge List spacing) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvSearchResults"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:padding="@dimen/spacing_small"
+                android:padding="0dp"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_post_card" />
 
@@ -92,7 +116,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginVertical="@dimen/spacing_large"
+                android:layout_marginVertical="24dp"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -101,10 +125,10 @@
                 android:id="@+id/layoutEmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/spacing_xlarge"
+                android:layout_marginVertical="32dp"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:padding="@dimen/spacing_large"
+                android:padding="24dp"
                 android:visibility="gone"
                 tools:visibility="gone">
 
@@ -123,7 +147,7 @@
                 android:id="@+id/layoutError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/spacing_large"
+                android:layout_marginVertical="24dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:visibility="gone"
@@ -138,21 +162,21 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRetry"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="@style/Widget.App.Button.Secondary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacing_small"
+                    android:layout_marginTop="12dp"
                     android:text="@string/retry" />
             </LinearLayout>
 
             <!-- Load More Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLoadMore"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.App.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="@dimen/spacing_medium"
+                android:layout_margin="16dp"
                 android:text="@string/load_more"
                 android:visibility="gone"
                 tools:visibility="visible" />
