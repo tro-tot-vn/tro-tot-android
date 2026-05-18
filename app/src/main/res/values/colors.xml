@@ -4,8 +4,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- Material Design 3 Color Palette (X-Inspired Style 2026) -->
-    <!-- Light Theme Colors -->
+    <!-- X-Inspired Android UI (2026) Color Palette -->
+    <!-- Light Theme -->
     <color name="md_theme_light_primary">#1D9BF0</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
     <color name="md_theme_light_primaryContainer">#E8F5FE</color>
@@ -35,13 +35,13 @@
     <color name="md_theme_light_onSurfaceVariant">#536471</color>
     
     <color name="md_theme_light_outline">#EFF3F4</color>
-    <color name="md_theme_light_outlineVariant">#EFF3F4</color>
+    <color name="md_theme_light_outlineVariant">#CFD9DE</color>
     
-    <!-- Dark Theme Colors (Lights Out) -->
+    <!-- Dark Theme (Lights Out Black) -->
     <color name="md_theme_dark_primary">#1D9BF0</color>
-    <color name="md_theme_dark_inversePrimary">#71767B</color>
-    <color name="md_theme_dark_onPrimary">#FFFFFF</color>
-    <color name="md_theme_dark_primaryContainer">#0A2F49</color>
+    <color name="md_theme_dark_inversePrimary">#536471</color>
+    <color name="md_theme_dark_onPrimary">#000000</color>
+    <color name="md_theme_dark_primaryContainer">#1A2F3D</color>
     <color name="md_theme_dark_onPrimaryContainer">#1D9BF0</color>
     
     <color name="md_theme_dark_secondary">#16181C</color>
@@ -68,7 +68,7 @@
     <color name="md_theme_dark_onSurfaceVariant">#71767B</color>
     
     <color name="md_theme_dark_outline">#2F3336</color>
-    <color name="md_theme_dark_outlineVariant">#2F3336</color>
+    <color name="md_theme_dark_outlineVariant">#3E4144</color>
     
     <!-- Convenience aliases for commonly used colors -->
     <color name="primary">@color/md_theme_light_primary</color>

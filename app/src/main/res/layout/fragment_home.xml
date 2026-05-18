@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
     android:fillViewport="true"
     tools:context=".ui.main.home.HomeFragment">
 
@@ -13,13 +12,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Hero Section (Flat edge-to-edge, zero margin, bottom outline stroke only) -->
+        <!-- Hero Section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="0dp"
+            android:layout_margin="@dimen/spacing_lg"
             app:cardBackgroundColor="?attr/colorSurfaceVariant"
-            app:cardCornerRadius="0dp"
+            app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorOutline">
@@ -36,7 +35,7 @@
                     android:text="@string/find_your_room"
                     android:textAlignment="center"
                     android:textColor="?attr/colorPrimary"
-                    android:textSize="20sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -46,7 +45,7 @@
                     android:text="@string/thousands_of_rooms"
                     android:textAlignment="center"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="13sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -68,7 +67,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Latest Posts RecyclerView (0dp padding for edge-to-edge X feed style) -->
+            <!-- Latest Posts RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvLatestPosts"
                 android:layout_width="match_parent"
@@ -120,7 +119,7 @@
             android:id="@+id/layoutRecommendations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xl"
+            android:layout_marginTop="@dimen/spacing_xxl"
             android:orientation="vertical"
             android:paddingHorizontal="0dp"
             android:visibility="gone"
@@ -136,7 +135,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- Recommendations RecyclerView (0dp padding) -->
+            <!-- Recommendations RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvRecommendations"
                 android:layout_width="match_parent"
@@ -145,7 +144,7 @@
                 tools:itemCount="4"
                 tools:listitem="@layout/item_post_card" />
 
-            <!-- Load More Button (Pill styled secondary) -->
+            <!-- Load More Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLoadMore"
                 style="@style/Widget.App.Button.Secondary"

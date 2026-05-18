@@ -13,11 +13,11 @@
         android:orientation="vertical"
         android:padding="0dp">
 
-        <!-- Profile Header Card (Flat border-bottom, edge-to-edge, zero margin to menu list) -->
+        <!-- Profile Header Card (Flat border-bottom, edge-to-edge) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="?android:attr/colorBackground"
             app:cardCornerRadius="0dp"
             app:cardElevation="0dp"
@@ -31,7 +31,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="20dp">
 
-                <!-- Left-aligned Avatar with Circle Crop Overlay (X Prominent size) -->
+                <!-- Left-aligned Avatar with Circle Crop Overlay -->
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/ivAvatar"
                     android:layout_width="72dp"
@@ -61,7 +61,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     tools:text="nguyenvana@gmail.com" />
 
                 <TextView

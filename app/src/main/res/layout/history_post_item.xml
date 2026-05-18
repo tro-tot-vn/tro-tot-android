@@ -1,183 +1,193 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="0dp"
-    android:background="?android:attr/colorBackground"
-    android:orientation="horizontal"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="12dp">
+    android:layout_margin="0dp"
+    app:cardBackgroundColor="?android:attr/colorBackground"
+    app:cardCornerRadius="0dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutline">
 
-    <!-- Thumbnail (Left aligned square image 100dp x 100dp bo goc 8dp) -->
-    <RelativeLayout
-        android:layout_width="100dp"
-        android:layout_height="100dp">
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivThumbnail"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:contentDescription="Post thumbnail"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_default_avatar"
-            app:shapeAppearanceOverlay="@style/RoundedImageView"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp" />
-
-        <!-- Bottom Image Count Overlay -->
-        <LinearLayout
-            android:id="@+id/layoutBottomInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:layout_margin="4dp"
-            android:background="#99000000"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="2dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvLastUpdate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="9sp"
-                android:visibility="gone" />
-
-            <ImageView
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:contentDescription="Image count icon"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_camera"
-                app:tint="@color/white" />
-
-            <TextView
-                android:id="@+id/tvImageCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="2dp"
-                android:textColor="@color/white"
-                android:textSize="9sp" />
-        </LinearLayout>
-    </RelativeLayout>
-
-    <!-- Content Section (12dp spacing from thumbnail) -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="4dp">
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
 
-        <!-- Title -->
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            tools:text="Phòng trọ cao cấp" />
-
-        <!-- Price -->
-        <TextView
-            android:id="@+id/tvPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="5.0 triệu/tháng" />
-
-        <!-- Meta info Row (Area, Location, time) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/tvArea"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
-                tools:text="25 m²" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="4dp"
-                android:text="•"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvLocation"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
-                tools:text="TP. Hồ Chí Minh" />
-        </LinearLayout>
-
-        <!-- Poster Info (Twitter style handle block) -->
-        <LinearLayout
-            android:id="@+id/layoutPoster"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone">
+        <!-- Thumbnail (Left aligned square image 100dp x 100dp bo goc 8dp) -->
+        <RelativeLayout
+            android:layout_width="100dp"
+            android:layout_height="100dp">
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/ivPosterAvatar"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="Poster avatar"
+                android:id="@+id/ivThumbnail"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:contentDescription="Post thumbnail"
                 android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/CircleImageView"
-                android:src="@drawable/ic_default_avatar" />
+                android:src="@drawable/ic_default_avatar"
+                app:shapeAppearanceOverlay="@style/RoundedImageView"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp" />
 
-            <TextView
-                android:id="@+id/tvPosterName"
-                android:layout_width="0dp"
+            <!-- Bottom Image Count Overlay -->
+            <LinearLayout
+                android:id="@+id/layoutBottomInfo"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
-                tools:text="Nguyễn Văn A" />
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="4dp"
+                android:background="#99000000"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvLastUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="9sp"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:contentDescription="Image count icon"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_camera"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvImageCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:textColor="@color/white"
+                    android:textSize="9sp" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- Content Section -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp">
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Phòng trọ cao cấp" />
+
+            <!-- Price -->
+            <TextView
+                android:id="@+id/tvPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="5.0 triệu/tháng" />
+
+            <!-- Meta info Row (Area, Location, time) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvArea"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    tools:text="25 m²" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="4dp"
+                    android:text="•"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    tools:text="TP. Hồ Chí Minh" />
+            </LinearLayout>
+
+            <!-- Poster Info (Twitter style handle block) -->
+            <LinearLayout
+                android:id="@+id/layoutPoster"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/ivPosterAvatar"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="Poster avatar"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    android:src="@drawable/ic_default_avatar" />
+
+                <TextView
+                    android:id="@+id/tvPosterName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    tools:text="Nguyễn Văn A" />
+            </LinearLayout>
         </LinearLayout>
+
+        <!-- Save/Bookmark Button (Flat Twitter Blue outline) -->
+        <ImageButton
+            android:id="@+id/btnSave"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="top"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Save post"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_bookmark"
+            android:visibility="gone"
+            app:tint="?attr/colorPrimary" />
+
     </LinearLayout>
 
-    <!-- Save/Bookmark Button (Flat Twitter Blue outline) -->
-    <ImageButton
-        android:id="@+id/btnSave"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Save post"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_bookmark"
-        android:visibility="gone"
-        app:tint="?attr/colorPrimary" />
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>
