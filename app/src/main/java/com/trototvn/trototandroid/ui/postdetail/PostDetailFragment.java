@@ -13,6 +13,10 @@ import androidx.lifecycle.ViewModelProvider;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.net.Uri;
+import com.bumptech.glide.Glide;
 
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
@@ -241,6 +245,79 @@ public class PostDetailFragment extends Fragment {
         addDetailRow(getString(R.string.acreage), String.format(Locale.getDefault(), "%.1f m²", post.getAcreage()));
         addDetailRow(getString(R.string.interior), post.getInteriorCondition());
         addDetailRow(getString(R.string.address), post.getFullAddress());
+
+        // Google Maps WebView
+        binding.wvMap.getSettings().setJavaScriptEnabled(true);
+        binding.wvMap.setWebViewClient(new WebViewClient());
+        String address = post.getFullAddress();
+        String mapUrl = "https://www.google.com/maps/embed/v1/place?key=AIzaSyDDNu6RXhhzn6OpjxnD886FhA7owrg2yYk&q=" + Uri.encode(address);
+        binding.wvMap.loadUrl(mapUrl);
+
+        // Seller Information
+        com.trototvn.trototandroid.data.model.post.PostOwner seller = post.getOwner();
+        binding.tvSellerName.setText(seller.getFullName());
+
+        StringBuilder location = new StringBuilder();
+        if (seller.getCurrentDistrict() != null && !seller.getCurrentDistrict().isEmpty()) {
+            location.append(seller.getCurrentDistrict());
+        }
+        if (seller.getCurrentCity() != null && !seller.getCurrentCity().isEmpty()) {
+            if (location.length() > 0) location.append(", ");
+            location.append(seller.getCurrentCity());
+        }
+        if (location.length() == 0) {
+            binding.tvSellerLocation.setText("Chưa có thông tin địa chỉ");
+        } else {
+            binding.tvSellerLocation.setText(location.toString());
+        }
+
+        if (seller.getJoinedAt() != null && !seller.getJoinedAt().isEmpty()) {
+            try {
+                String joined = seller.getJoinedAt();
+                if (joined.contains("T")) {
+                    joined = joined.substring(0, joined.indexOf("T"));
+                }
+                binding.tvSellerJoined.setText("Thành viên từ: " + joined);
+            } catch (Exception e) {
+                binding.tvSellerJoined.setText("Thành viên từ: " + seller.getJoinedAt());
+            }
+        } else {
+            binding.tvSellerJoined.setText("Thành viên mới");
+        }
+
+        if (seller.getAvatar() != null && !seller.getAvatar().isEmpty()) {
+            String avatarUrl = seller.getAvatar();
+            if (!avatarUrl.startsWith("http")) {
+                avatarUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + avatarUrl;
+            }
+            Glide.with(this)
+                 .load(avatarUrl)
+                 .placeholder(R.drawable.ic_default_avatar)
+                 .error(R.drawable.ic_default_avatar)
+                 .into(binding.ivSellerAvatar);
+        } else {
+            binding.ivSellerAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
+
+        binding.btnSellerPhone.setOnClickListener(v -> {
+            if (!viewModel.isAuthenticated()) {
+                Toast.makeText(requireContext(), "Vui lòng đăng nhập để xem số điện thoại", Toast.LENGTH_LONG).show();
+            } else {
+                binding.btnSellerPhone.setText(phone);
+            }
+        });
+
+        binding.btnSellerChat.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Tính năng Chat sẽ sớm được ra mắt!", Toast.LENGTH_SHORT).show();
+        });
+
+        // Quick Messaging Setup
+        binding.btnQuickMsg1.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Tính năng gửi tin nhắn nhanh sẽ sớm được ra mắt!", Toast.LENGTH_SHORT).show();
+        });
+        binding.btnQuickMsg2.setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Tính năng gửi tin nhắn nhanh sẽ sớm được ra mắt!", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void addDetailRow(String label, String value) {

@@ -72,5 +72,9 @@
         <item name="android:textSize">@dimen/text_size_caption</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
+
+    <style name="CircleImageView" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
     
 </resources>
