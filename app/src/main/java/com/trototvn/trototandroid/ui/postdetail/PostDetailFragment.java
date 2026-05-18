@@ -250,8 +250,14 @@ public class PostDetailFragment extends Fragment {
         binding.wvMap.getSettings().setJavaScriptEnabled(true);
         binding.wvMap.setWebViewClient(new WebViewClient());
         String address = post.getFullAddress();
-        String mapUrl = "https://www.google.com/maps/embed/v1/place?key=AIzaSyDDNu6RXhhzn6OpjxnD886FhA7owrg2yYk&q=" + Uri.encode(address);
-        binding.wvMap.loadUrl(mapUrl);
+        String apiKey = "AIzaSyDDNu6RXhhzn6OpjxnD886FhA7owrg2yYk";
+        String mapUrl = "https://www.google.com/maps/embed/v1/place?key=" + apiKey + "&q=" + Uri.encode(address);
+
+        String html = "<!DOCTYPE html><html><body style='margin:0;padding:0;'>" +
+                "<iframe width='100%' height='100%' frameborder='0' style='border:0; position:fixed; top:0; left:0; bottom:0; right:0;' " +
+                "src='" + mapUrl + "' allowfullscreen></iframe>" +
+                "</body></html>";
+        binding.wvMap.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
 
         // Seller Information
         com.trototvn.trototandroid.data.model.post.PostOwner seller = post.getOwner();
