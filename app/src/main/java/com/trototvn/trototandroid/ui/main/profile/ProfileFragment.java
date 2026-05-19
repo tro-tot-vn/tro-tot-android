@@ -142,8 +142,22 @@ public class ProfileFragment extends Fragment {
             binding.tvMemberSince.setText(getString(R.string.member_since, memberSince));
         }
 
-        // TODO: Load avatar with Glide
-        // Glide.with(this).load(profile.getAvatar()).into(binding.ivAvatar);
+        // Clear image tint list so the actual photo does not get colored by ?attr/colorPrimary
+        binding.ivAvatar.setImageTintList(null);
+
+        if (profile.getAvatar() != null && !profile.getAvatar().trim().isEmpty()) {
+            String avatarUrl = profile.getAvatar();
+            if (!avatarUrl.startsWith("http")) {
+                avatarUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + avatarUrl;
+            }
+            com.bumptech.glide.Glide.with(this)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .error(R.drawable.ic_default_avatar)
+                    .into(binding.ivAvatar);
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
     }
 
     private void updateMenuCounts() {

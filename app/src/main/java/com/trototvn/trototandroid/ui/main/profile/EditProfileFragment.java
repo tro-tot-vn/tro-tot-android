@@ -14,6 +14,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
+
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.databinding.FragmentEditProfileBinding;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.profile.CustomerProfile;
@@ -199,6 +201,20 @@ public class EditProfileFragment extends Fragment {
         Timber.d("Populating profile data: firstName=%s, lastName=%s, email=%s, gender=%s, birthday=%s",
                 profile.getFirstName(), profile.getLastName(), profile.getEmail(), profile.getGender(), profile.getBirthday());
 
+        if (profile.getAvatar() != null && !profile.getAvatar().trim().isEmpty()) {
+            String avatarUrl = profile.getAvatar();
+            if (!avatarUrl.startsWith("http")) {
+                avatarUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + avatarUrl;
+            }
+            com.bumptech.glide.Glide.with(this)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .error(R.drawable.ic_default_avatar)
+                    .into(binding.ivAvatar);
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
+
         if (profile.getFirstName() != null && !profile.getFirstName().isEmpty()) {
             binding.etFirstName.setText(profile.getFirstName());
         }
@@ -369,3 +385,4 @@ public class EditProfileFragment extends Fragment {
         binding = null;
     }
 }
+

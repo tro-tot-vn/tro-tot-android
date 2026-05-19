@@ -71,12 +71,12 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         profileData.put("email", profile.getEmail());
         profileData.put("bio", profile.getBio());
         profileData.put("gender", profile.getGender());
-        
+
         if (profile.getBirthday() != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             profileData.put("birthday", sdf.format(profile.getBirthday()));
         }
-        
+
         profileData.put("currentCity", profile.getCurrentCity());
         profileData.put("currentDistrict", profile.getCurrentDistrict());
         profileData.put("currentJob", profile.getCurrentJob());
@@ -102,7 +102,7 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         RequestBody email = RequestBody.create(MediaType.parse("text/plain"), profile.getEmail());
         RequestBody bio = RequestBody.create(MediaType.parse("text/plain"), profile.getBio() != null ? profile.getBio() : "");
         RequestBody gender = RequestBody.create(MediaType.parse("text/plain"), profile.getGender());
-        
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         RequestBody birthday = RequestBody.create(MediaType.parse("text/plain"), 
                 profile.getBirthday() != null ? sdf.format(profile.getBirthday()) : "");
