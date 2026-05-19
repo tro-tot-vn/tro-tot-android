@@ -17,76 +17,87 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp">
+            android:orientation="vertical">
 
-            <!-- Search Bar (Standard Input Fields specs) -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilSearch"
-                style="@style/Widget.App.TextInputLayout.Search"
+            <TextView
+                style="@style/TextAppearance.App.Title"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/search_hint"
-                app:endIconDrawable="@android:drawable/ic_menu_search"
-                app:endIconMode="custom"
-                app:startIconDrawable="@android:drawable/ic_menu_search"
-                app:startIconTint="?android:attr/textColorSecondary">
+                android:layout_height="@dimen/toolbar_height"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="@dimen/spacing_lg"
+                android:text="@string/search"
+                android:textStyle="bold" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etSearch"
-                    style="@style/Widget.App.TextInputEditText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:maxLines="1" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/divider_height"
+                android:background="?attr/colorOutline" />
 
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Filter Row with Spacing Grid spacing_md -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/spacing_lg"
+                android:paddingVertical="@dimen/spacing_md">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipFilter"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilSearch"
+                    style="@style/Widget.App.TextInputLayout.Search"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/filter"
-                    android:checkable="false"
-                    app:chipIcon="@android:drawable/ic_menu_manage"
-                    app:chipIconTint="?android:attr/textColorSecondary" />
+                    android:hint="@string/search_hint"
+                    app:endIconDrawable="@drawable/ic_search"
+                    app:endIconMode="custom"
+                    app:startIconDrawable="@drawable/ic_search">
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSearch"
+                        style="@style/Widget.App.TextInputEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Clear Filters Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnClearFilters"
-                    style="@style/Widget.App.Button.Text"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/clear_filters"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFilter"
+                        style="@style/Widget.App.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="false"
+                        android:text="@string/filter"
+                        app:chipIcon="@drawable/ic_settings"
+                        app:chipIconVisible="true" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnClearFilters"
+                        style="@style/Widget.App.Button.Text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/clear_filters"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+                </LinearLayout>
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/divider_height"
+                android:background="?attr/colorOutline" />
         </LinearLayout>
-
-        <!-- Bottom Header Divider (1dp colorOutline) -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?attr/colorOutline" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -100,64 +111,56 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Results RecyclerView (Edge-to-Edge List spacing) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvSearchResults"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:padding="0dp"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_post_card" />
 
-            <!-- Loading Indicator -->
             <ProgressBar
                 android:id="@+id/pbLoading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginVertical="24dp"
+                android:layout_marginVertical="@dimen/spacing_xxl"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
-            <!-- Empty State -->
             <LinearLayout
                 android:id="@+id/layoutEmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="32dp"
+                android:layout_marginVertical="@dimen/spacing_xlarge"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:padding="24dp"
-                android:visibility="gone"
-                tools:visibility="gone">
+                android:padding="@dimen/spacing_xxl"
+                android:visibility="gone">
 
                 <TextView
+                    style="@style/TextAppearance.App.Body"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/search_to_begin"
                     android:textAlignment="center"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="16sp" />
-
+                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
-            <!-- Error State -->
             <LinearLayout
                 android:id="@+id/layoutError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="24dp"
+                android:layout_marginVertical="@dimen/spacing_xxl"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:visibility="gone"
-                tools:visibility="gone">
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/tvError"
+                    style="@style/TextAppearance.App.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="?android:attr/textColorSecondary"
                     tools:text="Không tìm thấy kết quả" />
 
                 <com.google.android.material.button.MaterialButton
@@ -165,24 +168,20 @@
                     style="@style/Widget.App.Button.Secondary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/spacing_md"
                     android:text="@string/retry" />
             </LinearLayout>
 
-            <!-- Load More Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLoadMore"
                 style="@style/Widget.App.Button.Secondary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="16dp"
+                android:layout_margin="@dimen/spacing_lg"
                 android:text="@string/load_more"
                 android:visibility="gone"
                 tools:visibility="visible" />
-
         </LinearLayout>
-
     </androidx.core.widget.NestedScrollView>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

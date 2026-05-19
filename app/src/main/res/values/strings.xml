@@ -2,6 +2,8 @@
     <string name="app_name">Trọ tốt</string>
     
     <!-- Common strings -->
+    <string name="navigate_up">Quay lại</string>
+    <string name="post_create">Đăng tin</string>
     <string name="loading">Đang tải…</string>
     <string name="ok">Đồng ý</string>
     <string name="cancel">Hủy</string>

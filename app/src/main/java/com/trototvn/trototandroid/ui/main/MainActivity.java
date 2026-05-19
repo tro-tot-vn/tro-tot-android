@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         if (navController != null) {
             NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
 
-            // Disable icon tint to show original icon colors
+            // Icons use @color/icon_fill in vectors; avoid theme-attr tint (broken on API 35/36)
             binding.bottomNavigation.setItemIconTintList(null);
 
             // Optional: Handle reselection (prevent fragment recreation)

@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="0dp"
-    app:cardBackgroundColor="?android:attr/colorBackground"
-    app:cardCornerRadius="0dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="?attr/colorOutline">
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/layoutMenuItem"
@@ -19,63 +13,57 @@
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
+        android:gravity="center_vertical"
+        android:minHeight="52dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp">
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_md">
 
-        <!-- Icon (Standard 20dp, centered touch target compat) -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivIcon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center_vertical"
+            android:layout_width="@dimen/icon_size_medium"
+            android:layout_height="@dimen/icon_size_medium"
             android:contentDescription="@string/profile"
-            app:tint="?attr/colorPrimary"
+           
             tools:src="@drawable/ic_bookmark" />
 
-        <!-- Text Container (Left margin spacing_medium 16dp) -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="@dimen/spacing_lg"
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Title (Roboto Medium 15sp) -->
             <TextView
                 android:id="@+id/tvTitle"
+                style="@style/TextAppearance.App.Body"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="15sp"
-                android:fontFamily="sans-serif-medium"
                 tools:text="Tin đã lưu" />
 
-            <!-- Subtitle/Count (Caption 12sp) -->
             <TextView
                 android:id="@+id/tvSubtitle"
+                style="@style/TextAppearance.App.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
                 android:visibility="gone"
                 tools:text="12 tin"
                 tools:visibility="visible" />
-
         </LinearLayout>
 
-        <!-- Arrow (Muted gray) -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivArrow"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center_vertical"
+            android:layout_width="@dimen/icon_size_small"
+            android:layout_height="@dimen/icon_size_small"
             android:contentDescription="@string/profile"
-            android:src="@android:drawable/ic_menu_more"
-            app:tint="?android:attr/textColorSecondary" />
-
+            app:srcCompat="@drawable/ic_chevron_right"
+            />
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/divider_height"
+        android:layout_marginStart="52dp"
+        android:background="?attr/colorOutline" />
+</LinearLayout>
