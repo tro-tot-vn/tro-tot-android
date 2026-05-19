@@ -1,72 +1,73 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <!-- Minimalist X-Inspired Toolbar Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/toolbar_height"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:paddingHorizontal="@dimen/spacing_sm">
 
-        <!-- Back Button -->
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:contentDescription="Quay lại"
-            android:focusable="true"
-            android:src="@drawable/ic_arrow_back"
-            app:tint="?attr/colorOnSurface" />
+            android:layout_width="@dimen/icon_size_large"
+            android:layout_height="@dimen/icon_size_large"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/navigate_up"
+            android:padding="@dimen/spacing_sm"
+            app:srcCompat="@drawable/arrow_small_left"
+            />
 
-        <!-- Title & Subtitle Info -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvHeaderTitle"
+                style="@style/TextAppearance.App.Title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Bài đăng của tôi"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:text="Bài đăng của tôi" />
 
             <TextView
                 android:id="@+id/tvHeaderSubtitle"
+                style="@style/TextAppearance.App.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="11sp"
                 tools:text="0 bài đăng" />
         </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivToolbarCreate"
+            android:layout_width="@dimen/icon_size_large"
+            android:layout_height="@dimen/icon_size_large"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/post_create"
+            android:padding="@dimen/spacing_sm"
+            app:srcCompat="@drawable/icons8_create"
+            />
     </LinearLayout>
 
-    <!-- Subtle 1dp border line separating header -->
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/divider_height"
         android:background="?attr/colorOutline" />
 
-    <!-- Filter Chips Horizontal Scroll Row -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
+        android:paddingHorizontal="@dimen/spacing_lg"
+        android:paddingVertical="@dimen/spacing_sm"
         android:scrollbars="none">
 
         <com.google.android.material.chip.ChipGroup
@@ -78,53 +79,51 @@
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipAll"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.App.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Tất cả"
-                app:chipMinHeight="32dp" />
+                android:text="Tất cả" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipActive"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.App.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đang hoạt động"
-                app:chipMinHeight="32dp" />
+                android:text="Đang hoạt động" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPending"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.App.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chờ duyệt"
-                app:chipMinHeight="32dp" />
+                android:text="Chờ duyệt" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRejected"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.App.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Bị từ chối"
-                app:chipMinHeight="32dp" />
+                android:text="Bị từ chối" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipHidden"
-                style="@style/Widget.Material3.Chip.Filter"
+                style="@style/Widget.App.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đã ẩn"
-                app:chipMinHeight="32dp" />
+                android:text="Đã ẩn" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
-    <!-- Main List & Content State Container -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/divider_height"
+        android:background="?attr/colorOutline" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Pull To Refresh List Container -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
@@ -135,67 +134,54 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="32dp"
+                android:paddingBottom="@dimen/spacing_xlarge"
                 tools:listitem="@layout/item_my_post" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <!-- Loading Spinner -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:indeterminateTint="?attr/colorOnSurface"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            android:visibility="gone" />
 
-        <!-- Empty State Container -->
         <LinearLayout
             android:id="@+id/layoutEmpty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="32dp"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:padding="@dimen/spacing_xlarge"
+            android:visibility="gone">
 
-            <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@drawable/ic_post"
-                app:tint="?attr/colorOnSurfaceVariant" />
-
-            <TextView
-                android:id="@+id/tvEmptyTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Không có bài đăng nào"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                app:srcCompat="@drawable/ic_post"
+                />
 
             <TextView
-                android:id="@+id/tvEmptyMessage"
+                style="@style/TextAppearance.App.Title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="Các bài viết của bạn thuộc bộ lọc này sẽ hiển thị ở đây."
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp" />
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:text="Không có bài đăng nào" />
+
+            <TextView
+                style="@style/TextAppearance.App.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="Đăng tin đầu tiên của bạn"
+                android:textAlignment="center" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCreatePost"
+                style="@style/Widget.App.Button.Primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Đăng tin ngay"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                app:backgroundTint="?attr/colorOnSurface"
-                app:cornerRadius="4dp" />
+                android:layout_marginTop="@dimen/spacing_xxl"
+                android:text="@string/post_create" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

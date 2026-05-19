@@ -10,84 +10,66 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="0dp">
+        android:orientation="vertical">
 
-        <!-- Profile Header Card (Flat border-bottom, edge-to-edge) -->
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardBackgroundColor="?android:attr/colorBackground"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline">
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/spacing_lg"
+            android:paddingTop="@dimen/spacing_lg"
+            android:paddingBottom="@dimen/spacing_lg">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:contentDescription="@string/profile"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_default_avatar"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="2dp" />
+
+            <TextView
+                android:id="@+id/tvName"
+                style="@style/TextAppearance.App.Title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="20dp">
+                android:layout_marginTop="@dimen/spacing_md"
+                tools:text="Nguyễn Văn A" />
 
-                <!-- Left-aligned Avatar with Circle Crop Overlay -->
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ivAvatar"
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:contentDescription="@string/profile"
-                    android:scaleType="centerCrop"
-                    app:shapeAppearanceOverlay="@style/CircleImageView"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp"
-                    android:src="@drawable/ic_user"
-                    app:tint="?attr/colorPrimary" />
+            <TextView
+                android:id="@+id/tvEmail"
+                style="@style/TextAppearance.App.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                tools:text="nguyenvana@gmail.com" />
 
-                <!-- Left-aligned Profile Details -->
-                <TextView
-                    android:id="@+id/tvName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="Nguyễn Văn A" />
+            <TextView
+                android:id="@+id/tvMemberSince"
+                style="@style/TextAppearance.App.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                tools:text="Thành viên từ 3 tháng trước" />
 
-                <TextView
-                    android:id="@+id/tvEmail"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="14sp"
-                    tools:text="nguyenvana@gmail.com" />
+            <ProgressBar
+                android:id="@+id/pbLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/spacing_lg"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvMemberSince"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp"
-                    tools:text="Thành viên từ 3 tháng trước" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/divider_height"
+            android:background="?attr/colorOutline" />
 
-                <!-- Loading Indicator -->
-                <ProgressBar
-                    android:id="@+id/pbLoading"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Menu Items RecyclerView (Stretches edge-to-edge) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMenuItems"
             android:layout_width="match_parent"
@@ -95,7 +77,5 @@
             android:nestedScrollingEnabled="false"
             tools:itemCount="7"
             tools:listitem="@layout/item_profile_menu" />
-
     </LinearLayout>
-
 </androidx.core.widget.NestedScrollView>

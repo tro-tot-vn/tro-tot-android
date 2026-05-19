@@ -21,9 +21,9 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/arrow_small_left"
             android:scaleType="centerInside"
-            app:tint="?attr/colorPrimary"
+           
             android:contentDescription="Back" />
 
         <TextView
@@ -66,7 +66,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@drawable/ic_time_past"
-            app:tint="?android:attr/textColorTertiary" />
+            app:tint="@color/icon_fill_muted" />
 
         <TextView
             android:layout_width="match_parent"
