@@ -62,6 +62,10 @@ public class ProfileViewModel extends ViewModel {
         return subscriptionsCount;
     }
 
+    public void clearUpdateResult() {
+        updateResult.setValue(null);
+    }
+
     // ========== Actions ==========
 
     /**
@@ -91,10 +95,17 @@ public class ProfileViewModel extends ViewModel {
      * Update user profile
      */
     public void updateProfile(CustomerProfile profile) {
+        updateProfileWithAvatar(profile, null);
+    }
+
+    /**
+     * Update user profile with avatar
+     */
+    public void updateProfileWithAvatar(CustomerProfile profile, java.io.File avatarFile) {
         updateResult.setValue(Resource.loading(null));
 
         disposable.add(
-                profileRepository.updateProfile(profile)
+                profileRepository.updateProfileWithAvatar(profile, avatarFile)
                         .subscribe(
                                 resource -> {
                                     updateResult.setValue(resource);

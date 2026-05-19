@@ -99,9 +99,9 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         // Create RequestBody instances for text fields
         RequestBody firstName = RequestBody.create(MediaType.parse("text/plain"), profile.getFirstName());
         RequestBody lastName = RequestBody.create(MediaType.parse("text/plain"), profile.getLastName());
-        RequestBody email = RequestBody.create(MediaType.parse("text/plain"), profile.getEmail());
+        RequestBody email = RequestBody.create(MediaType.parse("text/plain"), profile.getEmail() != null ? profile.getEmail() : "");
         RequestBody bio = RequestBody.create(MediaType.parse("text/plain"), profile.getBio() != null ? profile.getBio() : "");
-        RequestBody gender = RequestBody.create(MediaType.parse("text/plain"), profile.getGender());
+        RequestBody gender = RequestBody.create(MediaType.parse("text/plain"), profile.getGender() != null ? profile.getGender() : "");
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         RequestBody birthday = RequestBody.create(MediaType.parse("text/plain"), 
@@ -114,9 +114,11 @@ public class ProfileRepositoryImpl implements ProfileRepository {
         RequestBody job = RequestBody.create(MediaType.parse("text/plain"), 
                 profile.getCurrentJob() != null ? profile.getCurrentJob() : "");
 
-        // Create MultipartBody.Part for avatar
-        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), avatarFile);
-        MultipartBody.Part avatar = MultipartBody.Part.createFormData("avatarFile", avatarFile.getName(), requestFile);
+        MultipartBody.Part avatar = null;
+        if (avatarFile != null && avatarFile.exists()) {
+            RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), avatarFile);
+            avatar = MultipartBody.Part.createFormData("avatar", avatarFile.getName(), requestFile);
+        }
 
         return apiService.updateProfileWithAvatar(
                         firstName, lastName, email, bio, gender, birthday, city, district, job, avatar

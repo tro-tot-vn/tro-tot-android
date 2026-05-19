@@ -34,6 +34,13 @@ import com.trototvn.trototandroid.utils.LocationService;
 import com.trototvn.trototandroid.data.model.location.City;
 import com.trototvn.trototandroid.data.model.location.District;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+
 @AndroidEntryPoint
 public class EditProfileFragment extends Fragment {
 
@@ -47,6 +54,40 @@ public class EditProfileFragment extends Fragment {
     private List<City> cities;
     private City selectedCity;
     private District selectedDistrict;
+    private File selectedAvatarFile = null;
+
+    private final ActivityResultLauncher<String> getContent = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    // Hiển thị ảnh đã chọn lên ImageView
+                    com.bumptech.glide.Glide.with(this)
+                            .load(uri)
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .error(R.drawable.ic_default_avatar)
+                            .into(binding.ivAvatar);
+
+                    // Chuyển URI lưu thành một File tạm để upload
+                    try {
+                        InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+                        if (inputStream != null) {
+                            File tempFile = new File(requireContext().getCacheDir(), "avatar_upload_" + System.currentTimeMillis() + ".jpg");
+                            OutputStream outputStream = new FileOutputStream(tempFile);
+                            byte[] buffer = new byte[1024];
+                            int length;
+                            while ((length = inputStream.read(buffer)) > 0) {
+                                outputStream.write(buffer, 0, length);
+                            }
+                            outputStream.close();
+                            inputStream.close();
+                            selectedAvatarFile = tempFile;
+                        }
+                    } catch (Exception e) {
+                        Timber.e(e, "Lỗi khi chuyển uri thành file ảnh");
+                        Toast.makeText(getContext(), "Không thể tải file ảnh", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
 
     @Nullable
     @Override
@@ -73,11 +114,36 @@ public class EditProfileFragment extends Fragment {
         // Setup location spinners
         setupLocationSpinners();
 
+        // Xử lý nút thay đổi Avatar
+        binding.btnChangeAvatar.setOnClickListener(v -> getContent.launch("image/*"));
+
+        // Set up the result observer for updating profile ONCE, not inside the click listener
+        setupUpdateObserver();
+
         // Load current profile data
         loadCurrentProfile();
 
         // Handle save button click
         binding.btnSave.setOnClickListener(v -> saveProfile());
+    }
+
+    private void setupUpdateObserver() {
+        viewModel.getUpdateResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+
+            binding.btnSave.setEnabled(true);
+
+            if (resource.getStatus() == Resource.Status.LOADING) {
+                Toast.makeText(getContext(), "Đang cập nhật thông tin...", Toast.LENGTH_SHORT).show();
+            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
+                Toast.makeText(getContext(), "Cập nhật thông tin thành công", Toast.LENGTH_SHORT).show();
+                // Reset the value to prevent multiple navigations if observer triggers again
+                viewModel.clearUpdateResult();
+                NavHostFragment.findNavController(this).navigateUp();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                Toast.makeText(getContext(), "Lỗi: " + resource.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void setupGenderSpinner() {
@@ -345,20 +411,8 @@ public class EditProfileFragment extends Fragment {
         }
 
         binding.btnSave.setEnabled(false);
-        viewModel.getUpdateResult().observe(getViewLifecycleOwner(), resource -> {
-            binding.btnSave.setEnabled(true);
 
-            if (resource.getStatus() == Resource.Status.LOADING) {
-                Toast.makeText(getContext(), "Đang cập nhật thông tin...", Toast.LENGTH_SHORT).show();
-            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
-                Toast.makeText(getContext(), "Cập nhật thông tin thành công", Toast.LENGTH_SHORT).show();
-                NavHostFragment.findNavController(this).navigateUp();
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                Toast.makeText(getContext(), "Lỗi: " + resource.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
-        viewModel.updateProfile(profileData);
+        viewModel.updateProfileWithAvatar(profileData, selectedAvatarFile);
     }
 
     private String mapLabelToGender(String label) {
@@ -385,4 +439,3 @@ public class EditProfileFragment extends Fragment {
         binding = null;
     }
 }
-
