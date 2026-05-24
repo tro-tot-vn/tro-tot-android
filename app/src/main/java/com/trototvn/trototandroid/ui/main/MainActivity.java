@@ -15,10 +15,12 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.trototvn.trototandroid.R;
+import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.databinding.ActivityMainBinding;
 import com.trototvn.trototandroid.ui.auth.AuthActivity;
 import com.trototvn.trototandroid.ui.splash.SplashActivity;
 import com.trototvn.trototandroid.utils.SessionManager;
+import com.trototvn.trototandroid.utils.SocketIOManager;
 
 import javax.inject.Inject;
 
@@ -38,7 +40,10 @@ public class MainActivity extends AppCompatActivity {
     SessionManager sessionManager;
 
     @Inject
-    com.trototvn.trototandroid.utils.SocketIOManager socketIOManager;
+    SocketIOManager socketIOManager;
+
+    @Inject
+    ChatRepository chatRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.POST_NOTIFICATIONS }, 101);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
 
@@ -61,7 +66,49 @@ public class MainActivity extends AppCompatActivity {
 
         // Connect socket if logged in
         if (sessionManager.isLoggedIn()) {
+            // 1. Bắt đầu kéo dữ liệu offline về DB
+            chatRepository.performHandshakeSync();
+
+            // 2. Bật kết nối Socket
             socketIOManager.connect(sessionManager.getUserId());
+
+            // 3. Lắng nghe socket events globally
+            chatRepository.observeIncomingMessages();
+        }
+
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent != null && intent.getExtras() != null) {
+            String conversationIdStr = intent.getStringExtra("conversationId");
+            if (conversationIdStr != null) {
+                try {
+                    long conversationId = Long.parseLong(conversationIdStr);
+                    String partnerName = intent.getStringExtra("partnerName");
+                    if (partnerName == null)
+                        partnerName = "Chat Partner";
+
+                    Bundle bundle = new Bundle();
+                    bundle.putLong("conversationId", conversationId);
+                    bundle.putString("partnerName", partnerName);
+
+                    if (navController != null) {
+                        navController.navigate(R.id.chatDetailFragment, bundle);
+                    }
+
+                    // Remove the extra to prevent re-processing on configuration changes
+                    intent.removeExtra("conversationId");
+                } catch (NumberFormatException ignored) {
+                }
+            }
         }
     }
 
@@ -92,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
      * Call this from fragments to logout
      */
     public void logout() {
+        chatRepository.stopObservingIncomingMessages();
         socketIOManager.disconnect();
         sessionManager.clearSession();
 
@@ -108,6 +156,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (chatRepository != null) {
+            chatRepository.stopObservingIncomingMessages();
+        }
         binding = null;
     }
 }

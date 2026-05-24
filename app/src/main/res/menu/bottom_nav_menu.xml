@@ -16,7 +16,7 @@
         android:title="@string/nav_my_posts" />
 
     <item
-        android:id="@+id/chatFragment"
+        android:id="@+id/chatListFragment"
         android:icon="@drawable/ic_message"
         android:title="@string/nav_chat" />
     

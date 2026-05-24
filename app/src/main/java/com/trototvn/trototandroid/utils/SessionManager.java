@@ -86,8 +86,29 @@ public class SessionManager {
 
     /**
      * Get user ID
+     * Bóc tách an toàn trực tiếp từ JWT Payload để bù đắp nếu SharedPreferences thiếu
      */
     public String getUserId() {
+        String token = getToken();
+        if (token != null && !token.isEmpty()) {
+            try {
+                String[] parts = token.split("\\.");
+                if (parts.length >= 2) {
+                    String payload = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE), "UTF-8");
+                    org.json.JSONObject json = new org.json.JSONObject(payload);
+                    
+                    if (json.has("customerId")) {
+                        return json.optString("customerId");
+                    } else if (json.has("accountId")) {
+                        return json.optString("accountId");
+                    } else if (json.has("userId")) {
+                        return json.optString("userId");
+                    }
+                }
+            } catch (Exception ignored) {
+                // Bỏ qua lỗi và rớt xuống phương án đọc SharedPreferences (fallback)
+            }
+        }
         return prefs.getString(KEY_USER_ID, null);
     }
 

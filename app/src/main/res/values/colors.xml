@@ -80,6 +80,7 @@
     <!-- Custom colors / compat aliases -->
     <color name="gray_300">#EFF3F4</color>
     <color name="gray_600">#536471</color>
+    <color name="orange_500">#FF9800</color>
 
     <!-- Icon fills: use @color (not ?attr tint) — fixes invisible icons on API 35/36 -->
     <color name="icon_fill">@color/md_theme_light_onSurface</color>
