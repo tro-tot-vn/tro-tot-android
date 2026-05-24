@@ -79,51 +79,37 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Timber.d("From: %s", remoteMessage.getFrom());
 
         NotificationHelper notificationHelper = new NotificationHelper(this);
+        Map<String, String> data = remoteMessage.getData();
 
-        // Check if message contains a notification payload.
-        if (remoteMessage.getNotification() != null) {
-            String title = remoteMessage.getNotification().getTitle();
-            String body = remoteMessage.getNotification().getBody();
-            notificationHelper.showNotification(title, body);
+        // 1. Đồng bộ tin nhắn chat chạy ngầm
+        if ("chat".equals(data.get("type"))) {
+            handleChatMessage(data);
         }
 
-        // Check if message contains a data payload.
-        if (!remoteMessage.getData().isEmpty()) {
-            Map<String, String> data = remoteMessage.getData();
-            Timber.d("Message data payload: %s", data);
+        // 2. Trích xuất thông tin hiển thị thông báo
+        String title = null;
+        String body = null;
 
-            // Logic Chat Sync (SSOT)
+        if (remoteMessage.getNotification() != null) {
+            title = remoteMessage.getNotification().getTitle();
+            body = remoteMessage.getNotification().getBody();
+        } else if (!data.isEmpty()) {
+            title = data.get("title");
+            body = data.get("body");
+        }
+
+        if (title != null && body != null) {
+            // Chặn thông báo chat nếu người dùng đang ở trong chính màn hình chat đó
             if ("chat".equals(data.get("type"))) {
-                handleChatMessage(data);
-
-                if (remoteMessage.getNotification() == null) {
-                    String conversationIdStr = data.get("conversationId");
-                    String senderName = data.get("senderName");
-                    if (senderName == null)
-                        senderName = data.get("title") != null ? data.get("title") : "Tin nhắn mới";
-                    String content = data.get("messageContent");
-                    if (content == null) content = data.get("content"); // Fallback to content field
-                    if (content == null) content = data.get("body");
-
-                    if (conversationIdStr != null && content != null) {
-                        // Check if the user is currently in this conversation
-                        if (conversationIdStr.equals(com.trototvn.trototandroid.App.activeConversationId)) {
-                            Timber.d("User is in the chat detail, skipping notification");
-                        } else {
-                            sendNotification(senderName, content, conversationIdStr);
-                        }
-                    }
-                }
-            } else {
-                // If the message only has data (and not chat type), show a generic notification
-                if (remoteMessage.getNotification() == null) {
-                    String title = data.get("title");
-                    String body = data.get("body");
-                    if (title != null && body != null) {
-                        notificationHelper.showNotification(title, body);
-                    }
+                String conversationIdStr = data.get("conversationId");
+                if (conversationIdStr != null && conversationIdStr.equals(com.trototvn.trototandroid.App.activeConversationId)) {
+                    Timber.d("User is in the active chat conversation, skipping notification display");
+                    return;
                 }
             }
+
+            // Hiển thị thông báo động, tự động nạp tất cả Intent extras từ data
+            notificationHelper.showNotification(title, body, data);
         }
     }
 

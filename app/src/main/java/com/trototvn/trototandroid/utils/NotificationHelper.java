@@ -57,23 +57,43 @@ public class NotificationHelper {
     }
 
     /**
-     * Show a simple text notification
+     * Show a simple text notification (backwards compatibility)
      */
     public void showNotification(String title, String message) {
+        showNotification(title, message, null);
+    }
+
+    /**
+     * Show a highly dynamic notification that automatically embeds deep-linking extras,
+     * routes to appropriate channels, and styles accordingly.
+     */
+    public void showNotification(String title, String message, java.util.Map<String, String> data) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        
+        String channelId = CHANNEL_ID;
+        int importance = NotificationCompat.PRIORITY_DEFAULT;
+        @ColorInt int brandColor = ContextCompat.getColor(context, R.color.primary);
+
+        if (data != null) {
+            for (java.util.Map.Entry<String, String> entry : data.entrySet()) {
+                intent.putExtra(entry.getKey(), entry.getValue());
+            }
+            if ("chat".equals(data.get("type"))) {
+                channelId = CHAT_CHANNEL_ID;
+                importance = NotificationCompat.PRIORITY_HIGH;
+                brandColor = ContextCompat.getColor(context, R.color.orange_500);
+            }
+        }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+                context, (int) System.currentTimeMillis() % 10000, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-        @ColorInt
-        int brandColor = ContextCompat.getColor(context, R.color.primary);
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_message) // Vector silhouette
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.drawable.ic_message)
                 .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_trotot_logo_app))
                 .setColor(brandColor)
                 .setContentTitle(title)
@@ -81,13 +101,18 @@ public class NotificationHelper {
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setPriority(importance);
 
         NotificationManager notificationManager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+            int notifId = (data != null && data.containsKey("postId")) 
+                ? data.get("postId").hashCode() 
+                : ((data != null && data.containsKey("conversationId")) 
+                    ? data.get("conversationId").hashCode() 
+                    : (int) System.currentTimeMillis());
+            notificationManager.notify(notifId, notificationBuilder.build());
         }
     }
 

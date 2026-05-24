@@ -109,6 +109,26 @@ public class MainActivity extends AppCompatActivity {
                 } catch (NumberFormatException ignored) {
                 }
             }
+
+            // Handle post subscription notification click
+            String postIdStr = intent.getStringExtra("postId");
+            String type = intent.getStringExtra("type");
+            if ("new_post_subscription".equals(type) && postIdStr != null) {
+                try {
+                    int postId = Integer.parseInt(postIdStr);
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("postId", postId);
+
+                    if (navController != null) {
+                        navController.navigate(R.id.postDetailFragment, bundle);
+                    }
+
+                    // Remove the extras to prevent re-processing on configuration changes
+                    intent.removeExtra("postId");
+                    intent.removeExtra("type");
+                } catch (NumberFormatException ignored) {
+                }
+            }
         }
     }
 
