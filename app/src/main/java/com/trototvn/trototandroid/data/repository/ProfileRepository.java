@@ -28,7 +28,7 @@ public interface ProfileRepository {
      * @return Single emitting Resource with void
      */
     Single<Resource<Void>> updateProfile(CustomerProfile profile);
-    
+
     /**
      * Update profile with avatar
      * @param profile Updated profile data

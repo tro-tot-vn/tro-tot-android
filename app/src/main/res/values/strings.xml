@@ -103,7 +103,22 @@
     <string name="subscriptions">Theo dõi khu vực</string>
     <string name="account_settings">Cài đặt tài khoản</string>
     <string name="logout_confirm">Bạn có chắc muốn đăng xuất?</string>
-    
+
+    <!-- Account Settings -->
+    <string name="change_password">Thay đổi mật khẩu</string>
+    <string name="change_password_subtitle">Cập nhật mật khẩu của bạn</string>
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="error_current_password_empty">Vui lòng nhập mật khẩu hiện tại</string>
+    <string name="error_new_password_empty">Vui lòng nhập mật khẩu mới</string>
+    <string name="error_confirm_password_empty">Vui lòng xác nhận mật khẩu</string>
+    <string name="error_passwords_not_match">Mật khẩu xác nhận không khớp</string>
+    <string name="error_same_password">Mật khẩu mới phải khác mật khẩu cũ</string>
+    <string name="error_change_password">Lỗi thay đổi mật khẩu</string>
+    <string name="password_changed_success">Mật khẩu được thay đổi thành công!</string>
+    <string name="back">Quay lại</string>
+
     <!-- Post Detail -->
     <string name="detailed_description">Mô tả chi tiết</string>
     <string name="contact_phone">SĐT Liên hệ:</string>

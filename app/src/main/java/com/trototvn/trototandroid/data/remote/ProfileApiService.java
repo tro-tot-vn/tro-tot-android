@@ -33,7 +33,7 @@ public interface ProfileApiService {
     
     @POST("api/customer/me")
     Single<ResponseData<Void>> updateProfile(@Body Map<String, Object> profileData);
-    
+
     @Multipart
     @POST("api/customer/me")
     Single<ResponseData<Void>> updateProfileWithAvatar(
@@ -59,25 +59,26 @@ public interface ProfileApiService {
     
     @DELETE("api/customer/saved-posts/{postId}")
     Single<ResponseData<Void>> unsavePost(@Path("postId") int postId);
-    
+
     // ========== View History ==========
-    
+
     @GET("api/customer/view-history")
     Single<ResponseData<List<Post>>> getViewHistory();
-    
+
     // ========== Subscriptions ==========
-    
+
     @GET("api/customer/subscriptions")
     Single<ResponseData<List<Subscription>>> getSubscriptions();
-    
+
     @POST("api/customer/subscriptions")
     Single<ResponseData<Subscription>> createSubscription(@Body Map<String, String> body);
-    
+
     @DELETE("api/customer/subscriptions/{id}")
     Single<ResponseData<Void>> deleteSubscription(@Path("id") int subscriptionId);
-    
+
     // ========== Account ==========
-    
+
     @POST("api/auth/change-password")
-    Single<ResponseData<Void>> changePassword(@Body ChangePasswordRequest request);
+    Single<ResponseData<Object>> changePassword(@Body ChangePasswordRequest request);
 }
+

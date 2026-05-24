@@ -14,6 +14,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
+
+import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.databinding.FragmentEditProfileBinding;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.profile.CustomerProfile;
@@ -24,6 +26,20 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.List;
+import java.util.ArrayList;
+import android.widget.AdapterView;
+import javax.inject.Inject;
+import com.trototvn.trototandroid.utils.LocationService;
+import com.trototvn.trototandroid.data.model.location.City;
+import com.trototvn.trototandroid.data.model.location.District;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 
 @AndroidEntryPoint
 public class EditProfileFragment extends Fragment {
@@ -32,6 +48,46 @@ public class EditProfileFragment extends Fragment {
     private ProfileViewModel viewModel;
     private final Calendar selectedDate = Calendar.getInstance();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    
+    @Inject
+    LocationService locationService;
+    private List<City> cities;
+    private City selectedCity;
+    private District selectedDistrict;
+    private File selectedAvatarFile = null;
+
+    private final ActivityResultLauncher<String> getContent = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    // Hiển thị ảnh đã chọn lên ImageView
+                    com.bumptech.glide.Glide.with(this)
+                            .load(uri)
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .error(R.drawable.ic_default_avatar)
+                            .into(binding.ivAvatar);
+
+                    // Chuyển URI lưu thành một File tạm để upload
+                    try {
+                        InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+                        if (inputStream != null) {
+                            File tempFile = new File(requireContext().getCacheDir(), "avatar_upload_" + System.currentTimeMillis() + ".jpg");
+                            OutputStream outputStream = new FileOutputStream(tempFile);
+                            byte[] buffer = new byte[1024];
+                            int length;
+                            while ((length = inputStream.read(buffer)) > 0) {
+                                outputStream.write(buffer, 0, length);
+                            }
+                            outputStream.close();
+                            inputStream.close();
+                            selectedAvatarFile = tempFile;
+                        }
+                    } catch (Exception e) {
+                        Timber.e(e, "Lỗi khi chuyển uri thành file ảnh");
+                        Toast.makeText(getContext(), "Không thể tải file ảnh", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
 
     @Nullable
     @Override
@@ -55,11 +111,39 @@ public class EditProfileFragment extends Fragment {
         // Setup date picker
         setupDatePicker();
 
+        // Setup location spinners
+        setupLocationSpinners();
+
+        // Xử lý nút thay đổi Avatar
+        binding.btnChangeAvatar.setOnClickListener(v -> getContent.launch("image/*"));
+
+        // Set up the result observer for updating profile ONCE, not inside the click listener
+        setupUpdateObserver();
+
         // Load current profile data
         loadCurrentProfile();
 
         // Handle save button click
         binding.btnSave.setOnClickListener(v -> saveProfile());
+    }
+
+    private void setupUpdateObserver() {
+        viewModel.getUpdateResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+
+            binding.btnSave.setEnabled(true);
+
+            if (resource.getStatus() == Resource.Status.LOADING) {
+                Toast.makeText(getContext(), "Đang cập nhật thông tin...", Toast.LENGTH_SHORT).show();
+            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
+                Toast.makeText(getContext(), "Cập nhật thông tin thành công", Toast.LENGTH_SHORT).show();
+                // Reset the value to prevent multiple navigations if observer triggers again
+                viewModel.clearUpdateResult();
+                NavHostFragment.findNavController(this).navigateUp();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                Toast.makeText(getContext(), "Lỗi: " + resource.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void setupGenderSpinner() {
@@ -118,6 +202,46 @@ public class EditProfileFragment extends Fragment {
         builder.show();
     }
 
+    private void setupLocationSpinners() {
+        cities = locationService.getAllCities();
+        if (cities == null) cities = new ArrayList<>();
+
+        List<String> cityNames = new ArrayList<>();
+        for (City city : cities) {
+            cityNames.add(city.getName());
+        }
+
+        ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_dropdown_item_1line, cityNames);
+        binding.spinnerCity.setAdapter(cityAdapter);
+
+        binding.spinnerCity.setOnItemClickListener((parent, view, position, id) -> {
+            selectedCity = cities.get(position);
+            updateDistrictSpinner(selectedCity);
+            binding.spinnerDistrict.setText("", false); // Reset district when city changes
+            selectedDistrict = null;
+        });
+        
+        binding.spinnerDistrict.setOnItemClickListener((parent, view, position, id) -> {
+            if (selectedCity != null && selectedCity.getDistricts() != null) {
+                selectedDistrict = selectedCity.getDistricts().get(position);
+            }
+        });
+    }
+
+    private void updateDistrictSpinner(City city) {
+        if (city == null || city.getDistricts() == null) return;
+
+        List<String> districtNames = new ArrayList<>();
+        for (District district : city.getDistricts()) {
+            districtNames.add(district.getName());
+        }
+
+        ArrayAdapter<String> districtAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_dropdown_item_1line, districtNames);
+        binding.spinnerDistrict.setAdapter(districtAdapter);
+    }
+
     private void loadCurrentProfile() {
         viewModel.getProfile().observe(getViewLifecycleOwner(), resource -> {
             if (resource != null && resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
@@ -142,6 +266,20 @@ public class EditProfileFragment extends Fragment {
 
         Timber.d("Populating profile data: firstName=%s, lastName=%s, email=%s, gender=%s, birthday=%s",
                 profile.getFirstName(), profile.getLastName(), profile.getEmail(), profile.getGender(), profile.getBirthday());
+
+        if (profile.getAvatar() != null && !profile.getAvatar().trim().isEmpty()) {
+            String avatarUrl = profile.getAvatar();
+            if (!avatarUrl.startsWith("http")) {
+                avatarUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + avatarUrl;
+            }
+            com.bumptech.glide.Glide.with(this)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .error(R.drawable.ic_default_avatar)
+                    .into(binding.ivAvatar);
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
 
         if (profile.getFirstName() != null && !profile.getFirstName().isEmpty()) {
             binding.etFirstName.setText(profile.getFirstName());
@@ -169,6 +307,32 @@ public class EditProfileFragment extends Fragment {
         if (profile.getBirthday() != null) {
             selectedDate.setTime(profile.getBirthday());
             binding.etDateOfBirth.setText(dateFormat.format(profile.getBirthday()));
+        }
+        
+        if (profile.getCurrentCity() != null && !profile.getCurrentCity().isEmpty()) {
+            binding.spinnerCity.setText(profile.getCurrentCity(), false);
+            // Pre-select city and populate district adapter
+            if (cities != null) {
+                for (City city : cities) {
+                    if (city.getName().equalsIgnoreCase(profile.getCurrentCity())) {
+                        selectedCity = city;
+                        updateDistrictSpinner(selectedCity);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (profile.getCurrentDistrict() != null && !profile.getCurrentDistrict().isEmpty()) {
+            binding.spinnerDistrict.setText(profile.getCurrentDistrict(), false);
+            if (selectedCity != null && selectedCity.getDistricts() != null) {
+                for (District dist : selectedCity.getDistricts()) {
+                    if (dist.getName().equalsIgnoreCase(profile.getCurrentDistrict())) {
+                        selectedDistrict = dist;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -199,12 +363,14 @@ public class EditProfileFragment extends Fragment {
         String gender = binding.spinnerGender.getText() != null ? binding.spinnerGender.getText().toString().trim() : "";
         String birthDate = binding.etDateOfBirth.getText() != null ? binding.etDateOfBirth.getText().toString().trim() : "";
         String bio = binding.etBio.getText() != null ? binding.etBio.getText().toString().trim() : "";
+        String currentCityStr = binding.spinnerCity.getText() != null ? binding.spinnerCity.getText().toString().trim() : "";
+        String currentDistrictStr = binding.spinnerDistrict.getText() != null ? binding.spinnerDistrict.getText().toString().trim() : "";
 
         if (firstName.isEmpty()) {
             binding.etFirstName.setError("Vui lòng nhập tên");
             return;
         }
-
+        
         if (lastName.isEmpty()) {
             binding.etLastName.setError("Vui lòng nhập họ");
             return;
@@ -225,6 +391,8 @@ public class EditProfileFragment extends Fragment {
         profileData.setLastName(lastName);
         profileData.setGender(mapLabelToGender(gender));
         profileData.setBio(bio);
+        profileData.setCurrentCity(currentCityStr);
+        profileData.setCurrentDistrict(currentDistrictStr);
 
         // Email is stored in nested account object
         CustomerProfile.AccountInfo account = new CustomerProfile.AccountInfo();
@@ -243,20 +411,8 @@ public class EditProfileFragment extends Fragment {
         }
 
         binding.btnSave.setEnabled(false);
-        viewModel.getUpdateResult().observe(getViewLifecycleOwner(), resource -> {
-            binding.btnSave.setEnabled(true);
 
-            if (resource.getStatus() == Resource.Status.LOADING) {
-                Toast.makeText(getContext(), "Đang cập nhật thông tin...", Toast.LENGTH_SHORT).show();
-            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
-                Toast.makeText(getContext(), "Cập nhật thông tin thành công", Toast.LENGTH_SHORT).show();
-                NavHostFragment.findNavController(this).navigateUp();
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                Toast.makeText(getContext(), "Lỗi: " + resource.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
-        viewModel.updateProfile(profileData);
+        viewModel.updateProfileWithAvatar(profileData, selectedAvatarFile);
     }
 
     private String mapLabelToGender(String label) {

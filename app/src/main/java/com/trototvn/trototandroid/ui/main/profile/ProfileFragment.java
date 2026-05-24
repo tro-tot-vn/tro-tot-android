@@ -73,8 +73,13 @@ public class ProfileFragment extends Fragment {
                     NavHostFragment.findNavController(this)
                             .navigate(R.id.savedPostsFragment);
                     break;
-                case SETTINGS:
-                    // TODO: Implement navigation
+                case SUBSCRIPTIONS:
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.subscriptionsFragment);
+                    break;
+                case CHANGE_PASSWORD:
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.changePasswordFragment);
                     break;
                 // Add other types as needed
             }
@@ -137,8 +142,22 @@ public class ProfileFragment extends Fragment {
             binding.tvMemberSince.setText(getString(R.string.member_since, memberSince));
         }
 
-        // TODO: Load avatar with Glide
-        // Glide.with(this).load(profile.getAvatar()).into(binding.ivAvatar);
+        // Clear image tint list so the actual photo does not get colored by ?attr/colorPrimary
+        binding.ivAvatar.setImageTintList(null);
+
+        if (profile.getAvatar() != null && !profile.getAvatar().trim().isEmpty()) {
+            String avatarUrl = profile.getAvatar();
+            if (!avatarUrl.startsWith("http")) {
+                avatarUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL + "api/files/" + avatarUrl;
+            }
+            com.bumptech.glide.Glide.with(this)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_default_avatar)
+                    .error(R.drawable.ic_default_avatar)
+                    .into(binding.ivAvatar);
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
     }
 
     private void updateMenuCounts() {
@@ -177,12 +196,12 @@ public class ProfileFragment extends Fragment {
                 subsCount != null && subsCount > 0 ? subsCount + " khu vực" : null,
                 ProfileMenuItem.ItemType.SUBSCRIPTIONS));
 
-        // Settings
+        // Change Password
         menuItems.add(new ProfileMenuItem(
-                R.drawable.ic_settings,
-                getString(R.string.account_settings),
+                R.drawable.ic_lock,
+                getString(R.string.change_password),
                 null,
-                ProfileMenuItem.ItemType.SETTINGS));
+                ProfileMenuItem.ItemType.CHANGE_PASSWORD));
 
         // Logout
         menuItems.add(new ProfileMenuItem(

@@ -48,6 +48,21 @@
         android:name="com.trototvn.trototandroid.ui.main.savedposts.SavedPostsFragment"
         android:label="Saved Posts" />
 
+    <fragment
+        android:id="@+id/accountSettingsFragment"
+        android:name="com.trototvn.trototandroid.ui.main.accountsettings.AccountSettingsFragment"
+        android:label="Account Settings" />
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.trototvn.trototandroid.ui.main.accountsettings.ChangePasswordFragment"
+        android:label="Change Password" />
+
+    <fragment
+        android:id="@+id/subscriptionsFragment"
+        android:name="com.trototvn.trototandroid.ui.main.subscriptions.SubscriptionsFragment"
+        android:label="Subscriptions" />
+
     <!-- Feature Fragments -->
 
     <fragment
