@@ -80,13 +80,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         NotificationHelper notificationHelper = new NotificationHelper(this);
         Map<String, String> data = remoteMessage.getData();
+        String type = data.get("type");
 
         // 1. Đồng bộ tin nhắn chat chạy ngầm
-        if ("chat".equals(data.get("type"))) {
+        if ("chat".equals(type)) {
             handleChatMessage(data);
         }
 
-        // 2. Trích xuất thông tin hiển thị thông báo
+        // 2. Trích xuất tiêu đề & nội dung chuẩn hóa phù hợp từng loại thông báo (Type-aware Fallback)
         String title = null;
         String body = null;
 
@@ -94,21 +95,29 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             title = remoteMessage.getNotification().getTitle();
             body = remoteMessage.getNotification().getBody();
         } else if (!data.isEmpty()) {
-            title = data.get("title");
-            body = data.get("body");
+            if ("chat".equals(type)) {
+                // Ưu tiên các trường đặc thù của tin nhắn Chat
+                title = data.get("senderName");
+                if (title == null) {
+                    title = data.get("title");
+                }
+                
+                body = data.get("messageContent");
+                if (body == null) {
+                    body = data.get("content");
+                }
+                if (body == null) {
+                    body = data.get("body");
+                }
+            } else {
+                // Các thông báo hệ thống/đăng ký thông thường
+                title = data.get("title");
+                body = data.get("body");
+            }
         }
 
+        // 3. Hiển thị duy nhất một lệnh thông qua Generic showNotification
         if (title != null && body != null) {
-            // Chặn thông báo chat nếu người dùng đang ở trong chính màn hình chat đó
-            if ("chat".equals(data.get("type"))) {
-                String conversationIdStr = data.get("conversationId");
-                if (conversationIdStr != null && conversationIdStr.equals(com.trototvn.trototandroid.App.activeConversationId)) {
-                    Timber.d("User is in the active chat conversation, skipping notification display");
-                    return;
-                }
-            }
-
-            // Hiển thị thông báo động, tự động nạp tất cả Intent extras từ data
             notificationHelper.showNotification(title, body, data);
         }
     }
@@ -127,13 +136,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             String messageStatus = data.get("messageStatus");
             String createdAtStr = data.get("createdAt");
 
-            if (messageIdStr == null || conversationIdStr == null || senderIdStr == null)
+            if (messageIdStr == null || conversationIdStr == null || senderIdStr == null) {
                 return;
+            }
 
             long messageId = Long.parseLong(messageIdStr);
             long conversationId = Long.parseLong(conversationIdStr);
             long senderId = Long.parseLong(senderIdStr);
-            long createdAt = createdAtStr != null ? Long.parseLong(createdAtStr) : System.currentTimeMillis();
+
+            // Bộ phân tích ngày phòng ngừa lỗi đa định dạng (Fail-Safe Date Parser)
+            long createdAt = parseSafeDate(createdAtStr);
 
             MessageEntity entity = new MessageEntity(
                     messageId,
@@ -159,8 +171,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @MessageType
     private String normalizeMessageType(String raw) {
-        if (raw == null)
+        if (raw == null) {
             return MessageType.TEXT;
+        }
         switch (raw.toUpperCase()) {
             case "IMAGE":
                 return MessageType.IMAGE;
@@ -173,8 +186,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @MessageStatus
     private String normalizeMessageStatus(String raw) {
-        if (raw == null)
+        if (raw == null) {
             return MessageStatus.SENT;
+        }
         switch (raw.toUpperCase()) {
             case "DELIVERED":
                 return MessageStatus.DELIVERED;
@@ -185,42 +199,40 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void sendNotification(String senderName, String messageBody, String conversationId) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("conversationId", conversationId);
-        intent.putExtra("partnerName", senderName);
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-        int flags = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
-
-        String channelId = "chat_channel_id";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    "Tin nhắn mới",
-                    NotificationManager.IMPORTANCE_HIGH
-            );
-            NotificationManager notificationManager = getSystemService(android.app.NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
+    /**
+     * Phân tích ngày tháng an toàn tuyệt đối hỗ trợ cả dạng Unix, ISO 8601 và Javascript Date String
+     */
+    private long parseSafeDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return System.currentTimeMillis();
         }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_trotot_logo_app)
-                .setContentTitle(senderName)
-                .setContentText(messageBody)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent);
-
-        int notificationId = conversationId != null ? conversationId.hashCode() : (int) System.currentTimeMillis();
-
+        String cleanStr = dateStr.trim();
+        
+        // 1. Thử phân tích dạng Số nguyên (Unix timestamp)
         try {
-            NotificationManagerCompat.from(this).notify(notificationId, builder.build());
-        } catch (SecurityException e) {
-            Timber.e(e, "No permission to show notification");
-        }
+            return Long.parseLong(cleanStr);
+        } catch (NumberFormatException ignored) {}
+
+        // 2. Thử phân tích định dạng ISO 8601 (e.g. 2026-05-24T14:24:58.000Z)
+        try {
+            java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
+            isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date parsedDate = isoFormat.parse(cleanStr);
+            if (parsedDate != null) return parsedDate.getTime();
+        } catch (Exception ignored) {}
+
+        // 3. Thử phân tích định dạng Javascript Date String (e.g. Sun May 24 2026 23:22:26 GMT+0000 (Coordinated Universal Time))
+        try {
+            String formatStr = cleanStr;
+            if (cleanStr.contains("(")) {
+                formatStr = cleanStr.substring(0, cleanStr.indexOf("(")).trim();
+            }
+            java.text.SimpleDateFormat jsDateFormat = new java.text.SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", java.util.Locale.US);
+            java.util.Date parsedDate = jsDateFormat.parse(formatStr);
+            if (parsedDate != null) return parsedDate.getTime();
+        } catch (Exception ignored) {}
+
+        // 4. Mặc định trả về thời gian hiện tại
+        return System.currentTimeMillis();
     }
 }

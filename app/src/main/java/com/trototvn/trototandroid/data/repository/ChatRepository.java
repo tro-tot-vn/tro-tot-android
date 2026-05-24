@@ -339,6 +339,11 @@ public class ChatRepository {
             } else if (MessageType.FILE.equals(entity.messageType)) {
                 content = "[Tập tin đính kèm]";
             }
+
+            // TODO: Triển khai In-app Notification tại đây.
+            // Nếu người dùng đang online nhưng KHÔNG ở trong phòng chat này (activeConversationId != entity.conversationId)
+            // thì kích hoạt hiển thị một Custom In-app Banner/Popup thông báo tin nhắn mới trượt từ trên xuống.
+
             return chatDao.insertMessage(entity)
                     .andThen(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
         })
