@@ -81,4 +81,11 @@
     <color name="gray_300">#EFF3F4</color>
     <color name="gray_600">#536471</color>
     <color name="orange_500">#FF9800</color>
+
+    <!-- Icon fills: use @color (not ?attr tint) — fixes invisible icons on API 35/36 -->
+    <color name="icon_fill">@color/md_theme_light_onSurface</color>
+    <color name="icon_fill_muted">@color/md_theme_light_onSurfaceVariant</color>
+    <color name="icon_fill_inverse">@color/md_theme_light_surface</color>
+    <color name="icon_outline">@color/md_theme_light_outlineVariant</color>
+    <color name="icon_error">@color/md_theme_light_error</color>
 </resources>

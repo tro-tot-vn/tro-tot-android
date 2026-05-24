@@ -1,11 +1,13 @@
 package com.trototvn.trototandroid.ui.main.myposts;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,6 +17,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.post.ModerationHistory;
 import com.trototvn.trototandroid.data.model.post.MyPost;
+import com.google.android.material.color.MaterialColors;
 import com.trototvn.trototandroid.databinding.ItemMyPostBinding;
 
 import java.text.NumberFormat;
@@ -107,23 +110,37 @@ public class MyPostsAdapter extends ListAdapter<MyPost, MyPostsAdapter.ViewHolde
             // Action Buttons
             binding.btnViewDetail.setOnClickListener(v -> actionListener.onViewDetail(post));
 
-            // Hide/Unhide Dynamic Button Configuration
             boolean isHidden = "HIDDEN".equals(post.getStatus());
             binding.btnToggleHide.setText(isHidden ? "Hiện tin đăng" : "Ẩn tin đăng");
-            
-            // Set simple dark filled button or outline for better UX hierarchy
-            if (isHidden) {
-                binding.btnToggleHide.setTextColor(Color.WHITE);
-                binding.btnToggleHide.setBackgroundColor(Color.BLACK);
-                binding.btnToggleHide.setStrokeWidth(0);
-            } else {
-                binding.btnToggleHide.setTextColor(Color.BLACK);
-                binding.btnToggleHide.setBackgroundColor(Color.TRANSPARENT);
-                binding.btnToggleHide.setStrokeWidth(1);
-            }
+            bindToggleHideButton(isHidden);
 
             binding.btnToggleHide.setOnClickListener(v -> actionListener.onToggleHide(post));
             binding.btnEditPost.setOnClickListener(v -> actionListener.onEditPost(post));
+        }
+
+        private void bindToggleHideButton(boolean isHidden) {
+            int onSurface = MaterialColors.getColor(
+                    binding.btnToggleHide,
+                    com.google.android.material.R.attr.colorOnSurface);
+            int surface = MaterialColors.getColor(
+                    binding.btnToggleHide,
+                    com.google.android.material.R.attr.colorSurface);
+            int outline = MaterialColors.getColor(
+                    binding.btnToggleHide,
+                    com.google.android.material.R.attr.colorOutlineVariant);
+
+            if (isHidden) {
+                binding.btnToggleHide.setBackgroundTintList(ColorStateList.valueOf(onSurface));
+                binding.btnToggleHide.setTextColor(surface);
+                binding.btnToggleHide.setStrokeWidth(0);
+            } else {
+                binding.btnToggleHide.setBackgroundTintList(
+                        ColorStateList.valueOf(ContextCompat.getColor(
+                                binding.getRoot().getContext(), android.R.color.transparent)));
+                binding.btnToggleHide.setTextColor(onSurface);
+                binding.btnToggleHide.setStrokeColor(ColorStateList.valueOf(outline));
+                binding.btnToggleHide.setStrokeWidth(1);
+            }
         }
 
         private void bindStatusBadge(String status) {

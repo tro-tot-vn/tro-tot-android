@@ -24,7 +24,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/arrow_small_left"
             android:scaleType="centerInside"
-            app:tint="?attr/colorPrimary"
+           
             android:contentDescription="Back" />
 
         <TextView

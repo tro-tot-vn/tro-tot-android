@@ -36,14 +36,44 @@
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
     
-    <!-- Text Input Styles (Form items use 8dp rounded box - Level 2 Hybrid X Style) -->
+    <!-- Text Input Styles (neutral outline — X minimal forms) -->
     <style name="Widget.App.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxCornerRadiusTopStart">@dimen/corner_radius_medium</item>
         <item name="boxCornerRadiusTopEnd">@dimen/corner_radius_medium</item>
         <item name="boxCornerRadiusBottomStart">@dimen/corner_radius_medium</item>
         <item name="boxCornerRadiusBottomEnd">@dimen/corner_radius_medium</item>
-        <item name="boxStrokeColor">?attr/colorPrimary</item>
-        <item name="hintTextColor">?attr/colorPrimary</item>
+        <item name="boxStrokeColor">?attr/colorOutlineVariant</item>
+        <item name="hintTextColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- X-style filter chips: filled when selected, outlined when not -->
+    <style name="Widget.App.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_background_color</item>
+        <item name="chipStrokeColor">@color/chip_stroke_color</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="android:textColor">@color/chip_text_color</item>
+        <item name="chipIconTint">@color/chip_text_color</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+
+    <!-- Compact outlined action for list rows -->
+    <style name="Widget.App.Button.Outlined.Small" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/button_height_small</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">@dimen/text_size_label</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="cornerRadius">@dimen/corner_radius_pill</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.App.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemRippleColor">@color/icon_fill_muted</item>
+        <item name="elevation">0dp</item>
+        <item name="android:background">?android:attr/colorBackground</item>
     </style>
     
     <style name="Widget.App.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">

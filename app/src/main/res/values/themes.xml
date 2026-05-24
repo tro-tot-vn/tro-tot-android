@@ -47,6 +47,10 @@
         <!-- Navigation Bar -->
         <item name="android:navigationBarColor">@color/md_theme_light_surface</item>
         <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- X-style chrome -->
+        <item name="bottomNavigationStyle">@style/Widget.App.BottomNavigation</item>
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
     </style>
 
     <!-- Main App Theme -->
@@ -54,7 +58,7 @@
     
     <!-- Splash Theme (No ActionBar, colored background) -->
     <style name="Theme.TroTotAndroid.Splash" parent="Theme.TroTotAndroid">
-        <item name="android:windowBackground">@color/md_theme_light_primary</item>
+        <item name="android:windowBackground">@color/ic_trotot_logo_app_background</item>
         <item name="android:windowFullscreen">false</item>
     </style>
     
