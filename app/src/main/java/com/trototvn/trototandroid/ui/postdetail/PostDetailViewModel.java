@@ -37,7 +37,7 @@ public class PostDetailViewModel extends BaseViewModel {
     private final MutableLiveData<Resource<RatingStats>> ratingStats = new MutableLiveData<>();
     private final MutableLiveData<Resource<Rating>> myRating = new MutableLiveData<>();
     private final MutableLiveData<Resource<RatingListResponse>> ratingsList = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isSaved = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> isSaved = new MutableLiveData<>(null);
     private final MutableLiveData<Resource<Void>> saveStatus = new MutableLiveData<>();
 
     @Inject
@@ -253,7 +253,15 @@ public class PostDetailViewModel extends BaseViewModel {
             return;
         }
 
-        boolean currentlySaved = isSaved.getValue() != null && isSaved.getValue();
+        if (isSaved.getValue() == null) {
+            return;
+        }
+
+        if (saveStatus.getValue() != null && saveStatus.getValue().getStatus() == Resource.Status.LOADING) {
+            return;
+        }
+
+        boolean currentlySaved = isSaved.getValue();
         saveStatus.setValue(Resource.loading(null));
 
         if (currentlySaved) {

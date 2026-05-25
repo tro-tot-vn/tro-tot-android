@@ -217,10 +217,17 @@ public class PostDetailFragment extends Fragment {
 
         // Observe Saved Status
         viewModel.getIsSaved().observe(getViewLifecycleOwner(), isSaved -> {
-            if (isSaved != null && isSaved) {
-                binding.fabSave.setImageResource(R.drawable.ic_bookmark_filled);
+            if (isSaved == null) {
+                binding.fabSave.setEnabled(false);
+                binding.fabSave.setAlpha(0.5f);
             } else {
-                binding.fabSave.setImageResource(R.drawable.ic_bookmark_border);
+                binding.fabSave.setEnabled(true);
+                binding.fabSave.setAlpha(1.0f);
+                if (isSaved) {
+                    binding.fabSave.setImageResource(R.drawable.ic_bookmark_filled);
+                } else {
+                    binding.fabSave.setImageResource(R.drawable.ic_bookmark_border);
+                }
             }
         });
 
