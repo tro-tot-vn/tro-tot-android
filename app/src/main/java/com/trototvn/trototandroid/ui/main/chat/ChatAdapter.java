@@ -241,7 +241,6 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                         .into(binding.ivContent);
 
                 String finalUrl = fileUrl;
@@ -284,7 +283,6 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                         .into(binding.ivContent);
 
                 String finalUrl = fileUrl;
