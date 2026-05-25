@@ -123,7 +123,11 @@ public class SavedPostRepositoryImpl implements SavedPostRepository {
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Error checking if post %d is saved", postId);
-                    return Resource.error("Lỗi khi kiểm tra trạng thái lưu tin", false);
+                    String errorMessage = "Lỗi khi kiểm tra trạng thái lưu tin";
+                    if (throwable instanceof retrofit2.HttpException) {
+                        errorMessage = "HTTP " + ((retrofit2.HttpException) throwable).code();
+                    }
+                    return Resource.error(errorMessage, false);
                 });
     }
 
