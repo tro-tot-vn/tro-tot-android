@@ -21,6 +21,7 @@ import com.bumptech.glide.Glide;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
+import com.trototvn.trototandroid.data.model.post.MultimediaFile;
 import com.trototvn.trototandroid.data.model.rating.Rating;
 import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.databinding.FragmentPostDetailBinding;
@@ -71,6 +72,13 @@ public class PostDetailFragment extends Fragment {
         setupImageGallery();
         setupRatingsList();
         setupRatingSubmission();
+
+        binding.fabSave.setOnClickListener(v -> {
+            if (postId != -1) {
+                viewModel.toggleSavePost(postId);
+            }
+        });
+
         observeData();
 
         // Load post detail & rating info
@@ -80,6 +88,7 @@ public class PostDetailFragment extends Fragment {
             viewModel.loadRatingStats(postId);
             viewModel.loadMyRating(postId);
             viewModel.loadRatings(postId);
+            viewModel.checkIfSaved(postId);
         } else {
             Timber.e("PostDetailFragment called with invalid postId: -1");
             Toast.makeText(requireContext(), "ID bài đăng không hợp lệ", Toast.LENGTH_SHORT).show();
@@ -205,11 +214,64 @@ public class PostDetailFragment extends Fragment {
                 binding.rvRatings.setVisibility(View.GONE);
             }
         });
+
+        // Observe Saved Status
+        viewModel.getIsSaved().observe(getViewLifecycleOwner(), isSaved -> {
+            if (isSaved == null) {
+                binding.fabSave.setEnabled(false);
+                binding.fabSave.setAlpha(0.5f);
+            } else {
+                binding.fabSave.setEnabled(true);
+                binding.fabSave.setAlpha(1.0f);
+                if (isSaved) {
+                    binding.fabSave.setImageResource(R.drawable.ic_bookmark_filled);
+                } else {
+                    binding.fabSave.setImageResource(R.drawable.ic_bookmark_border);
+                }
+            }
+        });
+
+        // Observe Save/Unsave Action Status
+        viewModel.getSaveStatus().observe(getViewLifecycleOwner(), resource -> {
+            if (resource.getStatus() == Resource.Status.SUCCESS) {
+                boolean isSaved = viewModel.getIsSaved().getValue() != null && viewModel.getIsSaved().getValue();
+                Toast.makeText(requireContext(), isSaved ? "Đã lưu tin đăng" : "Đã bỏ lưu tin đăng", Toast.LENGTH_SHORT).show();
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                Toast.makeText(requireContext(), resource.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void displayPostDetail(PostDetail post) {
+        // Diagnostic Logging
+        Timber.d("=== DIAGNOSTIC: displayPostDetail ===");
+        if (post.getMultimediaFiles() != null) {
+            Timber.d("Multimedia files count: %d", post.getMultimediaFiles().size());
+            for (int i = 0; i < post.getMultimediaFiles().size(); i++) {
+                MultimediaFile mf = post.getMultimediaFiles().get(i);
+                if (mf != null) {
+                    Timber.d("File[%d]: junction fileId=%d", i, mf.getFileId());
+                    if (mf.getFile() != null) {
+                        Timber.d("  -> fileDetail: fileId=%d, fileType=%s", 
+                                 mf.getFile().getFileId(), 
+                                 mf.getFile().getFileType() != null ? mf.getFile().getFileType().name() : "NULL");
+                    } else {
+                        Timber.d("  -> fileDetail is NULL!");
+                    }
+                }
+            }
+        } else {
+            Timber.d("Multimedia files list is NULL!");
+        }
+        
+        List<String> urls = post.getImageUrls();
+        Timber.d("Final extracted image URLs count: %d", urls.size());
+        for (String url : urls) {
+            Timber.d("  -> URL: %s", url);
+        }
+        
         // Images
-        imageAdapter.setImages(post.getImageUrls());
+        imageAdapter.setImages(urls);
 
         // Title
         binding.tvTitle.setText(post.getTitle());

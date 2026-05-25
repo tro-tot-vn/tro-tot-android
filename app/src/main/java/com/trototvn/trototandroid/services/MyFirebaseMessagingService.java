@@ -144,7 +144,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             long conversationId = Long.parseLong(conversationIdStr);
             long senderId = Long.parseLong(senderIdStr);
 
-            // Bộ phân tích ngày phòng ngừa lỗi đa định dạng (Fail-Safe Date Parser)
+            // Phân tích ngày tháng theo chuẩn ISO 8601
             long createdAt = parseSafeDate(createdAtStr);
 
             MessageEntity entity = new MessageEntity(
@@ -200,7 +200,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     /**
-     * Phân tích ngày tháng an toàn tuyệt đối hỗ trợ cả dạng Unix, ISO 8601 và Javascript Date String
+     * Phân tích ngày tháng theo chuẩn ISO 8601 từ Server Node.js
      */
     private long parseSafeDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
@@ -208,12 +208,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
         String cleanStr = dateStr.trim();
         
-        // 1. Thử phân tích dạng Số nguyên (Unix timestamp)
-        try {
-            return Long.parseLong(cleanStr);
-        } catch (NumberFormatException ignored) {}
-
-        // 2. Thử phân tích định dạng ISO 8601 (e.g. 2026-05-24T14:24:58.000Z)
+        // 1. Phân tích định dạng chuẩn ISO 8601 (Khuyến nghị)
         try {
             java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
             isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
@@ -221,18 +216,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             if (parsedDate != null) return parsedDate.getTime();
         } catch (Exception ignored) {}
 
-        // 3. Thử phân tích định dạng Javascript Date String (e.g. Sun May 24 2026 23:22:26 GMT+0000 (Coordinated Universal Time))
+        // 2. Fallback: Dạng Số nguyên (Unix timestamp) cho tương thích ngược
         try {
-            String formatStr = cleanStr;
-            if (cleanStr.contains("(")) {
-                formatStr = cleanStr.substring(0, cleanStr.indexOf("(")).trim();
-            }
-            java.text.SimpleDateFormat jsDateFormat = new java.text.SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", java.util.Locale.US);
-            java.util.Date parsedDate = jsDateFormat.parse(formatStr);
-            if (parsedDate != null) return parsedDate.getTime();
-        } catch (Exception ignored) {}
+            return Long.parseLong(cleanStr);
+        } catch (NumberFormatException ignored) {}
 
-        // 4. Mặc định trả về thời gian hiện tại
         return System.currentTimeMillis();
     }
 }

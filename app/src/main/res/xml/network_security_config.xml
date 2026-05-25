@@ -3,17 +3,11 @@
     <!-- Allow cleartext traffic for development -->
     <domain-config cleartextTrafficPermitted="true">
         <!-- Localhost -->
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android Emulator -->
         <domain includeSubdomains="true">khoakomlem-internal.ddns.net</domain> <!-- Android Emulator -->
-
-        <!-- Local network -->
-        <domain includeSubdomains="true">192.168.1.4</domain>
     </domain-config>
     
-    <!-- Production: Only HTTPS -->
-    <base-config cleartextTrafficPermitted="false">
+    <!-- Production: Allow cleartext globally for debug/dev -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

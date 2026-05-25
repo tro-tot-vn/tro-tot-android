@@ -23,7 +23,7 @@ public class PostDetail {
     private String interiorCondition;
     private double acreage;
     private String extendedAt;
-    private List<MultimediaFileDetail> multimediaFiles;
+    private List<MultimediaFile> multimediaFiles;
     private PostOwner owner;
 
     // Getters and Setters
@@ -71,8 +71,8 @@ public class PostDetail {
     public String getExtendedAt() { return extendedAt; }
     public void setExtendedAt(String extendedAt) { this.extendedAt = extendedAt; }
 
-    public List<MultimediaFileDetail> getMultimediaFiles() { return multimediaFiles; }
-    public void setMultimediaFiles(List<MultimediaFileDetail> multimediaFiles) {
+    public List<MultimediaFile> getMultimediaFiles() { return multimediaFiles; }
+    public void setMultimediaFiles(List<MultimediaFile> multimediaFiles) {
         this.multimediaFiles = multimediaFiles;
     }
 
@@ -108,9 +108,12 @@ public class PostDetail {
     public List<String> getImageUrls() {
         List<String> urls = new ArrayList<>();
         if (multimediaFiles != null) {
-            for (MultimediaFileDetail mf : multimediaFiles) {
-                if (mf != null && mf.getFileType() == FileType.IMAGE) {
-                    urls.add(Constants.BASE_URL + "api/files/" + mf.getFileId());
+            for (MultimediaFile mf : multimediaFiles) {
+                if (mf != null && mf.getFile() != null) {
+                    MultimediaFileDetail fileDetail = mf.getFile();
+                    if (fileDetail.getFileType() == FileType.IMAGE) {
+                        urls.add(Constants.BASE_URL + "api/files/" + mf.getFileId());
+                    }
                 }
             }
         }

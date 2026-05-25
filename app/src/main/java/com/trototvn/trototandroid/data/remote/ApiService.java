@@ -131,8 +131,29 @@ public interface ApiService {
      * POST - Save post to favorites
      * Requires authentication
      */
-    @POST("api/customer/saved-posts")
-    Single<ResponseData<Void>> savePost(@Body SavePostRequest request);
+    @POST("api/customer/saved-posts/{postId}")
+    Single<ResponseData<Void>> savePost(@Path("postId") int postId);
+
+    /**
+     * DELETE - Remove post from favorites
+     * Requires authentication
+     */
+    @DELETE("api/customer/saved-posts/{postId}")
+    Single<ResponseData<Void>> deleteSavedPost(@Path("postId") int postId);
+
+    /**
+     * GET - Fetch all saved posts for current customer
+     * Requires authentication
+     */
+    @GET("api/customer/saved-posts")
+    Single<ResponseData<List<com.trototvn.trototandroid.data.model.post.Post>>> getSavedPosts();
+
+    /**
+     * GET - Check if post is saved by current customer
+     * Requires authentication
+     */
+    @GET("api/customer/saved-posts/{postId}/check")
+    Single<ResponseData<Boolean>> checkSavedPost(@Path("postId") int postId);
 
     // ========== Interaction Logging ==========
 
