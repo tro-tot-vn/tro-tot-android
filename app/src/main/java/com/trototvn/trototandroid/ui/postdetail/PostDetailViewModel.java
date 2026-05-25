@@ -237,9 +237,14 @@ public class PostDetailViewModel extends BaseViewModel {
                                 resource -> {
                                     if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                                         isSaved.setValue(resource.getData());
+                                    } else if (resource.getStatus() == Resource.Status.ERROR) {
+                                        isSaved.setValue(false);
                                     }
                                 },
-                                throwable -> Timber.e(throwable, "Error checking if post is saved")
+                                throwable -> {
+                                    Timber.e(throwable, "Error checking if post is saved");
+                                    isSaved.setValue(false);
+                                }
                         )
         );
     }
