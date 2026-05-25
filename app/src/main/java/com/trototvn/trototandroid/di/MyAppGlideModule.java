@@ -24,14 +24,12 @@ public final class MyAppGlideModule extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        // Create a clean OkHttpClient without interceptors that force JSON header or authorize requests
         OkHttpClient cleanClient = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .build();
 
-        // Replace built-in HttpURLConnection loader with OkHttpUrlLoader
         registry.replace(
                 GlideUrl.class,
                 InputStream.class,
