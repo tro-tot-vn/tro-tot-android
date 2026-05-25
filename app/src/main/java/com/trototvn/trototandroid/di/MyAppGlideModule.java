@@ -32,6 +32,10 @@ public final class MyAppGlideModule extends AppGlideModule {
                 .build();
 
         // Replace built-in HttpURLConnection loader with OkHttpUrlLoader
-        registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(cleanClient));
+        registry.replace(
+                GlideUrl.class,
+                InputStream.class,
+                new OkHttpUrlLoader.Factory((okhttp3.Call.Factory) cleanClient)
+        );
     }
 }

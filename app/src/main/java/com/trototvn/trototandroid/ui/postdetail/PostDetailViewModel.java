@@ -238,44 +238,11 @@ public class PostDetailViewModel extends BaseViewModel {
                                     if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                                         isSaved.setValue(resource.getData());
                                     } else if (resource.getStatus() == Resource.Status.ERROR) {
-                                        if (resource.getMessage() != null && resource.getMessage().contains("HTTP 404")) {
-                                            Timber.w("Check API returned 404. Server not updated. Falling back to list fetch check.");
-                                            checkIfSavedViaList(postId);
-                                        } else {
-                                            isSaved.setValue(false);
-                                        }
-                                    }
-                                },
-                                throwable -> {
-                                    Timber.e(throwable, "Error checking if post is saved, falling back to list check");
-                                    checkIfSavedViaList(postId);
-                                }
-                        )
-        );
-    }
-
-    private void checkIfSavedViaList(int postId) {
-        compositeDisposable.add(
-                savedPostRepository.getSavedPosts()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                resource -> {
-                                    if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                                        boolean found = false;
-                                        for (com.trototvn.trototandroid.data.model.post.Post post : resource.getData()) {
-                                            if (post.getPostId() == postId) {
-                                                found = true;
-                                                break;
-                                            }
-                                        }
-                                        isSaved.setValue(found);
-                                    } else {
                                         isSaved.setValue(false);
                                     }
                                 },
                                 throwable -> {
-                                    Timber.e(throwable, "Error checking if post is saved via list");
+                                    Timber.e(throwable, "Error checking if post is saved");
                                     isSaved.setValue(false);
                                 }
                         )
