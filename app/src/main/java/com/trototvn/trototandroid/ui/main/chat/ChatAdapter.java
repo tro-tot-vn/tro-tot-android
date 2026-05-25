@@ -27,7 +27,7 @@ import com.trototvn.trototandroid.ui.base.BaseAdapter;
 import com.trototvn.trototandroid.ui.base.BaseDiffCallback;
 import com.trototvn.trototandroid.utils.Constants;
 
-import com.bumptech.glide.Glide;
+import com.trototvn.trototandroid.di.GlideApp;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import android.graphics.Color;
@@ -233,10 +233,10 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             }
 
             if (fileUrl == null || fileUrl.trim().isEmpty()) {
-                Glide.with(binding.getRoot().getContext()).clear(binding.ivContent);
+                GlideApp.with(binding.getRoot().getContext()).clear(binding.ivContent);
                 binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
             } else {
-                Glide.with(binding.getRoot().getContext())
+                GlideApp.with(binding.getRoot().getContext())
                         .load(fileUrl)
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
@@ -275,10 +275,10 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             }
 
             if (fileUrl == null || fileUrl.trim().isEmpty()) {
-                Glide.with(binding.getRoot().getContext()).clear(binding.ivContent);
+                GlideApp.with(binding.getRoot().getContext()).clear(binding.ivContent);
                 binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
             } else {
-                Glide.with(binding.getRoot().getContext())
+                GlideApp.with(binding.getRoot().getContext())
                         .load(fileUrl)
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
@@ -460,7 +460,7 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 ViewGroup.LayoutParams.MATCH_PARENT));
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-        Glide.with(context)
+        GlideApp.with(context)
                 .load(imageUrl)
                 .placeholder(new ColorDrawable(Color.LTGRAY))
                 .error(new ColorDrawable(Color.RED))

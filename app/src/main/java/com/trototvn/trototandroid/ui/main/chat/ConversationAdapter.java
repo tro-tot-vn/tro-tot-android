@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.DiffUtil;
 
+import com.trototvn.trototandroid.di.GlideApp;
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
 import com.trototvn.trototandroid.data.local.entity.ConversationUIModel;
 import com.trototvn.trototandroid.databinding.ItemConversationBinding;
@@ -101,7 +102,7 @@ public class ConversationAdapter extends BaseAdapter<ConversationUIModel, ItemCo
         });
 
         // Avatar Handling
-        com.bumptech.glide.Glide.with(binding.getRoot().getContext())
+        GlideApp.with(binding.getRoot().getContext())
                 .load(conversation.partnerAvatar)
                 .placeholder(com.trototvn.trototandroid.R.drawable.ic_user)
                 .error(com.trototvn.trototandroid.R.drawable.ic_user)
