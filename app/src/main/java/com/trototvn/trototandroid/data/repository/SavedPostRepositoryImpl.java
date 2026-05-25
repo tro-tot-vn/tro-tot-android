@@ -27,9 +27,7 @@ public class SavedPostRepositoryImpl implements SavedPostRepository {
 
     @Override
     public Single<Resource<Void>> savePost(int postId) {
-        SavePostRequest request = new SavePostRequest(postId);
-        
-        return apiService.savePost(request)
+        return apiService.savePost(postId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> Resource.<Void>success(null))
@@ -58,6 +56,74 @@ public class SavedPostRepositoryImpl implements SavedPostRepository {
                     }
 
                     return Resource.error(errorMessage, null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Void>> deleteSavedPost(int postId) {
+        return apiService.deleteSavedPost(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> Resource.<Void>success(null))
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error deleting saved post %d", postId);
+                    String errorMessage;
+
+                    if (throwable instanceof retrofit2.HttpException) {
+                        retrofit2.HttpException httpException = (retrofit2.HttpException) throwable;
+                        int code = httpException.code();
+
+                        if (code == 401) {
+                            errorMessage = "Vui lòng đăng nhập";
+                        } else if (code == 404) {
+                            errorMessage = "Tin đăng không tồn tại";
+                        } else {
+                            errorMessage = "Lỗi khi bỏ lưu tin";
+                        }
+                    } else if (throwable instanceof java.net.UnknownHostException ||
+                               throwable instanceof java.net.SocketTimeoutException) {
+                        errorMessage = "Không có kết nối mạng";
+                    } else {
+                        errorMessage = "Lỗi khi bỏ lưu tin";
+                    }
+
+                    return Resource.error(errorMessage, null);
+                });
+    }
+
+    @Override
+    public Single<Resource<java.util.List<com.trototvn.trototandroid.data.model.post.Post>>> getSavedPosts() {
+        return apiService.getSavedPosts()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response != null && response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.success((java.util.List<com.trototvn.trototandroid.data.model.post.Post>) new java.util.ArrayList<com.trototvn.trototandroid.data.model.post.Post>());
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error fetching saved posts");
+                    return Resource.error("Lỗi khi lấy danh sách tin đã lưu", null);
+                });
+    }
+
+    @Override
+    public Single<Resource<Boolean>> checkSavedPost(int postId) {
+        return apiService.checkSavedPost(postId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response != null && response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.success(false);
+                    }
+                })
+                .onErrorReturn(throwable -> {
+                    Timber.e(throwable, "Error checking if post %d is saved", postId);
+                    return Resource.error("Lỗi khi kiểm tra trạng thái lưu tin", false);
                 });
     }
 

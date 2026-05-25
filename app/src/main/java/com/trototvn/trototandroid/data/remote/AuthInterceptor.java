@@ -44,7 +44,11 @@ public class AuthInterceptor implements Interceptor {
 
         // Add other common headers
         requestBuilder.addHeader("Accept", "application/json");
-        requestBuilder.addHeader("Content-Type", "application/json");
+        
+        String method = original.method();
+        if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+            requestBuilder.addHeader("Content-Type", "application/json");
+        }
 
         Request request = requestBuilder.build();
         return chain.proceed(request);

@@ -10,6 +10,7 @@ import com.trototvn.trototandroid.data.model.rating.RatingListResponse;
 import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.data.repository.PostDetailRepository;
 import com.trototvn.trototandroid.data.repository.RatingRepository;
+import com.trototvn.trototandroid.data.repository.SavedPostRepository;
 import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
 
@@ -29,17 +30,21 @@ public class PostDetailViewModel extends BaseViewModel {
 
     private final PostDetailRepository repository;
     private final RatingRepository ratingRepository;
+    private final SavedPostRepository savedPostRepository;
     private final SessionManager sessionManager;
 
     private final MutableLiveData<Resource<PostDetail>> postDetail = new MutableLiveData<>();
     private final MutableLiveData<Resource<RatingStats>> ratingStats = new MutableLiveData<>();
     private final MutableLiveData<Resource<Rating>> myRating = new MutableLiveData<>();
     private final MutableLiveData<Resource<RatingListResponse>> ratingsList = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isSaved = new MutableLiveData<>(false);
+    private final MutableLiveData<Resource<Void>> saveStatus = new MutableLiveData<>();
 
     @Inject
-    public PostDetailViewModel(PostDetailRepository repository, RatingRepository ratingRepository, SessionManager sessionManager) {
+    public PostDetailViewModel(PostDetailRepository repository, RatingRepository ratingRepository, SavedPostRepository savedPostRepository, SessionManager sessionManager) {
         this.repository = repository;
         this.ratingRepository = ratingRepository;
+        this.savedPostRepository = savedPostRepository;
         this.sessionManager = sessionManager;
     }
 
@@ -57,6 +62,14 @@ public class PostDetailViewModel extends BaseViewModel {
 
     public LiveData<Resource<RatingListResponse>> getRatingsList() {
         return ratingsList;
+    }
+
+    public LiveData<Boolean> getIsSaved() {
+        return isSaved;
+    }
+
+    public LiveData<Resource<Void>> getSaveStatus() {
+        return saveStatus;
     }
 
     /**
@@ -208,5 +221,81 @@ public class PostDetailViewModel extends BaseViewModel {
             return phone;
         }
         return phone.substring(0, phone.length() - 3) + "***";
+    }
+
+    public void checkIfSaved(int postId) {
+        if (!isAuthenticated()) {
+            isSaved.setValue(false);
+            return;
+        }
+
+        compositeDisposable.add(
+                savedPostRepository.checkSavedPost(postId)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                resource -> {
+                                    if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                                        isSaved.setValue(resource.getData());
+                                    }
+                                },
+                                throwable -> Timber.e(throwable, "Error checking if post is saved")
+                        )
+        );
+    }
+
+    /**
+     * Toggle saved state of the post (save/unsave)
+     */
+    public void toggleSavePost(int postId) {
+        if (!isAuthenticated()) {
+            saveStatus.setValue(Resource.error("Vui lòng đăng nhập để thực hiện", null));
+            return;
+        }
+
+        boolean currentlySaved = isSaved.getValue() != null && isSaved.getValue();
+        saveStatus.setValue(Resource.loading(null));
+
+        if (currentlySaved) {
+            compositeDisposable.add(
+                    savedPostRepository.deleteSavedPost(postId)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    resource -> {
+                                        if (resource.getStatus() == Resource.Status.SUCCESS) {
+                                            isSaved.setValue(false);
+                                            saveStatus.setValue(Resource.success(null));
+                                        } else {
+                                            saveStatus.setValue(Resource.error(resource.getMessage(), null));
+                                        }
+                                    },
+                                    throwable -> {
+                                        Timber.e(throwable, "Error unsaving post");
+                                        saveStatus.setValue(Resource.error("Lỗi khi bỏ lưu tin", null));
+                                    }
+                            )
+            );
+        } else {
+            compositeDisposable.add(
+                    savedPostRepository.savePost(postId)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    resource -> {
+                                        if (resource.getStatus() == Resource.Status.SUCCESS) {
+                                            isSaved.setValue(true);
+                                            saveStatus.setValue(Resource.success(null));
+                                        } else {
+                                            saveStatus.setValue(Resource.error(resource.getMessage(), null));
+                                        }
+                                    },
+                                    throwable -> {
+                                        Timber.e(throwable, "Error saving post");
+                                        saveStatus.setValue(Resource.error("Lỗi khi lưu tin", null));
+                                    }
+                            )
+            );
+        }
     }
 }

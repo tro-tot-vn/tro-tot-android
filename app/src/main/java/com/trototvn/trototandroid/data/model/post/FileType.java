@@ -1,7 +1,12 @@
 package com.trototvn.trototandroid.data.model.post;
 
+import com.google.gson.annotations.SerializedName;
+
 public enum FileType {
+    @SerializedName(value = "IMAGE", alternate = {"Image", "image"})
     IMAGE("Image"),
+
+    @SerializedName(value = "VIDEO", alternate = {"Video", "video"})
     VIDEO("Video");
 
     private final String value;

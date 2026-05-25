@@ -12,6 +12,7 @@ import com.trototvn.trototandroid.data.model.location.Ward;
 import com.trototvn.trototandroid.data.model.location.WardListResponse;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.model.post.MultimediaFileDetail;
+import com.trototvn.trototandroid.data.model.post.MultimediaFile;
 import com.trototvn.trototandroid.data.repository.PostRepository;
 import com.trototvn.trototandroid.utils.LocationService;
 
@@ -215,7 +216,17 @@ public class PostFormViewModel extends ViewModel {
                         interiorStatus.setValue(detail.getInteriorCondition());
                         streetNumber.setValue(detail.getStreetNumber());
                         street.setValue(detail.getStreet());
-                        oldFiles.setValue(detail.getMultimediaFiles() != null ? detail.getMultimediaFiles() : new ArrayList<>());
+                        List<MultimediaFileDetail> oldDetails = new ArrayList<>();
+                        if (detail.getMultimediaFiles() != null) {
+                            for (MultimediaFile mf : detail.getMultimediaFiles()) {
+                                if (mf != null && mf.getFile() != null) {
+                                    MultimediaFileDetail fileDetail = mf.getFile();
+                                    fileDetail.setFileId(mf.getFileId());
+                                    oldDetails.add(fileDetail);
+                                }
+                            }
+                        }
+                        oldFiles.setValue(oldDetails);
 
                         // Address synchronization
                         syncAddressFromPostDetail(detail);
