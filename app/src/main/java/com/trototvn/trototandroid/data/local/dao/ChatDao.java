@@ -116,6 +116,18 @@ public interface ChatDao {
     @Query("DELETE FROM messages WHERE message_id = :messageId")
     Completable deleteMessageLocally(long messageId);
 
+    @Query("DELETE FROM messages")
+    Completable deleteAllMessages();
+
+    @Query("DELETE FROM conversations")
+    Completable deleteAllConversations();
+
+    @Query("DELETE FROM conversation_participants")
+    Completable deleteAllParticipants();
+
+    @Query("DELETE FROM message_attachments")
+    Completable deleteAllAttachments();
+
     // ─────────────────────────────────────────────────────────────
     // CLEANUP – giữ bảng Room gọn nhẹ
     // ─────────────────────────────────────────────────────────────

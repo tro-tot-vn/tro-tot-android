@@ -155,12 +155,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Call this from fragments to logout
-     */
     public void logout() {
         chatRepository.stopObservingIncomingMessages();
         socketIOManager.disconnect();
+        
+        // Clear Room database data
+        chatRepository.clearAllData()
+                .subscribe(
+                        () -> android.util.Log.d("MainActivity", "Local database cleared on logout"),
+                        throwable -> android.util.Log.e("MainActivity", "Failed to clear local database on logout", throwable)
+                );
+
         sessionManager.clearSession();
 
         Intent intent = new Intent(this, SplashActivity.class);
