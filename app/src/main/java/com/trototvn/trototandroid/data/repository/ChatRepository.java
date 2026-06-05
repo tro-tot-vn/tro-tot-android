@@ -557,8 +557,21 @@ public class ChatRepository {
         return chatDao.deleteOldMessages(conversationId, KEEP_MESSAGES_COUNT)
                 .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> Timber.d("Cleanup done for conversation: %s (kept %d)", conversationId,
-                        KEEP_MESSAGES_COUNT))
+                         KEEP_MESSAGES_COUNT))
                 .doOnError(e -> Timber.e(e, "Cleanup failed for conversation: %s", conversationId));
+    }
+
+    /**
+     * Clear all tables from local Room database.
+     */
+    public Completable clearAllData() {
+        return chatDao.deleteAllMessages()
+                .andThen(chatDao.deleteAllConversations())
+                .andThen(chatDao.deleteAllParticipants())
+                .andThen(chatDao.deleteAllAttachments())
+                .subscribeOn(Schedulers.io())
+                .doOnComplete(() -> Timber.d("Successfully cleared all local chat database tables"))
+                .doOnError(e -> Timber.e(e, "Failed to clear local chat database tables"));
     }
 
     // ─────────────────────────────────────────────────────────────
