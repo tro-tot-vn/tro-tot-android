@@ -59,15 +59,22 @@ public class SocketIOManager {
 
             // Thêm Token vào quá trình xác thực Socket
             String token = sessionManager.getToken();
+            String fcmToken = sessionManager.getFcmToken();
             if (token != null) {
                 // Cách 1: Truyền qua Auth Map (Chuẩn Socket.IO v3/v4)
                 java.util.Map<String, String> auth = new java.util.HashMap<>();
                 auth.put("token", token);
+                if (fcmToken != null) {
+                    auth.put("x-fcm-token", fcmToken);
+                }
                 options.auth = auth;
 
                 // Cách 2: Truyền qua Extra Headers (Nếu Backend yêu cầu Header)
                 java.util.Map<String, java.util.List<String>> headers = new java.util.HashMap<>();
                 headers.put("Authorization", java.util.Collections.singletonList("Bearer " + token));
+                if (fcmToken != null) {
+                    headers.put("x-fcm-token", java.util.Collections.singletonList(fcmToken));
+                }
                 options.extraHeaders = headers;
             }
 

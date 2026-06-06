@@ -34,6 +34,31 @@ public class SocketEvents {
     public static final String FILE_SENT = "file:sent";
     public static final String FILE_RECEIVED = "file:received";
 
+    // Video Call events (Client -> BE)
+    public static final String EMIT_GET_ICE_CONFIG = "video:call:getIceConfig";
+    public static final String EMIT_CREATE_ROOM = "video:call:createRoom";
+    public static final String EMIT_JOIN_ROOM = "video:call:joinRoom";
+    public static final String EMIT_OFFER = "video:call:offer";
+    public static final String EMIT_ANSWER = "video:call:answer";
+    public static final String EMIT_ICE_CANDIDATE = "video:call:iceCandidate";
+    public static final String EMIT_ACCEPTED = "video:call:accepted";
+    public static final String EMIT_REJECTED = "video:call:rejected";
+    public static final String EMIT_ENDED = "video:call:ended";
+    public static final String EMIT_LEAVE_ROOM = "video:call:leaveRoom";
+
+    // Video Call events (BE -> Client)
+    public static final String LISTEN_ICE_CONFIG = "video:call:iceConfig";
+    public static final String LISTEN_REQUEST = "video:call:request";
+    public static final String LISTEN_ROOM_CREATED = "video:call:roomCreated";
+    public static final String LISTEN_ROOM_JOINED = "video:call:roomJoined";
+    public static final String LISTEN_PEER_CONNECTED = "video:call:peerConnected";
+    public static final String LISTEN_OFFER = "video:call:offer";
+    public static final String LISTEN_ANSWER = "video:call:answer";
+    public static final String LISTEN_ICE_CANDIDATE = "video:call:iceCandidate";
+    public static final String LISTEN_ACCEPTED = "video:call:accepted";
+    public static final String LISTEN_REJECTED = "video:call:rejected";
+    public static final String LISTEN_ENDED = "video:call:ended";
+
     private SocketEvents() {
     }
 }
