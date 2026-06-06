@@ -6,9 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.SOURCE)
-@StringDef({ MessageType.TEXT, MessageType.IMAGE, MessageType.FILE })
+@StringDef({ MessageType.TEXT, MessageType.IMAGE, MessageType.FILE, MessageType.CALL })
 public @interface MessageType {
     String TEXT = "TEXT";
     String IMAGE = "IMAGE";
     String FILE = "FILE";
+    String CALL = "CALL";
 }
