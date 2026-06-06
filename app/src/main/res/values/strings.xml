@@ -135,4 +135,10 @@
     <string name="notification_channel_desc">Nhận thông báo về tin nhắn và cập nhật mới nhất</string>
     <string name="notification_title_default">Thông báo mới</string>
     <string name="bookmark">Bookmark</string>
+
+    <!-- Video Call Notifications -->
+    <string name="call_notification_channel_name">Cuộc gọi video đến</string>
+    <string name="call_notification_channel_desc">Nhận thông báo cuộc gọi video thời gian thực</string>
+    <string name="incoming_video_call">Cuộc gọi video đến</string>
+    <string name="incoming_video_call_content">%1$s đang gọi...</string>
 </resources>

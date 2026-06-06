@@ -3,7 +3,11 @@ package com.trototvn.trototandroid.services;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -19,6 +23,7 @@ import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
 import com.trototvn.trototandroid.ui.main.MainActivity;
+import com.trototvn.trototandroid.ui.video.IncomingCallActivity;
 import com.trototvn.trototandroid.utils.NotificationHelper;
 import com.trototvn.trototandroid.utils.SessionManager;
 
@@ -82,6 +87,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Map<String, String> data = remoteMessage.getData();
         String type = data.get("type");
 
+        if ("VIDEO_CALL_REQUEST".equals(type)) {
+            handleVideoCallRequest(data);
+            return;
+        } else if ("VIDEO_CALL_CANCELLED".equals(type)) {
+            handleVideoCallCancelled(data);
+            return;
+        }
+
         // 1. Đồng bộ tin nhắn chat chạy ngầm
         if ("chat".equals(type)) {
             handleChatMessage(data);
@@ -101,7 +114,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 if (title == null) {
                     title = data.get("title");
                 }
-                
+
                 body = data.get("messageContent");
                 if (body == null) {
                     body = data.get("content");
@@ -207,20 +220,129 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             return System.currentTimeMillis();
         }
         String cleanStr = dateStr.trim();
-        
+
         // 1. Phân tích định dạng chuẩn ISO 8601 (Khuyến nghị)
         try {
             java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
             isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
             java.util.Date parsedDate = isoFormat.parse(cleanStr);
             if (parsedDate != null) return parsedDate.getTime();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // 2. Fallback: Dạng Số nguyên (Unix timestamp) cho tương thích ngược
         try {
             return Long.parseLong(cleanStr);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
         return System.currentTimeMillis();
+    }
+
+    private void handleVideoCallRequest(Map<String, String> data) {
+        String roomId = data.get("roomId");
+        String callerIdStr = data.get("callerId");
+        String callerName = data.get("callerName");
+
+        if (roomId == null || callerIdStr == null) {
+            Timber.w("Invalid VIDEO_CALL_REQUEST payload");
+            return;
+        }
+
+        long callerId = 0;
+        try {
+            callerId = Long.parseLong(callerIdStr);
+        } catch (NumberFormatException e) {
+            Timber.e(e, "Invalid callerId format: %s", callerIdStr);
+        }
+
+        // Truy vấn nhanh Local Room DB để tìm avatar của callerId
+        String callerAvatar = null;
+        if (callerId > 0) {
+            try {
+                callerAvatar = chatDao.getPartnerAvatarByCustomerIdSync(callerId);
+            } catch (Exception e) {
+                Timber.e(e, "Error querying caller avatar");
+            }
+        }
+
+        // Chuẩn bị Full-Screen Intent trỏ tới IncomingCallActivity
+        Intent intent = new Intent(this, IncomingCallActivity.class);
+        intent.putExtra("roomId", roomId);
+        intent.putExtra("callerId", callerIdStr);
+        intent.putExtra("callerName", callerName != null ? callerName : getString(R.string.notification_title_default));
+        intent.putExtra("callerAvatar", callerAvatar);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                roomId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        String channelId = "trotot_call_channel";
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        Uri ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+
+        // Tạo Notification Channel ưu tiên cao kèm nhạc chuông
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    getString(R.string.call_notification_channel_name),
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription(getString(R.string.call_notification_channel_desc));
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
+            channel.setSound(ringtoneUri, new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+
+        String displayName = callerName != null ? callerName : getString(R.string.notification_title_default);
+        String contentText = getString(R.string.incoming_video_call_content, displayName);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.drawable.ic_phone)
+                .setContentTitle(getString(R.string.incoming_video_call))
+                .setContentText(contentText)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setFullScreenIntent(pendingIntent, true)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setSound(ringtoneUri)
+                .setVibrate(new long[]{0, 1000, 500, 1000});
+
+        if (notificationManager != null) {
+            notificationManager.notify(roomId.hashCode(), builder.build());
+        }
+    }
+
+    private void handleVideoCallCancelled(Map<String, String> data) {
+        String roomId = data.get("roomId");
+        if (roomId == null) {
+            Timber.w("Invalid VIDEO_CALL_CANCELLED payload: missing roomId");
+            return;
+        }
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(roomId.hashCode());
+        }
+
+        // Phát Broadcast nội bộ ra hiệu đóng màn hình IncomingCallActivity lập tức
+        Intent cancelIntent = new Intent(IncomingCallActivity.ACTION_VIDEO_CALL_CANCELLED);
+        cancelIntent.putExtra("roomId", roomId);
+        cancelIntent.setPackage(getPackageName());
+        sendBroadcast(cancelIntent);
+
+        Timber.d("Đã gửi broadcast hủy cuộc gọi cho phòng: %s", roomId);
     }
 }
