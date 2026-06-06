@@ -179,6 +179,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 return MessageType.IMAGE;
             case "FILE":
                 return MessageType.FILE;
+            case "CALL":
+                return MessageType.CALL;
             default:
                 return MessageType.TEXT;
         }
