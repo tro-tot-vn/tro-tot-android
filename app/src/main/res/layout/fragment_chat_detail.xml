@@ -41,16 +41,38 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/spacing_small"
+                    android:layout_marginEnd="@dimen/spacing_small"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAppearance="@style/TextAppearance.App.Title"
                     android:textSize="17sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/btnCall"
                     app:layout_constraintStart_toEndOf="@id/toolbarAvatar"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:text="Nguyễn Văn A" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCall"
+                    style="@style/Widget.App.Button.Text"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="@dimen/spacing_small"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="8dp"
+                    app:icon="@drawable/ic_video"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="24dp"
+                    app:iconTint="?attr/colorPrimary"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="ContentDescription" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.Uri;
 
+import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageAttachmentEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
@@ -44,10 +45,27 @@ public class ChatViewModel extends BaseViewModel {
     
     private final MutableLiveData<Resource<MessageEntity>> uploadState = new MutableLiveData<>();
 
+    // LiveData thông tin cuộc hội thoại để cập nhật avatar/tên partner
+    private final MutableLiveData<ConversationEntity> conversationLiveData = new MutableLiveData<>();
+    
+    // LiveData chuyển tiếp sự kiện tạo phòng gọi điện thành công
+    private final MutableLiveData<Resource<ChatRepository.CallRoomInfo>> callRoomLiveData = new MutableLiveData<>();
+
     @Inject
     public ChatViewModel(ChatRepository chatRepository, SessionManager sessionManager) {
         this.chatRepository = chatRepository;
         this.sessionManager = sessionManager;
+
+        // Đăng ký lắng nghe sự kiện tạo phòng gọi điện từ Repository
+        addDisposable(
+                chatRepository.observeCallRoomCreated()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                roomInfo -> callRoomLiveData.setValue(Resource.success(roomInfo)),
+                                error -> Timber.e(error, "Failed to observe call room creation")
+                        )
+        );
     }
 
     /**
@@ -58,6 +76,17 @@ public class ChatViewModel extends BaseViewModel {
         this.conversationId = conversationId;
         fetchInitialHistory();
         observeChatData();
+
+        // Tải thông tin chi tiết cuộc hội thoại (lấy avatar của partner)
+        addDisposable(
+                chatRepository.getConversationById(conversationId)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                conversationLiveData::setValue,
+                                error -> Timber.e(error, "Failed to load conversation details")
+                        )
+        );
     }
 
     /**
@@ -216,7 +245,31 @@ public class ChatViewModel extends BaseViewModel {
         return hasMoreMessages;
     }
 
+    public LiveData<ConversationEntity> getConversationLiveData() {
+        return conversationLiveData;
+    }
+
+    public LiveData<Resource<ChatRepository.CallRoomInfo>> getCallRoomLiveData() {
+        return callRoomLiveData;
+    }
+
     public String getCurrentUserId() {
         return sessionManager.getUserId();
+    }
+
+    /**
+     * Khởi tạo bắt đầu cuộc gọi bằng cách kích hoạt Handshake ở Repository
+     */
+    public void startCall(String partnerName) {
+        if (conversationId == -1) return;
+        callRoomLiveData.setValue(Resource.loading(null));
+        chatRepository.startCallHandshake(conversationId, partnerName);
+    }
+
+    /**
+     * Khôi phục trạng thái LiveData gọi điện sau khi đã tiêu thụ xong sự kiện chuyển màn hình
+     */
+    public void resetCallRoomState() {
+        callRoomLiveData.setValue(null);
     }
 }
