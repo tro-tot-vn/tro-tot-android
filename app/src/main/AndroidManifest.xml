@@ -81,6 +81,12 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true" />
 
+        <!-- Foreground Service for ongoing calls -->
+        <service
+            android:name=".services.CallForegroundService"
+            android:foregroundServiceType="phoneCall"
+            android:exported="false" />
+
     </application>
 
 </manifest>

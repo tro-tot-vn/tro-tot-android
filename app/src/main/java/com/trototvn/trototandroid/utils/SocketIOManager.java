@@ -202,4 +202,31 @@ public class SocketIOManager {
     public boolean isConnected() {
         return socket != null && socket.connected();
     }
+
+    /**
+     * Emit a generic Socket.IO event with payload
+     */
+    public void emit(String event, Object... args) {
+        if (socket != null && socket.connected()) {
+            socket.emit(event, args);
+        }
+    }
+
+    /**
+     * Register a socket listener dynamically
+     */
+    public void on(String event, io.socket.emitter.Emitter.Listener listener) {
+        if (socket != null) {
+            socket.on(event, listener);
+        }
+    }
+
+    /**
+     * Unregister a socket listener dynamically
+     */
+    public void off(String event) {
+        if (socket != null) {
+            socket.off(event);
+        }
+    }
 }
