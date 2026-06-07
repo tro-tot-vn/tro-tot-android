@@ -1,4 +1,4 @@
-package com.trototvn.trototandroid.webrtc;
+package com.trototvn.trototandroid.utils;
 
 import android.content.Context;
 import android.media.AudioAttributes;

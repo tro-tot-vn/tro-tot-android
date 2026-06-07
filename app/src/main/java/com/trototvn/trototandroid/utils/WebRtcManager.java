@@ -1,12 +1,10 @@
-package com.trototvn.trototandroid.webrtc;
+package com.trototvn.trototandroid.utils;
 
 import android.content.Context;
 
 import com.google.gson.Gson;
 import com.trototvn.trototandroid.data.model.video.IceConfigDto;
 import com.trototvn.trototandroid.data.model.video.IceServerDto;
-import com.trototvn.trototandroid.utils.SocketEvents;
-import com.trototvn.trototandroid.utils.SocketIOManager;
 
 import org.webrtc.*;
 
@@ -408,6 +406,67 @@ public class WebRtcManager {
             }
         }
     };
+
+    public void createOffer(SdpObserver observer, MediaConstraints constraints) {
+        if (peerConnection != null) {
+            peerConnection.createOffer(observer, constraints);
+        }
+    }
+
+    public void createAnswer(SdpObserver observer, MediaConstraints constraints) {
+        if (peerConnection != null) {
+            peerConnection.createAnswer(observer, constraints);
+        }
+    }
+
+    public void setLocalDescription(SdpObserver observer, SessionDescription sdp) {
+        if (peerConnection != null) {
+            peerConnection.setLocalDescription(observer, sdp);
+        }
+    }
+
+    public void setRemoteDescription(SdpObserver observer, SessionDescription sdp) {
+        if (peerConnection != null) {
+            peerConnection.setRemoteDescription(observer, sdp);
+        }
+    }
+
+    public void addIceCandidate(IceCandidate candidate) {
+        if (peerConnection != null) {
+            peerConnection.addIceCandidate(candidate);
+        }
+    }
+
+    /**
+     * Bật/tắt micro của thiết bị
+     */
+    public void setLocalAudioEnabled(boolean enabled) {
+        if (localAudioTrack != null) {
+            localAudioTrack.setEnabled(enabled);
+            Timber.d("Trạng thái micro cục bộ đặt thành: %b", enabled);
+        }
+    }
+
+    /**
+     * Bật/tắt camera truyền phát hình ảnh cục bộ
+     */
+    public void setLocalVideoEnabled(boolean enabled) {
+        if (localVideoTrack != null) {
+            localVideoTrack.setEnabled(enabled);
+            Timber.d("Trạng thái camera cục bộ đặt thành: %b", enabled);
+        }
+    }
+
+    /**
+     * Đảo chiều Camera (Trước <=> Sau)
+     */
+    public void switchCamera() {
+        if (videoCapturer instanceof CameraVideoCapturer) {
+            CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) videoCapturer;
+            cameraVideoCapturer.switchCamera(null);
+            Timber.d("Đã đảo chiều camera");
+        }
+    }
 
     /**
      * Giải phóng toàn bộ tài nguyên WebRTC tránh rò rỉ bộ nhớ

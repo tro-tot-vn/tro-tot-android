@@ -12,7 +12,6 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -22,8 +21,7 @@ import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
-import com.trototvn.trototandroid.ui.main.MainActivity;
-import com.trototvn.trototandroid.ui.video.IncomingCallActivity;
+import com.trototvn.trototandroid.ui.videocall.IncomingCallActivity;
 import com.trototvn.trototandroid.utils.NotificationHelper;
 import com.trototvn.trototandroid.utils.SessionManager;
 

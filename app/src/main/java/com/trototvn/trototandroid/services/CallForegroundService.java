@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
@@ -15,7 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.trototvn.trototandroid.R;
-import com.trototvn.trototandroid.ui.video.IncomingCallActivity;
+import com.trototvn.trototandroid.ui.videocall.IncomingCallActivity;
 
 import timber.log.Timber;
 
