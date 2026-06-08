@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.video.IceConfigDto;
-import com.trototvn.trototandroid.data.remote.ApiService;
+import com.trototvn.trototandroid.data.repository.VideoCallRepository;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
 
 import javax.inject.Inject;
@@ -20,12 +20,12 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 @HiltViewModel
 public class VideoCallViewModel extends BaseViewModel {
 
-    private final ApiService apiService;
+    private final VideoCallRepository videoCallRepository;
     private final MutableLiveData<Resource<IceConfigDto>> iceConfig = new MutableLiveData<>();
 
     @Inject
-    public VideoCallViewModel(ApiService apiService) {
-        this.apiService = apiService;
+    public VideoCallViewModel(VideoCallRepository videoCallRepository) {
+        this.videoCallRepository = videoCallRepository;
     }
 
     public LiveData<Resource<IceConfigDto>> getIceConfigLiveData() {
@@ -38,7 +38,7 @@ public class VideoCallViewModel extends BaseViewModel {
     public void fetchIceConfig() {
         handleLoading(iceConfig);
         addDisposable(
-                apiService.getIceConfig()
+                videoCallRepository.getIceConfig()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
