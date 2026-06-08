@@ -467,6 +467,7 @@ public class ChatRepository {
                     }
 
                     List<ConversationEntity> entities = new ArrayList<>();
+                    List<ConversationParticipantEntity> participantEntities = new ArrayList<>();
                     long currentUserId = 0;
                     try {
                         if (sessionManager.getUserId() != null)
@@ -478,11 +479,19 @@ public class ChatRepository {
                     isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
                     for (ConversationDto dto : response.getData()) {
+                        Timber.d("ConversationDto JSON: %s", gson.toJson(dto));
                         String partnerName = "Người dùng ẩn danh";
                         String partnerAvatar = null;
 
                         if (dto.participants != null) {
                             for (com.trototvn.trototandroid.data.model.chat.ParticipantDto p : dto.participants) {
+                                // Lưu participant entity cho database
+                                participantEntities.add(new ConversationParticipantEntity(
+                                        p.getSignalingId(),
+                                        dto.conversationId,
+                                        p.customerId
+                                ));
+
                                 if (p.customerId != currentUserId) {
                                     partnerName = (p.firstName != null ? p.firstName : "") + " " + (p.lastName != null ? p.lastName : "");
                                     partnerName = partnerName.trim();
@@ -496,7 +505,6 @@ public class ChatRepository {
                                         }
                                         partnerAvatar = baseUrl + "/api/files/" + p.avatarId;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -529,7 +537,8 @@ public class ChatRepository {
                                 lastDate));
                     }
 
-                    return chatDao.insertConversations(entities);
+                    return chatDao.insertConversations(entities)
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
                 });
     }
 
@@ -771,6 +780,7 @@ public class ChatRepository {
      * Khởi tạo quá trình gọi: tìm Callee ID rồi bắn socket tạo phòng
      */
     public void startCallHandshake(long conversationId, String partnerName) {
+        Timber.d("startCallHandshake: socket connected = %b", socketIOManager.isConnected());
         Disposable d = getPartnerId(conversationId)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -782,7 +792,7 @@ public class ChatRepository {
                             JsonObject payload = new JsonObject();
                             payload.addProperty("calleeId", calleeStr);
                             socketIOManager.emit(SocketEvents.EMIT_CREATE_ROOM, payload);
-                            Timber.d("Emitted video:call:createRoom for partnerId: %d", partnerId);
+                            Timber.d("Emitted video:call:createRoom for partnerId: %d, socket connected: %b", partnerId, socketIOManager.isConnected());
                         },
                         error -> Timber.e(error, "Failed to get partner ID to start call")
                 );

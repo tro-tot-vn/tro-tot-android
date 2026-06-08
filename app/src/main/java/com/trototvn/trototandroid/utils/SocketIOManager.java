@@ -1,6 +1,10 @@
 package com.trototvn.trototandroid.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.net.URISyntaxException;
 
@@ -208,7 +212,31 @@ public class SocketIOManager {
      */
     public void emit(String event, Object... args) {
         if (socket != null && socket.connected()) {
-            socket.emit(event, args);
+            if (args != null && args.length > 0) {
+                Object[] processedArgs = new Object[args.length];
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof JsonObject) {
+                        try {
+                            processedArgs[i] = new JSONObject(args[i].toString());
+                        } catch (Exception e) {
+                            Timber.e(e, "Error converting GSON JsonObject to org.json.JSONObject");
+                            processedArgs[i] = args[i];
+                        }
+                    } else if (args[i] instanceof JsonArray) {
+                        try {
+                            processedArgs[i] = new JSONArray(args[i].toString());
+                        } catch (Exception e) {
+                            Timber.e(e, "Error converting GSON JsonArray to org.json.JSONArray");
+                            processedArgs[i] = args[i];
+                        }
+                    } else {
+                        processedArgs[i] = args[i];
+                    }
+                }
+                socket.emit(event, processedArgs);
+            } else {
+                socket.emit(event);
+            }
         }
     }
 

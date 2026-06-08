@@ -145,4 +145,7 @@ public interface ChatDao {
 
     @Query("SELECT partner_avatar FROM conversations WHERE conversation_id IN (SELECT conversation_id FROM conversation_participants WHERE customer_id = :customerId) LIMIT 1")
     String getPartnerAvatarByCustomerIdSync(long customerId);
+
+    @Query("SELECT partner_avatar FROM conversations WHERE conversation_id IN (SELECT conversation_id FROM conversation_participants WHERE participant_id = :participantId) LIMIT 1")
+    String getPartnerAvatarByParticipantIdSync(long participantId);
 }

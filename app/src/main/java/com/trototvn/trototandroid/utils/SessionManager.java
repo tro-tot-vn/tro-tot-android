@@ -3,6 +3,8 @@ package com.trototvn.trototandroid.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import timber.log.Timber;
+
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
 
@@ -96,7 +98,7 @@ public class SessionManager {
                 if (parts.length >= 2) {
                     String payload = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE), "UTF-8");
                     org.json.JSONObject json = new org.json.JSONObject(payload);
-                    
+                    Timber.d("JWT Payload (getUserId): %s", payload);
                     if (json.has("customerId")) {
                         return json.optString("customerId");
                     } else if (json.has("accountId")) {
@@ -110,6 +112,33 @@ public class SessionManager {
             }
         }
         return prefs.getString(KEY_USER_ID, null);
+    }
+
+    /**
+     * Get account ID (signaling user ID)
+     * Bóc tách an toàn accountId hoặc userId từ JWT Payload để sử dụng làm ID truyền tín hiệu (WebRTC)
+     */
+    public String getAccountId() {
+        String token = getToken();
+        if (token != null && !token.isEmpty()) {
+            try {
+                String[] parts = token.split("\\.");
+                if (parts.length >= 2) {
+                    String payload = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE), "UTF-8");
+                    org.json.JSONObject json = new org.json.JSONObject(payload);
+                    Timber.d("JWT Payload (getAccountId): %s", payload);
+                    if (json.has("accountId")) {
+                        return json.optString("accountId");
+                    } else if (json.has("userId")) {
+                        return json.optString("userId");
+                    } else if (json.has("id")) {
+                        return json.optString("id");
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     /**
