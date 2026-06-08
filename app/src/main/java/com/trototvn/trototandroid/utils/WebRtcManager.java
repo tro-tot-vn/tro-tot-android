@@ -39,6 +39,8 @@ public class WebRtcManager {
     private VideoTrack localVideoTrack;
     private AudioTrack localAudioTrack;
     private VideoTrack remoteVideoTrack;
+    private VideoSource localVideoSource;
+    private AudioSource localAudioSource;
 
     private String roomId;
     private ScheduledExecutorService statsExecutor;
@@ -125,18 +127,18 @@ public class WebRtcManager {
         videoCapturer = createVideoCapturer(context);
         if (videoCapturer != null) {
             surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.getEglBaseContext());
-            VideoSource videoSource = factory.createVideoSource(videoCapturer.isScreencast());
-            videoCapturer.initialize(surfaceTextureHelper, context, videoSource.getCapturerObserver());
+            localVideoSource = factory.createVideoSource(videoCapturer.isScreencast());
+            videoCapturer.initialize(surfaceTextureHelper, context, localVideoSource.getCapturerObserver());
             videoCapturer.startCapture(1280, 720, 30);
 
-            localVideoTrack = factory.createVideoTrack("ARDMSv0", videoSource);
+            localVideoTrack = factory.createVideoTrack("ARDMSv0", localVideoSource);
             localVideoTrack.setEnabled(true);
         } else {
             Timber.w("Không thể khởi tạo VideoCapturer (có thể do thiếu quyền/thiết bị không hỗ trợ camera)");
         }
 
-        AudioSource audioSource = factory.createAudioSource(new MediaConstraints());
-        localAudioTrack = factory.createAudioTrack("ARDAMs1", audioSource);
+        localAudioSource = factory.createAudioSource(new MediaConstraints());
+        localAudioTrack = factory.createAudioTrack("ARDAMs1", localAudioSource);
         localAudioTrack.setEnabled(true);
 
         // 3. Phân tích ICE Servers từ API trả về và Cấu hình PeerConnection
@@ -505,6 +507,14 @@ public class WebRtcManager {
         if (localAudioTrack != null) {
             localAudioTrack.dispose();
             localAudioTrack = null;
+        }
+        if (localVideoSource != null) {
+            localVideoSource.dispose();
+            localVideoSource = null;
+        }
+        if (localAudioSource != null) {
+            localAudioSource.dispose();
+            localAudioSource = null;
         }
         remoteVideoTrack = null;
         roomId = null;

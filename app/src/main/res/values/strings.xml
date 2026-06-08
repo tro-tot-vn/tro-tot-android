@@ -146,4 +146,5 @@
     <string name="call_notification_ongoing_title">Cuộc gọi video</string>
     <string name="call_notification_ongoing_content">Đang đàm thoại với %1$s</string>
     <string name="call_notification_ongoing_content_default">Đang đàm thoại với đối phương</string>
+    <string name="default_user_name">Người dùng</string>
 </resources>

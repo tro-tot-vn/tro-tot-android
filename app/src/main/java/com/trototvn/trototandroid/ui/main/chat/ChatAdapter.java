@@ -343,7 +343,7 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
             // Set call icon tint based on content
-            if (message.content != null && message.content.toLowerCase().contains("nhỡ")) {
+            if (message.content != null && message.content.toLowerCase().contains(Constants.CALL_MISSED_KEYWORD)) {
                 binding.ivCallIcon.setImageResource(R.drawable.ic_phone);
                 binding.ivCallIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#F4212E"))); // Red
             } else {

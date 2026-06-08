@@ -141,7 +141,7 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
 
         // Event: Gọi điện thoại video
         binding.btnCall.setOnClickListener(v -> {
-            String partnerName = getArguments() != null ? getArguments().getString(ARG_PARTNER_NAME) : "Người dùng";
+            String partnerName = getArguments() != null ? getArguments().getString(ARG_PARTNER_NAME) : getString(com.trototvn.trototandroid.R.string.default_user_name);
             viewModel.startCall(partnerName);
         });
     }

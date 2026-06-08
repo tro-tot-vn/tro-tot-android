@@ -44,6 +44,9 @@ public class Constants {
     public static final String FORMAT_DATETIME = "dd/MM/yyyy HH:mm";
     public static final String FORMAT_ISO = "yyyy-MM-dd'T'HH:mm:ss";
 
+    // WebRTC Call related
+    public static final String CALL_MISSED_KEYWORD = "nhỡ";
+
     private Constants() {
         // Private constructor to prevent instantiation
     }

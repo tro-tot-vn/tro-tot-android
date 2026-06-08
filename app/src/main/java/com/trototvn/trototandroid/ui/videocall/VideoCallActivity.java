@@ -466,11 +466,10 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        
         // 1. Tắt Foreground Service
         Intent stopServiceIntent = new Intent(this, CallForegroundService.class);
-        stopService(stopServiceIntent);
+        stopServiceIntent.setAction(CallForegroundService.ACTION_STOP_CALL);
+        startService(stopServiceIntent);
 
         // 2. Tắt bộ đếm giây đàm thoại
         if (timerHandler != null) {
@@ -498,5 +497,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
         // Giải phóng luồng PeerConnection và Factory cục bộ
         webRtcManager.release();
+
+        super.onDestroy();
     }
 }

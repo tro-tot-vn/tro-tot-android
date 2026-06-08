@@ -88,7 +88,7 @@ public class ChatRepository {
     // Dùng CompositeDisposable để quản lý Socket subscription
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
 
-    private String callPartnerName;
+    private final java.util.concurrent.ConcurrentHashMap<String, String> activeHandshakes = new java.util.concurrent.ConcurrentHashMap<>();
     private final PublishSubject<CallRoomInfo> callRoomSubject = PublishSubject.create();
 
     private void onRoomCreated(Object[] args) {
@@ -103,7 +103,11 @@ public class ChatRepository {
                 JsonObject data = envelope.getAsJsonObject("data");
                 String roomId = data.get("roomId").getAsString();
                 String calleeId = data.get("calleeId").getAsString();
-                callRoomSubject.onNext(new CallRoomInfo(roomId, calleeId, callPartnerName));
+                String partnerName = activeHandshakes.remove(calleeId);
+                if (partnerName == null) {
+                    partnerName = "Người dùng";
+                }
+                callRoomSubject.onNext(new CallRoomInfo(roomId, calleeId, partnerName));
             }
         } catch (Exception e) {
             Timber.e(e, "Error parsing roomCreated payload");
@@ -122,9 +126,6 @@ public class ChatRepository {
         this.socketIOManager = socketIOManager;
         this.sessionManager = sessionManager;
         this.gson = gson;
-
-        // Register listener for WebRTC room creation
-        this.socketIOManager.on(SocketEvents.LISTEN_ROOM_CREATED, this::onRoomCreated);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -761,6 +762,8 @@ public class ChatRepository {
      * Lắng nghe sự kiện phòng cuộc gọi được tạo từ Socket
      */
     public Observable<CallRoomInfo> observeCallRoomCreated() {
+        socketIOManager.off(SocketEvents.LISTEN_ROOM_CREATED);
+        socketIOManager.on(SocketEvents.LISTEN_ROOM_CREATED, this::onRoomCreated);
         return callRoomSubject;
     }
 
@@ -768,13 +771,16 @@ public class ChatRepository {
      * Khởi tạo quá trình gọi: tìm Callee ID rồi bắn socket tạo phòng
      */
     public void startCallHandshake(long conversationId, String partnerName) {
-        this.callPartnerName = partnerName;
         Disposable d = getPartnerId(conversationId)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         partnerId -> {
+                            String calleeStr = String.valueOf(partnerId);
+                            if (partnerName != null) {
+                                activeHandshakes.put(calleeStr, partnerName);
+                            }
                             JsonObject payload = new JsonObject();
-                            payload.addProperty("calleeId", String.valueOf(partnerId));
+                            payload.addProperty("calleeId", calleeStr);
                             socketIOManager.emit(SocketEvents.EMIT_CREATE_ROOM, payload);
                             Timber.d("Emitted video:call:createRoom for partnerId: %d", partnerId);
                         },
