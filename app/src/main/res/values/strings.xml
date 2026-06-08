@@ -141,4 +141,9 @@
     <string name="call_notification_channel_desc">Nhận thông báo cuộc gọi video thời gian thực</string>
     <string name="incoming_video_call">Cuộc gọi video đến</string>
     <string name="incoming_video_call_content">%1$s đang gọi...</string>
+    <string name="call_notification_channel_active_name">Cuộc gọi đang diễn ra</string>
+    <string name="call_notification_channel_active_desc">Kênh hiển thị thông báo cuộc gọi đang diễn ra</string>
+    <string name="call_notification_ongoing_title">Cuộc gọi video</string>
+    <string name="call_notification_ongoing_content">Đang đàm thoại với %1$s</string>
+    <string name="call_notification_ongoing_content_default">Đang đàm thoại với đối phương</string>
 </resources>

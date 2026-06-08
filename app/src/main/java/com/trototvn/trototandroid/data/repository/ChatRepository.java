@@ -93,6 +93,10 @@ public class ChatRepository {
 
     private void onRoomCreated(Object[] args) {
         Timber.d("onRoomCreated received in ChatRepository");
+        if (args == null || args.length == 0 || args[0] == null) {
+            Timber.w("onRoomCreated: Received empty or null arguments");
+            return;
+        }
         try {
             JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
             if (envelope.has("data")) {

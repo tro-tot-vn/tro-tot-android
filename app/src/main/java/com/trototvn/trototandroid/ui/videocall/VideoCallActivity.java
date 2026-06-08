@@ -192,7 +192,10 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
         // 4. Lắng nghe luồng Stream đối phương gửi về để vẽ lên UI
         webRtcManager.setRemoteVideoTrackListener(track -> {
-            runOnUiThread(() -> track.addSink(binding.remoteVideoView));
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                track.addSink(binding.remoteVideoView);
+            });
         });
 
         // 5. Lắng nghe Candidate tạo thành công từ cục bộ để bắn qua Socket
@@ -248,6 +251,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     private final io.socket.emitter.Emitter.Listener onPeerConnected = args -> {
         Timber.d("onPeerConnected - Đối phương đã trực tuyến");
         runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
             if (isCaller) {
                 Timber.d("Caller đang khởi tạo Negotiation (Tạo Offer)...");
                 MediaConstraints constraints = new MediaConstraints();
@@ -263,6 +267,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     private final io.socket.emitter.Emitter.Listener onOfferReceived = args -> {
         Timber.d("onOfferReceived - Nhận được SDP Offer");
+        if (args == null || args.length == 0 || args[0] == null) return;
         try {
             JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
             if (envelope.has("data")) {
@@ -276,6 +281,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
                 );
 
                 runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
                     webRtcManager.setRemoteDescription(new SdpObserver() {
                         @Override
                         public void onCreateSuccess(SessionDescription sdp) {}
@@ -307,6 +313,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     private final io.socket.emitter.Emitter.Listener onAnswerReceived = args -> {
         Timber.d("onAnswerReceived - Nhận được SDP Answer");
+        if (args == null || args.length == 0 || args[0] == null) return;
         try {
             JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
             if (envelope.has("data")) {
@@ -320,6 +327,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
                 );
 
                 runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
                     webRtcManager.setRemoteDescription(new SdpObserver() {
                         @Override
                         public void onCreateSuccess(SessionDescription sdp) {}
@@ -348,6 +356,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     private final io.socket.emitter.Emitter.Listener onIceCandidateReceived = args -> {
         Timber.d("onIceCandidateReceived - Nhận được ICE Candidate đối phương");
+        if (args == null || args.length == 0 || args[0] == null) return;
         try {
             JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
             if (envelope.has("data")) {
@@ -358,7 +367,10 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
                 int sdpMLineIndex = candidateJson.get("sdpMLineIndex").getAsInt();
 
                 IceCandidate candidate = new IceCandidate(sdpMid, sdpMLineIndex, sdp);
-                runOnUiThread(() -> webRtcManager.addIceCandidate(candidate));
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    webRtcManager.addIceCandidate(candidate);
+                });
             }
         } catch (Exception e) {
             Timber.e(e, "Lỗi phân tích cú pháp ICE Candidate");
@@ -368,6 +380,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     private final io.socket.emitter.Emitter.Listener onCallEnded = args -> {
         Timber.d("onCallEnded - Cuộc gọi kết thúc từ phía đối phương");
         runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
             showToast("Cuộc gọi đã kết thúc");
             finish();
         });
@@ -376,6 +389,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     private final io.socket.emitter.Emitter.Listener onCallRejected = args -> {
         Timber.d("onCallRejected - Cuộc gọi bị từ chối");
         runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
             showToast("Cuộc gọi bị từ chối hoặc bận");
             finish();
         });
@@ -384,6 +398,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     private final io.socket.emitter.Emitter.Listener onPeerLeft = args -> {
         Timber.d("onPeerLeft - Đối phương đã rời khỏi phòng đàm thoại");
         runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) return;
             showToast("Đối phương đã rời cuộc gọi");
             finish();
         });
@@ -454,9 +469,8 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         super.onDestroy();
         
         // 1. Tắt Foreground Service
-        Intent stopService = new Intent(this, CallForegroundService.class);
-        stopService.setAction(CallForegroundService.ACTION_STOP_CALL);
-        startService(stopService);
+        Intent stopServiceIntent = new Intent(this, CallForegroundService.class);
+        stopService(stopServiceIntent);
 
         // 2. Tắt bộ đếm giây đàm thoại
         if (timerHandler != null) {

@@ -14,7 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.trototvn.trototandroid.R;
-import com.trototvn.trototandroid.ui.videocall.IncomingCallActivity;
+import com.trototvn.trototandroid.ui.videocall.VideoCallActivity;
 
 import timber.log.Timber;
 
@@ -55,10 +55,10 @@ public class CallForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Cuộc gọi đang diễn ra",
+                    getString(R.string.call_notification_channel_active_name),
                     NotificationManager.IMPORTANCE_DEFAULT
             );
-            channel.setDescription("Kênh hiển thị thông báo cuộc gọi đang diễn ra");
+            channel.setDescription(getString(R.string.call_notification_channel_active_desc));
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -66,7 +66,7 @@ public class CallForegroundService extends Service {
         }
 
         // Intent quay lại màn hình cuộc gọi
-        Intent intent = new Intent(this, IncomingCallActivity.class);
+        Intent intent = new Intent(this, VideoCallActivity.class);
         intent.putExtra("roomId", roomId);
         intent.putExtra("callerName", partnerName);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -78,9 +78,13 @@ public class CallForegroundService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        String contentText = partnerName != null
+                ? getString(R.string.call_notification_ongoing_content, partnerName)
+                : getString(R.string.call_notification_ongoing_content_default);
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Cuộc gọi video")
-                .setContentText("Đang đàm thoại với " + (partnerName != null ? partnerName : "đối phương"))
+                .setContentTitle(getString(R.string.call_notification_ongoing_title))
+                .setContentText(contentText)
                 .setSmallIcon(R.drawable.ic_phone)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
@@ -88,14 +92,19 @@ public class CallForegroundService extends Service {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build();
 
-        // Android 14+ yêu cầu chỉ định foregroundServiceType là phoneCall
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // Android 11+ yêu cầu chỉ định foregroundServiceType là phoneCall
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Timber.d("CallForegroundService onDestroy");
+        stopForeground(true);
     }
 
     @Nullable

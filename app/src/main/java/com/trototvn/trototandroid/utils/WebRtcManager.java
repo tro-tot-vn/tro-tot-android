@@ -35,6 +35,7 @@ public class WebRtcManager {
     private PeerConnectionFactory factory;
     private PeerConnection peerConnection;
     private VideoCapturer videoCapturer;
+    private SurfaceTextureHelper surfaceTextureHelper;
     private VideoTrack localVideoTrack;
     private AudioTrack localAudioTrack;
     private VideoTrack remoteVideoTrack;
@@ -123,9 +124,9 @@ public class WebRtcManager {
         // 2. Tạo Camera VideoCapturer, Local Video & Audio Source/Track
         videoCapturer = createVideoCapturer(context);
         if (videoCapturer != null) {
-            SurfaceTextureHelper textureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.getEglBaseContext());
+            surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.getEglBaseContext());
             VideoSource videoSource = factory.createVideoSource(videoCapturer.isScreencast());
-            videoCapturer.initialize(textureHelper, context, videoSource.getCapturerObserver());
+            videoCapturer.initialize(surfaceTextureHelper, context, videoSource.getCapturerObserver());
             videoCapturer.startCapture(1280, 720, 30);
 
             localVideoTrack = factory.createVideoTrack("ARDMSv0", videoSource);
@@ -162,10 +163,10 @@ public class WebRtcManager {
         // 4. Đính kèm Media Tracks vào PeerConnection
         if (peerConnection != null) {
             if (localVideoTrack != null) {
-                peerConnection.addTrack(localVideoTrack, List.of("ARDMSs0"));
+                peerConnection.addTrack(localVideoTrack, java.util.Collections.singletonList("ARDMSs0"));
             }
             if (localAudioTrack != null) {
-                peerConnection.addTrack(localAudioTrack, List.of("ARDMSs0"));
+                peerConnection.addTrack(localAudioTrack, java.util.Collections.singletonList("ARDMSs0"));
             }
         }
 
@@ -205,12 +206,14 @@ public class WebRtcManager {
      * Đồng bộ trạng thái ICE cục bộ lên Server
      */
     private void sendIceStateChange() {
-        if (peerConnection == null || roomId == null) return;
+        PeerConnection pc = this.peerConnection;
+        String rId = this.roomId;
+        if (pc == null || rId == null) return;
 
         com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
-        payload.addProperty("roomId", roomId);
-        payload.addProperty("iceConnectionState", peerConnection.iceConnectionState().name());
-        payload.addProperty("iceGatheringState", peerConnection.iceGatheringState().name());
+        payload.addProperty("roomId", rId);
+        payload.addProperty("iceConnectionState", pc.iceConnectionState().name());
+        payload.addProperty("iceGatheringState", pc.iceGatheringState().name());
 
         socketIOManager.emit(SocketEvents.EMIT_ICE_STATE_CHANGE, payload);
         Timber.d("Đã gửi sự kiện iceStateChange: %s", payload);
@@ -233,9 +236,11 @@ public class WebRtcManager {
      * Đọc thống kê WebRTC Peer Connection và gửi lên Server định kỳ
      */
     private void getAndSendStats() {
-        if (peerConnection == null || roomId == null) return;
+        PeerConnection pc = this.peerConnection;
+        String rId = this.roomId;
+        if (pc == null || rId == null) return;
 
-        peerConnection.getStats(report -> {
+        pc.getStats(report -> {
             com.google.gson.JsonObject statsJson = new com.google.gson.JsonObject();
             for (org.webrtc.RTCStats stats : report.getStatsMap().values()) {
                 com.google.gson.JsonObject statsObj = new com.google.gson.JsonObject();
@@ -256,7 +261,7 @@ public class WebRtcManager {
             }
 
             com.google.gson.JsonObject payload = new com.google.gson.JsonObject();
-            payload.addProperty("roomId", roomId);
+            payload.addProperty("roomId", rId);
             payload.add("stats", statsJson);
 
             socketIOManager.emit(SocketEvents.EMIT_CONNECTION_STATS, payload);
@@ -493,10 +498,21 @@ public class WebRtcManager {
             videoCapturer = null;
         }
 
-        localVideoTrack = null;
-        localAudioTrack = null;
+        if (localVideoTrack != null) {
+            localVideoTrack.dispose();
+            localVideoTrack = null;
+        }
+        if (localAudioTrack != null) {
+            localAudioTrack.dispose();
+            localAudioTrack = null;
+        }
         remoteVideoTrack = null;
         roomId = null;
+
+        if (surfaceTextureHelper != null) {
+            surfaceTextureHelper.dispose();
+            surfaceTextureHelper = null;
+        }
 
         if (factory != null) {
             factory.dispose();
