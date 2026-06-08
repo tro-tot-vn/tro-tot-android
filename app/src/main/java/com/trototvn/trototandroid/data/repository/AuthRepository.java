@@ -134,4 +134,21 @@ public class AuthRepository {
                 .ignoreElement()
                 .onErrorComplete(); // Fire-and-forget, swallow error if it fails
     }
+
+    /**
+     * Unregister FCM Token from Backend on Logout
+     */
+    public Completable unregisterFcmToken(String token) {
+        if (token == null || token.isEmpty()) {
+            return Completable.complete();
+        }
+
+        com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request =
+                new com.trototvn.trototandroid.data.model.notification.FcmTokenRequest(token);
+
+        return apiService.unregisterFcmToken(request)
+                .subscribeOn(Schedulers.io())
+                .ignoreElement()
+                .onErrorComplete(); // Fire-and-forget, swallow error if it fails
+    }
 }

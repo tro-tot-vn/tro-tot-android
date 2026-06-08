@@ -15,14 +15,10 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.trototvn.trototandroid.R;
-import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.databinding.ActivityMainBinding;
-import com.trototvn.trototandroid.ui.auth.AuthActivity;
 import com.trototvn.trototandroid.ui.splash.SplashActivity;
-import com.trototvn.trototandroid.utils.SessionManager;
-import com.trototvn.trototandroid.utils.SocketIOManager;
 
-import javax.inject.Inject;
+import androidx.lifecycle.ViewModelProvider;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -35,21 +31,26 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private NavController navController;
-
-    @Inject
-    SessionManager sessionManager;
-
-    @Inject
-    SocketIOManager socketIOManager;
-
-    @Inject
-    ChatRepository chatRepository;
+    private MainViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        viewModel.getLogoutCompleted().observe(this, completed -> {
+            if (Boolean.TRUE.equals(completed)) {
+                Intent intent = new Intent(this, SplashActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        // Initialize session and socket connection inside ViewModel
+        viewModel.initSessionSync();
 
         setupNavigation();
         setupBottomNavigation();
@@ -63,18 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Notification Channel
         new com.trototvn.trototandroid.utils.NotificationHelper(this).createNotificationChannel();
-
-        // Connect socket if logged in
-        if (sessionManager.isLoggedIn()) {
-            // 1. Bắt đầu kéo dữ liệu offline về DB
-            chatRepository.performHandshakeSync();
-
-            // 2. Bật kết nối Socket
-            socketIOManager.connect(sessionManager.getUserId());
-
-            // 3. Lắng nghe socket events globally
-            chatRepository.observeIncomingMessages();
-        }
 
         handleIntent(getIntent());
     }
@@ -156,21 +145,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void logout() {
-        chatRepository.stopObservingIncomingMessages();
-        socketIOManager.disconnect();
-        
-        // Clear Room database data
-        chatRepository.clearAllData()
-                .subscribe(
-                        () -> android.util.Log.d("MainActivity", "Local database cleared on logout"),
-                        throwable -> android.util.Log.e("MainActivity", "Failed to clear local database on logout", throwable)
-                );
-
-        sessionManager.clearSession();
-
-        Intent intent = new Intent(this, SplashActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        viewModel.logout();
     }
 
     @Override
@@ -181,9 +156,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (chatRepository != null) {
-            chatRepository.stopObservingIncomingMessages();
-        }
         binding = null;
     }
 }

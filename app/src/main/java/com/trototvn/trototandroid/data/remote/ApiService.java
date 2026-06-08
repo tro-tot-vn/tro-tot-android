@@ -385,6 +385,12 @@ public interface ApiService {
     @POST("api/notifications/tokens")
     Single<ResponseData<Object>> registerFcmToken(@Body com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request);
 
+    /**
+     * POST - Unregister FCM Token (Logout)
+     */
+    @POST("api/notifications/tokens/unregister")
+    Single<ResponseData<String>> unregisterFcmToken(@Body com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request);
+
     // ========== Video Call ==========
 
     /**
