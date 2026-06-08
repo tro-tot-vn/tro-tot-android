@@ -62,7 +62,7 @@ public class ChatViewModel extends BaseViewModel {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                roomInfo -> callRoomLiveData.setValue(Resource.success(roomInfo)),
+                                resource -> callRoomLiveData.setValue(resource),
                                 error -> Timber.e(error, "Failed to observe call room creation")
                         )
         );

@@ -9,6 +9,7 @@ import com.trototvn.trototandroid.data.local.entity.MessageAttachmentEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
 import com.trototvn.trototandroid.data.model.chat.ConversationDto;
 import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
@@ -89,17 +90,20 @@ public class ChatRepository {
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
 
     private final java.util.concurrent.ConcurrentHashMap<String, String> activeHandshakes = new java.util.concurrent.ConcurrentHashMap<>();
-    private final PublishSubject<CallRoomInfo> callRoomSubject = PublishSubject.create();
+    private final PublishSubject<Resource<CallRoomInfo>> callRoomSubject = PublishSubject.create();
 
     private void onRoomCreated(Object[] args) {
         Timber.d("onRoomCreated received in ChatRepository");
         if (args == null || args.length == 0 || args[0] == null) {
             Timber.w("onRoomCreated: Received empty or null arguments");
+            callRoomSubject.onNext(Resource.error("Lỗi tạo phòng gọi từ máy chủ (dữ liệu trống)", null));
             return;
         }
         try {
-            JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
-            if (envelope.has("data")) {
+            String rawPayload = args[0].toString();
+            Timber.d("onRoomCreated raw payload: %s", rawPayload);
+            JsonObject envelope = gson.fromJson(rawPayload, JsonObject.class);
+            if (envelope.has("data") && !envelope.get("data").isJsonNull()) {
                 JsonObject data = envelope.getAsJsonObject("data");
                 String roomId = data.get("roomId").getAsString();
                 String calleeId = data.get("calleeId").getAsString();
@@ -107,10 +111,14 @@ public class ChatRepository {
                 if (partnerName == null) {
                     partnerName = "Người dùng";
                 }
-                callRoomSubject.onNext(new CallRoomInfo(roomId, calleeId, partnerName));
+                callRoomSubject.onNext(Resource.success(new CallRoomInfo(roomId, calleeId, partnerName)));
+            } else {
+                String errorMsg = envelope.has("message") ? envelope.get("message").getAsString() : "Lỗi không xác định";
+                callRoomSubject.onNext(Resource.error("Lỗi máy chủ: " + errorMsg + " | Payload: " + rawPayload, null));
             }
         } catch (Exception e) {
             Timber.e(e, "Error parsing roomCreated payload");
+            callRoomSubject.onNext(Resource.error("Lỗi phân tích phản hồi từ máy chủ cuộc gọi | Payload: " + args[0].toString(), null));
         }
     }
 
@@ -553,7 +561,7 @@ public class ChatRepository {
                 isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
                 return isoFormat.format(latestDate);
             }
-            return "";
+            return "1970-01-01T00:00:00.000Z";
         })
         .flatMap(since -> apiService.syncMissedMessages(since, 100))
         .flatMapCompletable(response -> {
@@ -770,7 +778,7 @@ public class ChatRepository {
     /**
      * Lắng nghe sự kiện phòng cuộc gọi được tạo từ Socket
      */
-    public Observable<CallRoomInfo> observeCallRoomCreated() {
+    public Observable<Resource<CallRoomInfo>> observeCallRoomCreated() {
         socketIOManager.off(SocketEvents.LISTEN_ROOM_CREATED);
         socketIOManager.on(SocketEvents.LISTEN_ROOM_CREATED, this::onRoomCreated);
         return callRoomSubject;
@@ -781,6 +789,10 @@ public class ChatRepository {
      */
     public void startCallHandshake(long conversationId, String partnerName) {
         Timber.d("startCallHandshake: socket connected = %b", socketIOManager.isConnected());
+        if (!socketIOManager.isConnected()) {
+            callRoomSubject.onNext(Resource.error("Không có kết nối đến máy chủ cuộc gọi. Vui lòng kiểm tra lại mạng hoặc thử lại sau.", null));
+            return;
+        }
         Disposable d = getPartnerId(conversationId)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -794,7 +806,10 @@ public class ChatRepository {
                             socketIOManager.emit(SocketEvents.EMIT_CREATE_ROOM, payload);
                             Timber.d("Emitted video:call:createRoom for partnerId: %d, socket connected: %b", partnerId, socketIOManager.isConnected());
                         },
-                        error -> Timber.e(error, "Failed to get partner ID to start call")
+                        error -> {
+                            Timber.e(error, "Failed to get partner ID to start call");
+                            callRoomSubject.onNext(Resource.error("Không tìm thấy đối phương trong cuộc hội thoại", null));
+                        }
                 );
         socketDisposables.add(d);
     }

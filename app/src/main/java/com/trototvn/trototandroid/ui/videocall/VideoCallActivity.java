@@ -130,14 +130,13 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         
-        super.onCreate(savedInstanceState);
-
+        // Trích xuất intent extras trước khi gọi super.onCreate để setupViews() và observeData() sử dụng được ngay
         roomId = getIntent().getStringExtra("roomId");
         partnerId = getIntent().getStringExtra("partnerId");
         partnerName = getIntent().getStringExtra("partnerName");
         isCaller = getIntent().getBooleanExtra("isCaller", false);
 
-        viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
+        super.onCreate(savedInstanceState);
 
         // Khởi động Foreground Service để giữ kết nối camera/micro
         Intent serviceIntent = new Intent(this, CallForegroundService.class);
@@ -163,6 +162,9 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     @Override
     protected void observeData() {
+        if (viewModel == null) {
+            viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
+        }
         viewModel.getIceConfigLiveData().observe(this, resource -> {
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 initWebRtc(resource.getData());
