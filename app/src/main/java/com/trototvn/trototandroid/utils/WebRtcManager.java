@@ -95,6 +95,7 @@ public class WebRtcManager {
      * Khởi tạo WebRTC engine cho phòng gọi
      */
     public void init(IceConfigDto iceConfig, String roomId) {
+        release();
         this.roomId = roomId;
         Timber.d("Khởi tạo WebRtcManager cho phòng: %s", roomId);
 

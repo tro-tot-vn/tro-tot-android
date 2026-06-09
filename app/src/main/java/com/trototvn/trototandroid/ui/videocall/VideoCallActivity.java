@@ -162,6 +162,9 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
         super.onCreate(savedInstanceState);
 
+        // Khởi tạo ViewModel sau khi super.onCreate hoàn thành và Hilt đã thực hiện inject
+        viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
+
         // Đảm bảo Socket đã kết nối (phòng hờ trường hợp app ở Killed/Background state khi mở đàm thoại)
         String userId = sessionManager.getUserId();
         if (userId != null) {
@@ -546,18 +549,20 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         }
 
         // 3. Giải phóng bộ nhớ WebRTC theo thứ tự tuần tự tránh rò rỉ (Crucial Release Order)
-        if (webRtcManager.getLocalVideoTrack() != null && binding.localVideoView != null) {
-            webRtcManager.getLocalVideoTrack().removeSink(binding.localVideoView);
-        }
-        if (webRtcManager.getRemoteVideoTrack() != null && binding.remoteVideoView != null) {
-            webRtcManager.getRemoteVideoTrack().removeSink(binding.remoteVideoView);
-        }
+        if (binding != null) {
+            if (webRtcManager.getLocalVideoTrack() != null && binding.localVideoView != null) {
+                webRtcManager.getLocalVideoTrack().removeSink(binding.localVideoView);
+            }
+            if (webRtcManager.getRemoteVideoTrack() != null && binding.remoteVideoView != null) {
+                webRtcManager.getRemoteVideoTrack().removeSink(binding.remoteVideoView);
+            }
 
-        if (binding.localVideoView != null) {
-            binding.localVideoView.release();
-        }
-        if (binding.remoteVideoView != null) {
-            binding.remoteVideoView.release();
+            if (binding.localVideoView != null) {
+                binding.localVideoView.release();
+            }
+            if (binding.remoteVideoView != null) {
+                binding.remoteVideoView.release();
+            }
         }
 
         // Báo cho server rời phòng cuộc gọi để làm sạch phòng và báo cho client đối phương
