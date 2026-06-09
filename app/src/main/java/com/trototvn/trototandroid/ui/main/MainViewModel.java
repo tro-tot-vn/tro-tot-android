@@ -59,6 +59,9 @@ public class MainViewModel extends BaseViewModel {
 
             // 3. Listen to incoming messages globally
             chatRepository.observeIncomingMessages();
+
+            // 4. Listen to incoming calls globally
+            chatRepository.observeIncomingCalls();
         }
     }
 
@@ -67,6 +70,7 @@ public class MainViewModel extends BaseViewModel {
      */
     public void logout() {
         chatRepository.stopObservingIncomingMessages();
+        chatRepository.stopObservingIncomingCalls();
         socketIOManager.disconnect();
 
         String fcmToken = sessionManager.getFcmToken();
@@ -98,5 +102,6 @@ public class MainViewModel extends BaseViewModel {
     protected void onCleared() {
         super.onCleared();
         chatRepository.stopObservingIncomingMessages();
+        chatRepository.stopObservingIncomingCalls();
     }
 }

@@ -21,6 +21,11 @@ import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.utils.SocketIOManager;
 import com.trototvn.trototandroid.utils.SocketEvents;
 
+import android.content.Intent;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+import com.trototvn.trototandroid.utils.WebRtcManager;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -80,14 +85,19 @@ public class ChatRepository {
     // Số tin nhắn tối đa giữ lại mỗi conversation khi cleanup
     private static final int KEEP_MESSAGES_COUNT = 100;
 
+    private final Context context;
     private final ChatDao chatDao;
     private final ApiService apiService;
     private final SocketIOManager socketIOManager;
     private final SessionManager sessionManager;
+    private final WebRtcManager webRtcManager;
     private final Gson gson;
 
     // Dùng CompositeDisposable để quản lý Socket subscription
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
+
+    private final io.socket.emitter.Emitter.Listener onIncomingCallRequestListener = this::onIncomingCallRequest;
+    private final io.socket.emitter.Emitter.Listener onIncomingCallEndedListener = this::onIncomingCallEnded;
 
     private final java.util.concurrent.ConcurrentHashMap<String, String> activeHandshakes = new java.util.concurrent.ConcurrentHashMap<>();
     private final PublishSubject<Resource<CallRoomInfo>> callRoomSubject = PublishSubject.create();
@@ -124,16 +134,107 @@ public class ChatRepository {
 
     @Inject
     public ChatRepository(
+            @ApplicationContext Context context,
             ChatDao chatDao,
             ApiService apiService,
             SocketIOManager socketIOManager,
             SessionManager sessionManager,
+            WebRtcManager webRtcManager,
             Gson gson) {
+        this.context = context;
         this.chatDao = chatDao;
         this.apiService = apiService;
         this.socketIOManager = socketIOManager;
         this.sessionManager = sessionManager;
+        this.webRtcManager = webRtcManager;
         this.gson = gson;
+    }
+
+    public void observeIncomingCalls() {
+        socketIOManager.off(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+        socketIOManager.on(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+
+        socketIOManager.off(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+        socketIOManager.on(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+    }
+
+    public void stopObservingIncomingCalls() {
+        socketIOManager.off(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+        socketIOManager.off(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+    }
+
+    private void onIncomingCallRequest(Object[] args) {
+        if (args == null || args.length == 0 || args[0] == null) return;
+        try {
+            JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
+            JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
+                    ? envelope.getAsJsonObject("data")
+                    : envelope;
+            String roomId = data.get("roomId").getAsString();
+            long callerId = data.get("callerId").getAsLong();
+
+            // Check busy state: if user is already in a peer connection, auto-reject
+            if (webRtcManager.getPeerConnection() != null) {
+                Timber.d("User is busy, auto-rejecting incoming call: %s", roomId);
+                JsonObject payload = new JsonObject();
+                payload.addProperty("roomId", roomId);
+                payload.addProperty("reason", "Busy");
+                socketIOManager.emit(SocketEvents.EMIT_REJECTED, payload);
+                return;
+            }
+
+            Disposable d = Single.fromCallable(() -> {
+                String name = chatDao.getPartnerNameByCustomerIdSync(callerId);
+                String avatar = chatDao.getPartnerAvatarByCustomerIdSync(callerId);
+                return new String[]{name, avatar};
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                result -> {
+                    String name = result[0];
+                    String avatar = result[1];
+                    Intent intent = new Intent(context, com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.class);
+                    intent.putExtra("roomId", roomId);
+                    intent.putExtra("callerId", String.valueOf(callerId));
+                    intent.putExtra("callerName", name != null && !name.trim().isEmpty() ? name : "Người dùng");
+                    intent.putExtra("callerAvatar", avatar);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(intent);
+                },
+                throwable -> {
+                    Timber.e(throwable, "Error querying DB for incoming call partner");
+                    Intent intent = new Intent(context, com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.class);
+                    intent.putExtra("roomId", roomId);
+                    intent.putExtra("callerId", String.valueOf(callerId));
+                    intent.putExtra("callerName", "Người dùng");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(intent);
+                }
+            );
+            socketDisposables.add(d);
+        } catch (Exception e) {
+            Timber.e(e, "Error processing incoming call request");
+        }
+    }
+
+    private void onIncomingCallEnded(Object[] args) {
+        if (args == null || args.length == 0 || args[0] == null) return;
+        try {
+            JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
+            JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
+                    ? envelope.getAsJsonObject("data")
+                    : envelope;
+            String roomId = data.get("roomId").getAsString();
+
+            Intent cancelIntent = new Intent(com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.ACTION_VIDEO_CALL_CANCELLED);
+            cancelIntent.putExtra("roomId", roomId);
+            cancelIntent.setPackage(context.getPackageName());
+            context.sendBroadcast(cancelIntent);
+            Timber.d("Sent local broadcast ACTION_VIDEO_CALL_CANCELLED for roomId: %s", roomId);
+        } catch (Exception e) {
+            Timber.e(e, "Error processing incoming call ended");
+        }
     }
 
     // ─────────────────────────────────────────────────────────────

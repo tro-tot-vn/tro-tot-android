@@ -257,4 +257,13 @@ public class SocketIOManager {
             socket.off(event);
         }
     }
+
+    /**
+     * Unregister a specific socket listener dynamically
+     */
+    public void off(String event, io.socket.emitter.Emitter.Listener listener) {
+        if (socket != null) {
+            socket.off(event, listener);
+        }
+    }
 }

@@ -287,15 +287,15 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     }
 
     private void unregisterNegotiationSocketListeners() {
-        socketIOManager.off(SocketEvents.LISTEN_PEER_CONNECTED);
-        socketIOManager.off(SocketEvents.LISTEN_OFFER);
-        socketIOManager.off(SocketEvents.LISTEN_ANSWER);
-        socketIOManager.off(SocketEvents.LISTEN_ICE_CANDIDATE);
-        socketIOManager.off(SocketEvents.LISTEN_ENDED);
-        socketIOManager.off(SocketEvents.LISTEN_REJECTED);
-        socketIOManager.off(SocketEvents.LISTEN_ERROR);
-        socketIOManager.off("video:call:roomLeft");
-        socketIOManager.off("video:call:participantLeft");
+        socketIOManager.off(SocketEvents.LISTEN_PEER_CONNECTED, onPeerConnected);
+        socketIOManager.off(SocketEvents.LISTEN_OFFER, onOfferReceived);
+        socketIOManager.off(SocketEvents.LISTEN_ANSWER, onAnswerReceived);
+        socketIOManager.off(SocketEvents.LISTEN_ICE_CANDIDATE, onIceCandidateReceived);
+        socketIOManager.off(SocketEvents.LISTEN_ENDED, onCallEnded);
+        socketIOManager.off(SocketEvents.LISTEN_REJECTED, onCallRejected);
+        socketIOManager.off(SocketEvents.LISTEN_ERROR, onCallError);
+        socketIOManager.off("video:call:roomLeft", onPeerLeft);
+        socketIOManager.off("video:call:participantLeft", onPeerLeft);
     }
 
     // ========== Xử lý tín hiệu đàm thoại Socket.IO ==========
