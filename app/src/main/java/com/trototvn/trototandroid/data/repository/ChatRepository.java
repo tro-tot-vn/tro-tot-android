@@ -767,18 +767,22 @@ public class ChatRepository {
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),
                                 lastDate));
+
+                        // Tự động gia nhập phòng chat socket cho hội thoại này
+                        joinConversation(dto.conversationId);
                     }
 
                     return chatDao.insertConversations(entities)
-                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities))
+                            .andThen(syncMissedMessages());
                 });
     }
 
     /**
      * Đồng bộ tin nhắn bị lỡ khi offline (Handshake Sync).
      */
-    public void performHandshakeSync() {
-        Single.fromCallable(() -> {
+    public Completable syncMissedMessages() {
+        return Single.fromCallable(() -> {
             java.util.Date latestDate = chatDao.getLatestMessageTimestampSync();
             if (latestDate != null) {
                 java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
@@ -820,12 +824,17 @@ public class ChatRepository {
             return chatDao.insertMessages(entities)
                 .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
                 .andThen(Completable.merge(updates));
-        })
-        .subscribeOn(Schedulers.io())
-        .subscribe(
-            () -> Timber.d("Handshake sync completed successfully"),
-            error -> Timber.e(error, "Handshake sync failed")
-        );
+        });
+    }
+
+    public void performHandshakeSync() {
+        Disposable d = syncMissedMessages()
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                () -> Timber.d("Handshake sync completed successfully"),
+                error -> Timber.e(error, "Handshake sync failed")
+            );
+        socketDisposables.add(d);
     }
 
     // ─────────────────────────────────────────────────────────────

@@ -290,7 +290,6 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
     @Override
     public void onPause() {
         super.onPause();
-        viewModel.leaveConversation(conversationId);
         App.activeConversationId = null;
     }
 }
