@@ -162,6 +162,14 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
         super.onCreate(savedInstanceState);
 
+        // Kiểm tra tính hợp lệ của roomId sau super.onCreate để đảm bảo Hilt đã thực hiện inject thành công
+        if (roomId == null || roomId.trim().isEmpty()) {
+            Timber.e("VideoCallActivity - roomId is null or empty, finishing activity");
+            showToast("Lỗi: Không tìm thấy phòng đàm thoại");
+            finish();
+            return;
+        }
+
         // Khởi tạo ViewModel sau khi super.onCreate hoàn thành và Hilt đã thực hiện inject
         viewModel = new ViewModelProvider(this).get(VideoCallViewModel.class);
 

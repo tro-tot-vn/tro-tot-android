@@ -534,5 +534,8 @@ public class WebRtcManager {
             eglBase.release();
             eglBase = null;
         }
+
+        remoteVideoTrackListener = null;
+        iceCandidateListener = null;
     }
 }

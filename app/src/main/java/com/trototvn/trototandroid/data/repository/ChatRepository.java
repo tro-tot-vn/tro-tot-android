@@ -115,13 +115,18 @@ public class ChatRepository {
             JsonObject envelope = gson.fromJson(rawPayload, JsonObject.class);
             if (envelope.has("data") && !envelope.get("data").isJsonNull()) {
                 JsonObject data = envelope.getAsJsonObject("data");
-                String roomId = data.get("roomId").getAsString();
-                String calleeId = data.get("calleeId").getAsString();
-                String partnerName = activeHandshakes.remove(calleeId);
-                if (partnerName == null) {
-                    partnerName = "Người dùng";
+                if (data.has("roomId") && !data.get("roomId").isJsonNull() &&
+                        data.has("calleeId") && !data.get("calleeId").isJsonNull()) {
+                    String roomId = data.get("roomId").getAsString();
+                    String calleeId = data.get("calleeId").getAsString();
+                    String partnerName = activeHandshakes.remove(calleeId);
+                    if (partnerName == null) {
+                        partnerName = "Người dùng";
+                    }
+                    callRoomSubject.onNext(Resource.success(new CallRoomInfo(roomId, calleeId, partnerName)));
+                } else {
+                    callRoomSubject.onNext(Resource.error("Lỗi máy chủ: Dữ liệu phòng thiếu thông tin | Payload: " + rawPayload, null));
                 }
-                callRoomSubject.onNext(Resource.success(new CallRoomInfo(roomId, calleeId, partnerName)));
             } else {
                 String errorMsg = envelope.has("message") ? envelope.get("message").getAsString() : "Lỗi không xác định";
                 callRoomSubject.onNext(Resource.error("Lỗi máy chủ: " + errorMsg + " | Payload: " + rawPayload, null));
@@ -170,6 +175,13 @@ public class ChatRepository {
             JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
                     ? envelope.getAsJsonObject("data")
                     : envelope;
+            
+            if (!data.has("roomId") || data.get("roomId").isJsonNull() ||
+                    !data.has("callerId") || data.get("callerId").isJsonNull()) {
+                Timber.w("onIncomingCallRequest: roomId or callerId is null or missing");
+                return;
+            }
+            
             String roomId = data.get("roomId").getAsString();
             long callerId = data.get("callerId").getAsLong();
 
@@ -225,6 +237,12 @@ public class ChatRepository {
             JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
                     ? envelope.getAsJsonObject("data")
                     : envelope;
+            
+            if (!data.has("roomId") || data.get("roomId").isJsonNull()) {
+                Timber.w("onIncomingCallEnded: roomId is null or missing");
+                return;
+            }
+            
             String roomId = data.get("roomId").getAsString();
 
             Intent cancelIntent = new Intent(com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.ACTION_VIDEO_CALL_CANCELLED);

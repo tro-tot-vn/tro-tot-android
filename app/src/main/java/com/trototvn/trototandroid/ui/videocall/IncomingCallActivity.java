@@ -92,6 +92,12 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
         callerName = getIntent().getStringExtra("callerName");
         callerAvatar = getIntent().getStringExtra("callerAvatar");
 
+        if (roomId == null || roomId.trim().isEmpty()) {
+            Timber.e("IncomingCallActivity - roomId is null or empty, finishing activity immediately");
+            finish();
+            return;
+        }
+
         // Đảm bảo Socket đã kết nối khi Activity được mở trực tiếp từ FCM push khi app bị đóng (killed state)
         String userId = sessionManager.getUserId();
         if (userId != null) {
