@@ -6,7 +6,7 @@ package com.trototvn.trototandroid.utils;
 public class Constants {
 
     // API related
-    public static final String BASE_URL = "http://khoakomlem-internal.ddns.net:3333/";
+    public static final String BASE_URL = "https://trototvn.lamdx4.servebeer.com/";
     public static final int TIMEOUT_SECONDS = 60;
 
     // Pagination
@@ -43,6 +43,9 @@ public class Constants {
     public static final String FORMAT_DATE = "dd/MM/yyyy";
     public static final String FORMAT_DATETIME = "dd/MM/yyyy HH:mm";
     public static final String FORMAT_ISO = "yyyy-MM-dd'T'HH:mm:ss";
+
+    // WebRTC Call related
+    public static final String CALL_MISSED_KEYWORD = "nhỡ";
 
     private Constants() {
         // Private constructor to prevent instantiation

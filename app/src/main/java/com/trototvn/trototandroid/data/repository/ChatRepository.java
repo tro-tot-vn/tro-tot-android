@@ -1,12 +1,15 @@
 package com.trototvn.trototandroid.data.repository;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.trototvn.trototandroid.data.local.dao.ChatDao;
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
+import com.trototvn.trototandroid.data.local.entity.ConversationParticipantEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageAttachmentEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.data.model.chat.AttachmentDto;
 import com.trototvn.trototandroid.data.model.chat.ConversationDto;
 import com.trototvn.trototandroid.data.model.chat.MarkReadRequest;
@@ -16,6 +19,12 @@ import com.trototvn.trototandroid.data.model.chat.SocketMessageEvent;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.utils.SocketIOManager;
+import com.trototvn.trototandroid.utils.SocketEvents;
+
+import android.content.Intent;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+import com.trototvn.trototandroid.utils.WebRtcManager;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,10 +48,12 @@ import javax.inject.Singleton;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,30 +70,189 @@ import timber.log.Timber;
 @Singleton
 public class ChatRepository {
 
+    public static class CallRoomInfo {
+        public final String roomId;
+        public final String partnerId;
+        public final String partnerName;
+
+        public CallRoomInfo(String roomId, String partnerId, String partnerName) {
+            this.roomId = roomId;
+            this.partnerId = partnerId;
+            this.partnerName = partnerName;
+        }
+    }
+
     // Số tin nhắn tối đa giữ lại mỗi conversation khi cleanup
     private static final int KEEP_MESSAGES_COUNT = 100;
 
+    private final Context context;
     private final ChatDao chatDao;
     private final ApiService apiService;
     private final SocketIOManager socketIOManager;
     private final SessionManager sessionManager;
+    private final WebRtcManager webRtcManager;
     private final Gson gson;
 
     // Dùng CompositeDisposable để quản lý Socket subscription
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
 
+    private final io.socket.emitter.Emitter.Listener onIncomingCallRequestListener = this::onIncomingCallRequest;
+    private final io.socket.emitter.Emitter.Listener onIncomingCallEndedListener = this::onIncomingCallEnded;
+
+    private final java.util.concurrent.ConcurrentHashMap<String, String> activeHandshakes = new java.util.concurrent.ConcurrentHashMap<>();
+    private final PublishSubject<Resource<CallRoomInfo>> callRoomSubject = PublishSubject.create();
+
+    private void onRoomCreated(Object[] args) {
+        Timber.d("onRoomCreated received in ChatRepository");
+        if (args == null || args.length == 0 || args[0] == null) {
+            Timber.w("onRoomCreated: Received empty or null arguments");
+            callRoomSubject.onNext(Resource.error("Lỗi tạo phòng gọi từ máy chủ (dữ liệu trống)", null));
+            return;
+        }
+        try {
+            String rawPayload = args[0].toString();
+            Timber.d("onRoomCreated raw payload: %s", rawPayload);
+            JsonObject envelope = gson.fromJson(rawPayload, JsonObject.class);
+            if (envelope.has("data") && !envelope.get("data").isJsonNull()) {
+                JsonObject data = envelope.getAsJsonObject("data");
+                if (data.has("roomId") && !data.get("roomId").isJsonNull() &&
+                        data.has("calleeId") && !data.get("calleeId").isJsonNull()) {
+                    String roomId = data.get("roomId").getAsString();
+                    String calleeId = data.get("calleeId").getAsString();
+                    String partnerName = activeHandshakes.remove(calleeId);
+                    if (partnerName == null) {
+                        partnerName = "Người dùng";
+                    }
+                    callRoomSubject.onNext(Resource.success(new CallRoomInfo(roomId, calleeId, partnerName)));
+                } else {
+                    callRoomSubject.onNext(Resource.error("Lỗi máy chủ: Dữ liệu phòng thiếu thông tin | Payload: " + rawPayload, null));
+                }
+            } else {
+                String errorMsg = envelope.has("message") ? envelope.get("message").getAsString() : "Lỗi không xác định";
+                callRoomSubject.onNext(Resource.error("Lỗi máy chủ: " + errorMsg + " | Payload: " + rawPayload, null));
+            }
+        } catch (Exception e) {
+            Timber.e(e, "Error parsing roomCreated payload");
+            callRoomSubject.onNext(Resource.error("Lỗi phân tích phản hồi từ máy chủ cuộc gọi | Payload: " + args[0].toString(), null));
+        }
+    }
+
     @Inject
     public ChatRepository(
+            @ApplicationContext Context context,
             ChatDao chatDao,
             ApiService apiService,
             SocketIOManager socketIOManager,
             SessionManager sessionManager,
+            WebRtcManager webRtcManager,
             Gson gson) {
+        this.context = context;
         this.chatDao = chatDao;
         this.apiService = apiService;
         this.socketIOManager = socketIOManager;
         this.sessionManager = sessionManager;
+        this.webRtcManager = webRtcManager;
         this.gson = gson;
+    }
+
+    public void observeIncomingCalls() {
+        socketIOManager.off(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+        socketIOManager.on(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+
+        socketIOManager.off(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+        socketIOManager.on(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+    }
+
+    public void stopObservingIncomingCalls() {
+        socketIOManager.off(SocketEvents.LISTEN_REQUEST, onIncomingCallRequestListener);
+        socketIOManager.off(SocketEvents.LISTEN_ENDED, onIncomingCallEndedListener);
+    }
+
+    private void onIncomingCallRequest(Object[] args) {
+        if (args == null || args.length == 0 || args[0] == null) return;
+        try {
+            JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
+            JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
+                    ? envelope.getAsJsonObject("data")
+                    : envelope;
+            
+            if (!data.has("roomId") || data.get("roomId").isJsonNull() ||
+                    !data.has("callerId") || data.get("callerId").isJsonNull()) {
+                Timber.w("onIncomingCallRequest: roomId or callerId is null or missing");
+                return;
+            }
+            
+            String roomId = data.get("roomId").getAsString();
+            long callerId = data.get("callerId").getAsLong();
+
+            // Check busy state: if user is already in a peer connection, auto-reject
+            if (webRtcManager.getPeerConnection() != null) {
+                Timber.d("User is busy, auto-rejecting incoming call: %s", roomId);
+                JsonObject payload = new JsonObject();
+                payload.addProperty("roomId", roomId);
+                payload.addProperty("reason", "Busy");
+                socketIOManager.emit(SocketEvents.EMIT_REJECTED, payload);
+                return;
+            }
+
+            Disposable d = Single.fromCallable(() -> {
+                String name = chatDao.getPartnerNameByCustomerIdSync(callerId);
+                String avatar = chatDao.getPartnerAvatarByCustomerIdSync(callerId);
+                return new String[]{name, avatar};
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                result -> {
+                    String name = result[0];
+                    String avatar = result[1];
+                    Intent intent = new Intent(context, com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.class);
+                    intent.putExtra("roomId", roomId);
+                    intent.putExtra("callerId", String.valueOf(callerId));
+                    intent.putExtra("callerName", name != null && !name.trim().isEmpty() ? name : "Người dùng");
+                    intent.putExtra("callerAvatar", avatar);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(intent);
+                },
+                throwable -> {
+                    Timber.e(throwable, "Error querying DB for incoming call partner");
+                    Intent intent = new Intent(context, com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.class);
+                    intent.putExtra("roomId", roomId);
+                    intent.putExtra("callerId", String.valueOf(callerId));
+                    intent.putExtra("callerName", "Người dùng");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(intent);
+                }
+            );
+            socketDisposables.add(d);
+        } catch (Exception e) {
+            Timber.e(e, "Error processing incoming call request");
+        }
+    }
+
+    private void onIncomingCallEnded(Object[] args) {
+        if (args == null || args.length == 0 || args[0] == null) return;
+        try {
+            JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
+            JsonObject data = envelope.has("data") && !envelope.get("data").isJsonNull()
+                    ? envelope.getAsJsonObject("data")
+                    : envelope;
+            
+            if (!data.has("roomId") || data.get("roomId").isJsonNull()) {
+                Timber.w("onIncomingCallEnded: roomId is null or missing");
+                return;
+            }
+            
+            String roomId = data.get("roomId").getAsString();
+
+            Intent cancelIntent = new Intent(com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.ACTION_VIDEO_CALL_CANCELLED);
+            cancelIntent.putExtra("roomId", roomId);
+            cancelIntent.setPackage(context.getPackageName());
+            context.sendBroadcast(cancelIntent);
+            Timber.d("Sent local broadcast ACTION_VIDEO_CALL_CANCELLED for roomId: %s", roomId);
+        } catch (Exception e) {
+            Timber.e(e, "Error processing incoming call ended");
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -424,6 +594,7 @@ public class ChatRepository {
                     }
 
                     List<ConversationEntity> entities = new ArrayList<>();
+                    List<ConversationParticipantEntity> participantEntities = new ArrayList<>();
                     long currentUserId = 0;
                     try {
                         if (sessionManager.getUserId() != null)
@@ -435,11 +606,19 @@ public class ChatRepository {
                     isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
                     for (ConversationDto dto : response.getData()) {
+                        Timber.d("ConversationDto JSON: %s", gson.toJson(dto));
                         String partnerName = "Người dùng ẩn danh";
                         String partnerAvatar = null;
 
                         if (dto.participants != null) {
                             for (com.trototvn.trototandroid.data.model.chat.ParticipantDto p : dto.participants) {
+                                // Lưu participant entity cho database
+                                participantEntities.add(new ConversationParticipantEntity(
+                                        p.getSignalingId(),
+                                        dto.conversationId,
+                                        p.customerId
+                                ));
+
                                 if (p.customerId != currentUserId) {
                                     partnerName = (p.firstName != null ? p.firstName : "") + " " + (p.lastName != null ? p.lastName : "");
                                     partnerName = partnerName.trim();
@@ -453,7 +632,6 @@ public class ChatRepository {
                                         }
                                         partnerAvatar = baseUrl + "/api/files/" + p.avatarId;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -486,7 +664,8 @@ public class ChatRepository {
                                 lastDate));
                     }
 
-                    return chatDao.insertConversations(entities);
+                    return chatDao.insertConversations(entities)
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
                 });
     }
 
@@ -501,7 +680,7 @@ public class ChatRepository {
                 isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
                 return isoFormat.format(latestDate);
             }
-            return "";
+            return "1970-01-01T00:00:00.000Z";
         })
         .flatMap(since -> apiService.syncMissedMessages(since, 100))
         .flatMapCompletable(response -> {
@@ -701,9 +880,81 @@ public class ChatRepository {
                 return MessageType.IMAGE;
             case "FILE":
                 return MessageType.FILE;
+            case "CALL":
+                return MessageType.CALL;
             default:
                 return MessageType.TEXT;
         }
+    }
+
+    /**
+     * Lấy thông tin cuộc hội thoại theo ID
+     */
+    public Single<ConversationEntity> getConversationById(long conversationId) {
+        return chatDao.getConversationById(conversationId);
+    }
+
+    /**
+     * Lắng nghe sự kiện phòng cuộc gọi được tạo từ Socket
+     */
+    public Observable<Resource<CallRoomInfo>> observeCallRoomCreated() {
+        socketIOManager.off(SocketEvents.LISTEN_ROOM_CREATED);
+        socketIOManager.on(SocketEvents.LISTEN_ROOM_CREATED, this::onRoomCreated);
+        return callRoomSubject;
+    }
+
+    /**
+     * Khởi tạo quá trình gọi: tìm Callee ID rồi bắn socket tạo phòng
+     */
+    public void startCallHandshake(long conversationId, String partnerName) {
+        Timber.d("startCallHandshake: socket connected = %b", socketIOManager.isConnected());
+        if (!socketIOManager.isConnected()) {
+            callRoomSubject.onNext(Resource.error("Không có kết nối đến máy chủ cuộc gọi. Vui lòng kiểm tra lại mạng hoặc thử lại sau.", null));
+            return;
+        }
+        Disposable d = getPartnerId(conversationId)
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        partnerId -> {
+                            String calleeStr = String.valueOf(partnerId);
+                            if (partnerName != null) {
+                                activeHandshakes.put(calleeStr, partnerName);
+                            }
+                            JsonObject payload = new JsonObject();
+                            payload.addProperty("calleeId", calleeStr);
+                            socketIOManager.emit(SocketEvents.EMIT_CREATE_ROOM, payload);
+                            Timber.d("Emitted video:call:createRoom for partnerId: %d, socket connected: %b", partnerId, socketIOManager.isConnected());
+                        },
+                        error -> {
+                            Timber.e(error, "Failed to get partner ID to start call");
+                            callRoomSubject.onNext(Resource.error("Không tìm thấy đối phương trong cuộc hội thoại", null));
+                        }
+                );
+        socketDisposables.add(d);
+    }
+
+    /**
+     * Lấy user ID của đối phương trong cuộc hội thoại
+     */
+    public Single<Long> getPartnerId(long conversationId) {
+        long currentUserId = 0;
+        try {
+            String uid = sessionManager.getUserId();
+            if (uid != null) {
+                currentUserId = Long.parseLong(uid);
+            }
+        } catch (NumberFormatException ignored) {}
+
+        final long myId = currentUserId;
+        return chatDao.getParticipantsByConversationId(conversationId)
+                .map(participants -> {
+                    for (ConversationParticipantEntity p : participants) {
+                        if (p.customerId != myId) {
+                            return p.customerId;
+                        }
+                    }
+                    throw new Exception("Partner not found");
+                });
     }
 
     /**

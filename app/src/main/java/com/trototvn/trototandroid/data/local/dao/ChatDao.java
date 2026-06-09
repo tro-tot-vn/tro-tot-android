@@ -139,4 +139,16 @@ public interface ChatDao {
      */
     @Query("DELETE FROM messages WHERE conversation_id = :conversationId AND message_id NOT IN (SELECT message_id FROM messages WHERE conversation_id = :conversationId ORDER BY created_at DESC LIMIT :keepCount)")
     Completable deleteOldMessages(long conversationId, int keepCount);
+
+    @Query("SELECT * FROM conversations WHERE conversation_id = :conversationId LIMIT 1")
+    Single<ConversationEntity> getConversationById(long conversationId);
+
+    @Query("SELECT partner_avatar FROM conversations WHERE conversation_id IN (SELECT conversation_id FROM conversation_participants WHERE customer_id = :customerId) LIMIT 1")
+    String getPartnerAvatarByCustomerIdSync(long customerId);
+
+    @Query("SELECT partner_avatar FROM conversations WHERE conversation_id IN (SELECT conversation_id FROM conversation_participants WHERE participant_id = :participantId) LIMIT 1")
+    String getPartnerAvatarByParticipantIdSync(long participantId);
+
+    @Query("SELECT partner_name FROM conversations WHERE conversation_id IN (SELECT conversation_id FROM conversation_participants WHERE customer_id = :customerId) LIMIT 1")
+    String getPartnerNameByCustomerIdSync(long customerId);
 }

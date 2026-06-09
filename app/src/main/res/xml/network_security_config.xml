@@ -3,7 +3,7 @@
     <!-- Allow cleartext traffic for development -->
     <domain-config cleartextTrafficPermitted="true">
         <!-- Localhost -->
-        <domain includeSubdomains="true">khoakomlem-internal.ddns.net</domain> <!-- Android Emulator -->
+        <domain includeSubdomains="true">trototvn.lamdx4.servebeer.com</domain> <!-- Android Emulator -->
     </domain-config>
     
     <!-- Production: Allow cleartext globally for debug/dev -->

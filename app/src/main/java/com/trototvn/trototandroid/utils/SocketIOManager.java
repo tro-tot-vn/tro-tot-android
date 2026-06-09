@@ -1,6 +1,10 @@
 package com.trototvn.trototandroid.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.net.URISyntaxException;
 
@@ -59,15 +63,22 @@ public class SocketIOManager {
 
             // Thêm Token vào quá trình xác thực Socket
             String token = sessionManager.getToken();
+            String fcmToken = sessionManager.getFcmToken();
             if (token != null) {
                 // Cách 1: Truyền qua Auth Map (Chuẩn Socket.IO v3/v4)
                 java.util.Map<String, String> auth = new java.util.HashMap<>();
                 auth.put("token", token);
+                if (fcmToken != null) {
+                    auth.put("x-fcm-token", fcmToken);
+                }
                 options.auth = auth;
 
                 // Cách 2: Truyền qua Extra Headers (Nếu Backend yêu cầu Header)
                 java.util.Map<String, java.util.List<String>> headers = new java.util.HashMap<>();
                 headers.put("Authorization", java.util.Collections.singletonList("Bearer " + token));
+                if (fcmToken != null) {
+                    headers.put("x-fcm-token", java.util.Collections.singletonList(fcmToken));
+                }
                 options.extraHeaders = headers;
             }
 
@@ -194,5 +205,65 @@ public class SocketIOManager {
 
     public boolean isConnected() {
         return socket != null && socket.connected();
+    }
+
+    /**
+     * Emit a generic Socket.IO event with payload
+     */
+    public void emit(String event, Object... args) {
+        if (socket != null && socket.connected()) {
+            if (args != null && args.length > 0) {
+                Object[] processedArgs = new Object[args.length];
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof JsonObject) {
+                        try {
+                            processedArgs[i] = new JSONObject(args[i].toString());
+                        } catch (Exception e) {
+                            Timber.e(e, "Error converting GSON JsonObject to org.json.JSONObject");
+                            processedArgs[i] = args[i];
+                        }
+                    } else if (args[i] instanceof JsonArray) {
+                        try {
+                            processedArgs[i] = new JSONArray(args[i].toString());
+                        } catch (Exception e) {
+                            Timber.e(e, "Error converting GSON JsonArray to org.json.JSONArray");
+                            processedArgs[i] = args[i];
+                        }
+                    } else {
+                        processedArgs[i] = args[i];
+                    }
+                }
+                socket.emit(event, processedArgs);
+            } else {
+                socket.emit(event);
+            }
+        }
+    }
+
+    /**
+     * Register a socket listener dynamically
+     */
+    public void on(String event, io.socket.emitter.Emitter.Listener listener) {
+        if (socket != null) {
+            socket.on(event, listener);
+        }
+    }
+
+    /**
+     * Unregister a socket listener dynamically
+     */
+    public void off(String event) {
+        if (socket != null) {
+            socket.off(event);
+        }
+    }
+
+    /**
+     * Unregister a specific socket listener dynamically
+     */
+    public void off(String event, io.socket.emitter.Emitter.Listener listener) {
+        if (socket != null) {
+            socket.off(event, listener);
+        }
     }
 }

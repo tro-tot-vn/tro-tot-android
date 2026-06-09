@@ -19,6 +19,8 @@ import com.google.android.material.textview.MaterialTextView;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageType;
+import com.trototvn.trototandroid.databinding.ItemChatCallReceivedBinding;
+import com.trototvn.trototandroid.databinding.ItemChatCallSentBinding;
 import com.trototvn.trototandroid.databinding.ItemChatImageReceivedBinding;
 import com.trototvn.trototandroid.databinding.ItemChatImageSentBinding;
 import com.trototvn.trototandroid.databinding.ItemChatReceivedBinding;
@@ -30,6 +32,7 @@ import com.trototvn.trototandroid.utils.Constants;
 import com.trototvn.trototandroid.di.GlideApp;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.widget.ImageView;
@@ -53,9 +56,12 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
     private static final int VIEW_TYPE_TEXT_RECEIVED = 2;
     private static final int VIEW_TYPE_IMAGE_SENT = 3;
     private static final int VIEW_TYPE_IMAGE_RECEIVED = 4;
+    private static final int VIEW_TYPE_CALL_SENT = 5;
+    private static final int VIEW_TYPE_CALL_RECEIVED = 6;
 
     private final long currentUserId;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private String partnerAvatar;
 
     public interface OnMessageDeleteListener {
         void onDelete(MessageEntity message);
@@ -71,14 +77,20 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
         this.currentUserId = currentUserId;
     }
 
+    public void setPartnerAvatar(String partnerAvatar) {
+        this.partnerAvatar = partnerAvatar;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemViewType(int position) {
         MessageEntity message = getItem(position);
         boolean isSent = message.senderId == currentUserId;
-        boolean isImage = MessageType.IMAGE.equals(message.messageType);
-
-        if (isImage) {
+        
+        if (MessageType.IMAGE.equals(message.messageType)) {
             return isSent ? VIEW_TYPE_IMAGE_SENT : VIEW_TYPE_IMAGE_RECEIVED;
+        } else if (MessageType.CALL.equals(message.messageType)) {
+            return isSent ? VIEW_TYPE_CALL_SENT : VIEW_TYPE_CALL_RECEIVED;
         } else {
             return isSent ? VIEW_TYPE_TEXT_SENT : VIEW_TYPE_TEXT_RECEIVED;
         }
@@ -99,8 +111,14 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
         } else if (viewType == VIEW_TYPE_IMAGE_SENT) {
             ItemChatImageSentBinding binding = ItemChatImageSentBinding.inflate(inflater, parent, false);
             return new BaseViewHolder<>(binding);
-        } else {
+        } else if (viewType == VIEW_TYPE_IMAGE_RECEIVED) {
             ItemChatImageReceivedBinding binding = ItemChatImageReceivedBinding.inflate(inflater, parent, false);
+            return new BaseViewHolder<>(binding);
+        } else if (viewType == VIEW_TYPE_CALL_SENT) {
+            ItemChatCallSentBinding binding = ItemChatCallSentBinding.inflate(inflater, parent, false);
+            return new BaseViewHolder<>(binding);
+        } else {
+            ItemChatCallReceivedBinding binding = ItemChatCallReceivedBinding.inflate(inflater, parent, false);
             return new BaseViewHolder<>(binding);
         }
     }
@@ -162,7 +180,17 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvContent.setText(message.content);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
-            // Avatar xử lý sau
+            
+            if (partnerAvatar != null && !partnerAvatar.isEmpty()) {
+                GlideApp.with(binding.getRoot().getContext())
+                        .load(partnerAvatar)
+                        .placeholder(R.drawable.ic_default_avatar)
+                        .error(R.drawable.ic_default_avatar)
+                        .circleCrop()
+                        .into(binding.ivAvatar);
+            } else {
+                binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+            }
 
             binding.cvMessage.setOnLongClickListener(v -> {
                 showMessageContextMenu(v.getContext(), message, false);
@@ -252,6 +280,17 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             bindDateHeader(binding.tvDateHeader, message, position);
             binding.tvTime.setText(timeFormat.format(message.createdAt));
 
+            if (partnerAvatar != null && !partnerAvatar.isEmpty()) {
+                GlideApp.with(binding.getRoot().getContext())
+                        .load(partnerAvatar)
+                        .placeholder(R.drawable.ic_default_avatar)
+                        .error(R.drawable.ic_default_avatar)
+                        .circleCrop()
+                        .into(binding.ivAvatar);
+            } else {
+                binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+            }
+
             binding.ivContent.setOnLongClickListener(v -> {
                 showMessageContextMenu(v.getContext(), message, false);
                 return true;
@@ -288,6 +327,45 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 String finalUrl = fileUrl;
                 binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), finalUrl));
             }
+        } else if (holder.binding instanceof ItemChatCallSentBinding) {
+            ItemChatCallSentBinding binding = (ItemChatCallSentBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
+            binding.tvContent.setText(message.content);
+            binding.tvTime.setText(timeFormat.format(message.createdAt));
+            binding.cvMessage.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, true);
+                return true;
+            });
+        } else if (holder.binding instanceof ItemChatCallReceivedBinding) {
+            ItemChatCallReceivedBinding binding = (ItemChatCallReceivedBinding) holder.binding;
+            bindDateHeader(binding.tvDateHeader, message, position);
+            binding.tvContent.setText(message.content);
+            binding.tvTime.setText(timeFormat.format(message.createdAt));
+
+            // Set call icon tint based on content
+            if (message.content != null && message.content.toLowerCase().contains(Constants.CALL_MISSED_KEYWORD)) {
+                binding.ivCallIcon.setImageResource(R.drawable.ic_phone);
+                binding.ivCallIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#F4212E"))); // Red
+            } else {
+                binding.ivCallIcon.setImageResource(R.drawable.ic_phone);
+                binding.ivCallIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#71767B"))); // Grey
+            }
+
+            if (partnerAvatar != null && !partnerAvatar.isEmpty()) {
+                GlideApp.with(binding.getRoot().getContext())
+                        .load(partnerAvatar)
+                        .placeholder(R.drawable.ic_default_avatar)
+                        .error(R.drawable.ic_default_avatar)
+                        .circleCrop()
+                        .into(binding.ivAvatar);
+            } else {
+                binding.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+            }
+
+            binding.cvMessage.setOnLongClickListener(v -> {
+                showMessageContextMenu(v.getContext(), message, false);
+                return true;
+            });
         }
     }
 

@@ -2,6 +2,7 @@ package com.trototvn.trototandroid.data.remote;
 
 import com.trototvn.trototandroid.data.model.ResponseData;
 import com.trototvn.trototandroid.data.model.User;
+import com.trototvn.trototandroid.data.model.video.IceConfigDto;
 import com.trototvn.trototandroid.data.model.auth.LoginRequest;
 import com.trototvn.trototandroid.data.model.auth.LoginResponse;
 import com.trototvn.trototandroid.data.model.auth.RefreshTokenRequest;
@@ -383,4 +384,18 @@ public interface ApiService {
      */
     @POST("api/notifications/tokens")
     Single<ResponseData<Object>> registerFcmToken(@Body com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request);
+
+    /**
+     * POST - Unregister FCM Token (Logout)
+     */
+    @POST("api/notifications/tokens/unregister")
+    Single<ResponseData<String>> unregisterFcmToken(@Body com.trototvn.trototandroid.data.model.notification.FcmTokenRequest request);
+
+    // ========== Video Call ==========
+
+    /**
+     * GET - Retrieve ICE Server configurations for WebRTC
+     */
+    @GET("api/video-call/ice-config")
+    Single<ResponseData<IceConfigDto>> getIceConfig();
 }

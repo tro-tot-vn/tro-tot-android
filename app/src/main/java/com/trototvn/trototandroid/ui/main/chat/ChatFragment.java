@@ -1,5 +1,6 @@
 package com.trototvn.trototandroid.ui.main.chat;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -13,7 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.trototvn.trototandroid.App;
 import com.trototvn.trototandroid.data.local.entity.MessageEntity;
 import com.trototvn.trototandroid.data.local.entity.MessageStatus;
+import com.trototvn.trototandroid.di.GlideApp;
+import com.trototvn.trototandroid.ui.videocall.VideoCallActivity;
 import com.trototvn.trototandroid.data.model.Resource;
+import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.databinding.FragmentChatDetailBinding;
 import com.trototvn.trototandroid.ui.base.BaseFragment;
 import com.trototvn.trototandroid.utils.SessionManager;
@@ -134,6 +138,12 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
         binding.btnAttach.setOnClickListener(v -> {
             imagePicker.launch("image/*");
         });
+
+        // Event: Gọi điện thoại video
+        binding.btnCall.setOnClickListener(v -> {
+            String partnerName = getArguments() != null ? getArguments().getString(ARG_PARTNER_NAME) : getString(com.trototvn.trototandroid.R.string.default_user_name);
+            viewModel.startCall(partnerName);
+        });
     }
 
     @Override
@@ -205,6 +215,54 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
                     binding.btnSend.setEnabled(true);
                     binding.btnAttach.setEnabled(true);
                     showToast(resource.getMessage());
+                    break;
+            }
+        });
+
+        // Quan sát thông tin hội thoại để tải ảnh đại diện đối phương
+        viewModel.getConversationLiveData().observe(getViewLifecycleOwner(), conversation -> {
+            if (conversation != null) {
+                // Cập nhật avatar đối phương vào Adapter tin nhắn
+                adapter.setPartnerAvatar(conversation.partnerAvatar);
+
+                // Hiển thị ảnh đại diện trên Toolbar
+                if (conversation.partnerAvatar != null && !conversation.partnerAvatar.isEmpty()) {
+                    GlideApp.with(this)
+                            .load(conversation.partnerAvatar)
+                            .placeholder(com.trototvn.trototandroid.R.drawable.ic_default_avatar)
+                            .error(com.trototvn.trototandroid.R.drawable.ic_default_avatar)
+                            .circleCrop()
+                            .into(binding.toolbarAvatar);
+                } else {
+                    binding.toolbarAvatar.setImageResource(com.trototvn.trototandroid.R.drawable.ic_default_avatar);
+                }
+            }
+        });
+
+        // Quan sát trạng thái tạo phòng gọi để mở VideoCallActivity
+        viewModel.getCallRoomLiveData().observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+            switch (resource.getStatus()) {
+                case LOADING:
+                    binding.btnCall.setEnabled(false);
+                    break;
+                case SUCCESS:
+                    binding.btnCall.setEnabled(true);
+                    if (resource.getData() != null) {
+                        ChatRepository.CallRoomInfo callInfo = resource.getData();
+                        Intent intent = new Intent(getContext(), VideoCallActivity.class);
+                        intent.putExtra("roomId", callInfo.roomId);
+                        intent.putExtra("partnerId", callInfo.partnerId);
+                        intent.putExtra("partnerName", callInfo.partnerName);
+                        intent.putExtra("isCaller", true);
+                        startActivity(intent);
+                        viewModel.resetCallRoomState();
+                    }
+                    break;
+                case ERROR:
+                    binding.btnCall.setEnabled(true);
+                    showToast(resource.getMessage());
+                    viewModel.resetCallRoomState();
                     break;
             }
         });
