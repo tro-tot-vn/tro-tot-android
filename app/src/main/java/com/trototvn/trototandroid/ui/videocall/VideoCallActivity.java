@@ -1,6 +1,8 @@
 package com.trototvn.trototandroid.ui.videocall;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -9,7 +11,10 @@ import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.gson.Gson;
@@ -57,6 +62,21 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
     private String partnerId;
     private String partnerName;
     private boolean isCaller;
+
+    private final ActivityResultLauncher<String[]> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                Boolean cameraGranted = result.get(Manifest.permission.CAMERA);
+                Boolean recordAudioGranted = result.get(Manifest.permission.RECORD_AUDIO);
+                
+                if (cameraGranted != null && cameraGranted && recordAudioGranted != null && recordAudioGranted) {
+                    Timber.d("Quyền CAMERA và RECORD_AUDIO đã được cấp đầy đủ");
+                    viewModel.fetchIceConfig();
+                } else {
+                    Timber.w("Quyền CAMERA hoặc RECORD_AUDIO bị từ chối");
+                    showToast("Ứng dụng cần quyền Camera và Micro để thực hiện cuộc gọi video");
+                    finish();
+                }
+            });
 
     private boolean isMuted = false;
     private boolean isVideoDisabled = false;
@@ -145,8 +165,26 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         serviceIntent.putExtra(CallForegroundService.EXTRA_PARTNER_NAME, partnerName);
         startService(serviceIntent);
 
-        // Lấy thông số cấu hình máy chủ ICE từ Backend
-        viewModel.fetchIceConfig();
+        // Kiểm tra và yêu cầu quyền trước khi kết nối đàm thoại
+        checkAndRequestPermissions();
+    }
+
+    private void checkAndRequestPermissions() {
+        String[] permissions = new String[]{
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+        };
+
+        boolean hasCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        boolean hasAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+
+        if (hasCamera && hasAudio) {
+            Timber.d("Quyền CAMERA và RECORD_AUDIO đã được cấp từ trước");
+            viewModel.fetchIceConfig();
+        } else {
+            Timber.d("Yêu cầu quyền CAMERA và RECORD_AUDIO");
+            requestPermissionLauncher.launch(permissions);
+        }
     }
 
     @Override
@@ -231,6 +269,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         socketIOManager.on(SocketEvents.LISTEN_ICE_CANDIDATE, onIceCandidateReceived);
         socketIOManager.on(SocketEvents.LISTEN_ENDED, onCallEnded);
         socketIOManager.on(SocketEvents.LISTEN_REJECTED, onCallRejected);
+        socketIOManager.on(SocketEvents.LISTEN_ERROR, onCallError);
         
         // Lắng nghe sự kiện đối phương thoát khỏi phòng (Sự kiện MỚI)
         socketIOManager.on("video:call:roomLeft", onPeerLeft);
@@ -244,6 +283,7 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         socketIOManager.off(SocketEvents.LISTEN_ICE_CANDIDATE);
         socketIOManager.off(SocketEvents.LISTEN_ENDED);
         socketIOManager.off(SocketEvents.LISTEN_REJECTED);
+        socketIOManager.off(SocketEvents.LISTEN_ERROR);
         socketIOManager.off("video:call:roomLeft");
         socketIOManager.off("video:call:participantLeft");
     }
@@ -406,6 +446,22 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         });
     };
 
+    private final io.socket.emitter.Emitter.Listener onCallError = args -> {
+        Timber.e("onCallError - Lỗi từ Signaling Server");
+        if (args != null && args.length > 0 && args[0] != null) {
+            try {
+                JsonObject envelope = gson.fromJson(args[0].toString(), JsonObject.class);
+                if (envelope.has("message")) {
+                    String message = envelope.get("message").getAsString();
+                    runOnUiThread(() -> showToast("Lỗi cuộc gọi: " + message));
+                }
+            } catch (Exception e) {
+                Timber.e(e, "Lỗi phân tích cú pháp error envelope");
+            }
+        }
+        runOnUiThread(this::finish);
+    };
+
     // ========== Điều khiển phần cứng và UI đàm thoại ==========
 
     private void toggleMute() {
@@ -492,6 +548,14 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         }
         if (binding.remoteVideoView != null) {
             binding.remoteVideoView.release();
+        }
+
+        // Báo cho server rời phòng cuộc gọi để làm sạch phòng và báo cho client đối phương
+        if (roomId != null) {
+            JsonObject leavePayload = new JsonObject();
+            leavePayload.addProperty("roomId", roomId);
+            socketIOManager.emit(SocketEvents.EMIT_LEAVE_ROOM, leavePayload);
+            Timber.d("Đã gửi socket leaveRoom cho roomId: %s", roomId);
         }
 
         // Hủy lắng nghe các sự kiện socket
