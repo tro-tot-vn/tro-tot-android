@@ -43,8 +43,59 @@ public class NetworkModule {
     public Gson provideGson() {
         return new GsonBuilder()
                 .setLenient()
-                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                .registerTypeAdapter(java.util.Date.class, new GsonDateAdapter())
                 .create();
+    }
+
+    private static class GsonDateAdapter implements com.google.gson.JsonSerializer<java.util.Date>, com.google.gson.JsonDeserializer<java.util.Date> {
+        private final java.text.SimpleDateFormat[] formats;
+
+        public GsonDateAdapter() {
+            formats = new java.text.SimpleDateFormat[]{
+                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US),
+                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US),
+                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.US),
+                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+            };
+            for (java.text.SimpleDateFormat f : formats) {
+                f.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
+            }
+        }
+
+        @Override
+        public com.google.gson.JsonElement serialize(java.util.Date src, java.lang.reflect.Type typeOfSrc, com.google.gson.JsonSerializationContext context) {
+            synchronized (formats[0]) {
+                return new com.google.gson.JsonPrimitive(formats[0].format(src));
+            }
+        }
+
+        @Override
+        public java.util.Date deserialize(com.google.gson.JsonElement json, java.lang.reflect.Type typeOfT, com.google.gson.JsonDeserializationContext context) throws com.google.gson.JsonParseException {
+            String cleanStr = json.getAsString().trim();
+            if (cleanStr.isEmpty()) {
+                return null;
+            }
+
+            for (java.text.SimpleDateFormat format : formats) {
+                try {
+                    synchronized (format) {
+                        return format.parse(cleanStr);
+                    }
+                } catch (Exception ignored) {}
+            }
+
+            try {
+                long epochTime = Long.parseLong(cleanStr);
+                if (epochTime > 0) {
+                    if (epochTime < 10000000000L) {
+                        return new java.util.Date(epochTime * 1000);
+                    }
+                    return new java.util.Date(epochTime);
+                }
+            } catch (NumberFormatException ignored) {}
+
+            throw new com.google.gson.JsonParseException("Unparseable date: \"" + cleanStr + "\"");
+        }
     }
 
     @Provides

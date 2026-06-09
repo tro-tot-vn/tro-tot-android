@@ -284,11 +284,13 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
     public void onResume() {
         super.onResume();
         App.activeConversationId = String.valueOf(conversationId);
+        viewModel.joinConversation(conversationId);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        viewModel.leaveConversation(conversationId);
         App.activeConversationId = null;
     }
 }

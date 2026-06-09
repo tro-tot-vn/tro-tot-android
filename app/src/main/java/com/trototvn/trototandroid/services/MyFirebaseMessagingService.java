@@ -224,7 +224,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // 1. Phân tích định dạng chuẩn ISO 8601 (Khuyến nghị)
         try {
             java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
-            isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
             java.util.Date parsedDate = isoFormat.parse(cleanStr);
             if (parsedDate != null) return parsedDate.getTime();
         } catch (Exception ignored) {

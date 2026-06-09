@@ -30,6 +30,7 @@ public class SocketIOManager {
 
     private final PublishSubject<String> connectionStatusSubject = PublishSubject.create();
     private final PublishSubject<Object> messageReceivedSubject = PublishSubject.create();
+    private final PublishSubject<Object> messageReadSubject = PublishSubject.create();
     private final PublishSubject<Object> typingStatusSubject = PublishSubject.create();
     private final PublishSubject<Object> userStatusSubject = PublishSubject.create();
 
@@ -98,6 +99,16 @@ public class SocketIOManager {
         socket.on(Socket.EVENT_CONNECT, args -> {
             Timber.i("Socket connected");
             connectionStatusSubject.onNext(SocketEvents.CONNECTION);
+            
+            // Tự động rejoin conversation room khi kết nối lại nếu đang ở màn hình chat
+            try {
+                if (com.trototvn.trototandroid.App.activeConversationId != null) {
+                    long activeId = Long.parseLong(com.trototvn.trototandroid.App.activeConversationId);
+                    joinConversation(activeId);
+                }
+            } catch (Exception e) {
+                Timber.e(e, "Error rejoining conversation room on socket connect");
+            }
         });
 
         socket.on(Socket.EVENT_DISCONNECT, args -> {
@@ -113,6 +124,11 @@ public class SocketIOManager {
         socket.on(SocketEvents.MESSAGE_RECEIVED, args -> {
             Timber.d("Socket message received: %s", args[0]);
             messageReceivedSubject.onNext(args[0]);
+        });
+
+        socket.on(SocketEvents.MESSAGE_READ, args -> {
+            Timber.d("Socket message read: %s", args[0]);
+            messageReadSubject.onNext(args[0]);
         });
 
         socket.on(SocketEvents.TYPING_START, args -> typingStatusSubject.onNext(args[0]));
@@ -174,6 +190,34 @@ public class SocketIOManager {
     }
 
     /**
+     * Emit message read event
+     */
+    public void emitMessageRead(long conversationId, java.util.List<Long> messageIds) {
+        if (socket != null && socket.connected()) {
+            com.google.gson.JsonObject data = new com.google.gson.JsonObject();
+            data.addProperty("conversationId", conversationId);
+            
+            com.google.gson.JsonArray idsArray = new com.google.gson.JsonArray();
+            for (Long id : messageIds) {
+                idsArray.add(id);
+            }
+            data.add("messageIds", idsArray);
+            
+            if (!messageIds.isEmpty()) {
+                data.addProperty("messageId", messageIds.get(messageIds.size() - 1));
+            }
+            
+            try {
+                org.json.JSONObject payload = new org.json.JSONObject(data.toString());
+                socket.emit(SocketEvents.MESSAGE_READ, payload);
+                Timber.d("Emitted message:read via socket: %s", payload);
+            } catch (Exception e) {
+                Timber.e(e, "Error emitting message:read");
+            }
+        }
+    }
+
+    /**
      * Emit typing status
      */
     public void setTyping(long conversationId, boolean isTyping) {
@@ -193,6 +237,10 @@ public class SocketIOManager {
 
     public Observable<Object> getMessageReceived() {
         return messageReceivedSubject;
+    }
+
+    public Observable<Object> getMessageRead() {
+        return messageReadSubject;
     }
 
     public Observable<Object> getTypingStatus() {

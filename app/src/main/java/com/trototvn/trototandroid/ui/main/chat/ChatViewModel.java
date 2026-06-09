@@ -203,9 +203,9 @@ public class ChatViewModel extends BaseViewModel {
      * Đánh dấu tin nhắn đã đọc
      */
     public void markAsRead(List<Long> messageIds) {
-        if (messageIds == null || messageIds.isEmpty()) return;
+        if (messageIds == null || messageIds.isEmpty() || conversationId == -1) return;
 
-        addDisposable(chatRepository.markMessagesAsRead(messageIds)
+        addDisposable(chatRepository.markMessagesAsRead(conversationId, messageIds)
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         () -> Timber.d("Marked %d messages as read", messageIds.size()),
@@ -271,5 +271,13 @@ public class ChatViewModel extends BaseViewModel {
      */
     public void resetCallRoomState() {
         callRoomLiveData.setValue(null);
+    }
+
+    public void joinConversation(long conversationId) {
+        chatRepository.joinConversation(conversationId);
+    }
+
+    public void leaveConversation(long conversationId) {
+        chatRepository.leaveConversation(conversationId);
     }
 }
