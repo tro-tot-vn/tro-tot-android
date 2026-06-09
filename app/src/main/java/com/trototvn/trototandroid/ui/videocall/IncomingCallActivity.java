@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.databinding.ActivityIncomingCallBinding;
 import com.trototvn.trototandroid.ui.base.BaseActivity;
+import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.utils.SocketEvents;
 import com.trototvn.trototandroid.utils.SocketIOManager;
 
@@ -42,6 +43,9 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
 
     @Inject
     SocketIOManager socketIOManager;
+
+    @Inject
+    SessionManager sessionManager;
 
     private String roomId;
     private String callerId;
@@ -87,6 +91,12 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
         callerId = getIntent().getStringExtra("callerId");
         callerName = getIntent().getStringExtra("callerName");
         callerAvatar = getIntent().getStringExtra("callerAvatar");
+
+        // Đảm bảo Socket đã kết nối khi Activity được mở trực tiếp từ FCM push khi app bị đóng (killed state)
+        String userId = sessionManager.getUserId();
+        if (userId != null) {
+            socketIOManager.connect(userId);
+        }
 
         Timber.d("IncomingCallActivity bắt đầu cho phòng: %s, người gọi: %s", roomId, callerName);
 

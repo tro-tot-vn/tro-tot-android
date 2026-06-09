@@ -25,6 +25,7 @@ import com.trototvn.trototandroid.data.model.video.IceConfigDto;
 import com.trototvn.trototandroid.databinding.ActivityVideoCallBinding;
 import com.trototvn.trototandroid.services.CallForegroundService;
 import com.trototvn.trototandroid.ui.base.BaseActivity;
+import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.utils.SocketEvents;
 import com.trototvn.trototandroid.utils.SocketIOManager;
 import com.trototvn.trototandroid.utils.WebRtcManager;
@@ -55,6 +56,9 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
 
     @Inject
     Gson gson;
+
+    @Inject
+    SessionManager sessionManager;
 
     private VideoCallViewModel viewModel;
 
@@ -157,6 +161,12 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         isCaller = getIntent().getBooleanExtra("isCaller", false);
 
         super.onCreate(savedInstanceState);
+
+        // Đảm bảo Socket đã kết nối (phòng hờ trường hợp app ở Killed/Background state khi mở đàm thoại)
+        String userId = sessionManager.getUserId();
+        if (userId != null) {
+            socketIOManager.connect(userId);
+        }
 
         // Khởi động Foreground Service để giữ kết nối camera/micro
         Intent serviceIntent = new Intent(this, CallForegroundService.class);
