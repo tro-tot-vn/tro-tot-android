@@ -488,15 +488,23 @@ public class ChatRepository {
     public void observeIncomingMessages() {
         Disposable dReceived = socketIOManager.getMessageReceived()
                 .subscribeOn(Schedulers.io())
+                .flatMapCompletable(raw -> saveIncomingMessage(raw.toString()).onErrorComplete(err -> {
+                    Timber.e(err, "Error in saveIncomingMessage stream");
+                    return true;
+                }))
                 .subscribe(
-                        raw -> saveIncomingMessage(raw.toString()),
+                        () -> {},
                         error -> Timber.e(error, "Socket message stream error"));
         socketDisposables.add(dReceived);
 
         Disposable dRead = socketIOManager.getMessageRead()
                 .subscribeOn(Schedulers.io())
+                .flatMapCompletable(raw -> handleMessageReadEvent(raw.toString()).onErrorComplete(err -> {
+                    Timber.e(err, "Error in handleMessageReadEvent stream");
+                    return true;
+                }))
                 .subscribe(
-                        raw -> handleMessageReadEvent(raw.toString()),
+                        () -> {},
                         error -> Timber.e(error, "Socket message read stream error"));
         socketDisposables.add(dRead);
     }
@@ -512,11 +520,15 @@ public class ChatRepository {
     /**
      * Xử lý sự kiện message:read từ Socket.IO và cập nhật trạng thái trong database thành READ
      */
-    public void handleMessageReadEvent(String jsonPayload) {
-        Timber.d("handleMessageReadEvent: raw payload = %s", jsonPayload);
-        if (jsonPayload == null || jsonPayload.trim().isEmpty()) return;
+    public Completable handleMessageReadEvent(String jsonPayload) {
+        return Completable.fromAction(() -> {
+            Timber.d("handleMessageReadEvent: raw payload = %s", jsonPayload);
+        })
+        .andThen(Completable.defer(() -> {
+            if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
+                return Completable.complete();
+            }
 
-        try {
             com.google.gson.JsonElement element = gson.fromJson(jsonPayload, com.google.gson.JsonElement.class);
             List<Long> readIds = new ArrayList<>();
 
@@ -554,19 +566,18 @@ public class ChatRepository {
                 for (Long id : readIds) {
                     updates.add(chatDao.updateMessageStatus(id, MessageStatus.READ, System.currentTimeMillis()));
                 }
-                Disposable d = Completable.merge(updates)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                () -> Timber.d("Successfully marked messages %s as READ from socket event", readIds),
-                                err -> Timber.e(err, "Failed to update message statuses for message:read socket event")
-                        );
-                socketDisposables.add(d);
+                return Completable.merge(updates)
+                        .doOnComplete(() -> Timber.d("Successfully marked messages %s as READ from socket event", readIds))
+                        .doOnError(err -> Timber.e(err, "Failed to update message statuses for message:read socket event"));
             } else {
                 Timber.w("No message IDs extracted from message:read payload: %s", jsonPayload);
+                return Completable.complete();
             }
-        } catch (Exception e) {
+        }))
+        .onErrorComplete(e -> {
             Timber.e(e, "Error parsing message:read socket payload: %s", jsonPayload);
-        }
+            return true;
+        });
     }
 
     private void extractIdsFromJsonObject(com.google.gson.JsonObject obj, List<Long> readIds) {
@@ -602,8 +613,8 @@ public class ChatRepository {
     /**
      * Lưu tin nhắn nhận được từ Socket vào Room DB và cập nhật hội thoại.
      */
-    public void saveIncomingMessage(String jsonPayload) {
-        Single.fromCallable(() -> {
+    public Completable saveIncomingMessage(String jsonPayload) {
+        return Single.fromCallable(() -> {
             SocketMessageEvent event = gson.fromJson(jsonPayload, SocketMessageEvent.class);
             return mapSocketEventToEntity(event);
         })
@@ -622,11 +633,8 @@ public class ChatRepository {
             return chatDao.insertMessage(entity)
                     .andThen(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
         })
-        .subscribeOn(Schedulers.io())
-        .subscribe(
-                () -> Timber.d("Saved incoming message & updated conversation"),
-                err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage())
-        );
+        .doOnComplete(() -> Timber.d("Saved incoming message & updated conversation"))
+        .doOnError(err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage()));
     }
 
     public void stopObservingIncomingMessages() {
