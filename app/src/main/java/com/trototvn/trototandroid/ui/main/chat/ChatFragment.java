@@ -21,6 +21,8 @@ import com.trototvn.trototandroid.data.repository.ChatRepository;
 import com.trototvn.trototandroid.databinding.FragmentChatDetailBinding;
 import com.trototvn.trototandroid.ui.base.BaseFragment;
 import com.trototvn.trototandroid.utils.SessionManager;
+import com.trototvn.trototandroid.utils.SocketIOManager;
+import com.trototvn.trototandroid.utils.WebRtcManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,40 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
     @Inject
     SessionManager sessionManager;
 
+    @Inject
+    SocketIOManager socketIOManager;
+
+    @Inject
+    WebRtcManager webRtcManager;
+
     private ChatViewModel viewModel;
+
+    private String pendingCallPartnerName;
+
+    private final ActivityResultLauncher<String[]> requestCallPermissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                Boolean cameraGranted = result.get(android.Manifest.permission.CAMERA);
+                Boolean recordAudioGranted = result.get(android.Manifest.permission.RECORD_AUDIO);
+                if (cameraGranted != null && cameraGranted && recordAudioGranted != null && recordAudioGranted) {
+                    checkSocketAndStartCall();
+                } else {
+                    showToast("Bạn cần cấp quyền Camera và Micro để thực hiện cuộc gọi");
+                }
+            });
+
+    private void checkSocketAndStartCall() {
+        if (pendingCallPartnerName == null) return;
+        if (!socketIOManager.isConnected()) {
+            showToast("Không có kết nối đến máy chủ cuộc gọi. Vui lòng thử lại sau.");
+            return;
+        }
+        if (webRtcManager.getPeerConnection() != null) {
+            showToast("Bạn đang trong một cuộc gọi khác");
+            return;
+        }
+        viewModel.startCall(pendingCallPartnerName);
+    }
+
     private ChatAdapter adapter;
     private long conversationId;
     private boolean isInitialLoad = true;
@@ -142,7 +177,21 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
         // Event: Gọi điện thoại video
         binding.btnCall.setOnClickListener(v -> {
             String partnerName = getArguments() != null ? getArguments().getString(ARG_PARTNER_NAME) : getString(com.trototvn.trototandroid.R.string.default_user_name);
-            viewModel.startCall(partnerName);
+            pendingCallPartnerName = partnerName;
+
+            String[] permissions = new String[]{
+                    android.Manifest.permission.CAMERA,
+                    android.Manifest.permission.RECORD_AUDIO
+            };
+
+            boolean hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+            boolean hasAudio = androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+
+            if (hasCamera && hasAudio) {
+                checkSocketAndStartCall();
+            } else {
+                requestCallPermissionsLauncher.launch(permissions);
+            }
         });
     }
 

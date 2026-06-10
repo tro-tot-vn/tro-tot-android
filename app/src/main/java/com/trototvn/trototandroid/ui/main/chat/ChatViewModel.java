@@ -262,6 +262,11 @@ public class ChatViewModel extends BaseViewModel {
      */
     public void startCall(String partnerName) {
         if (conversationId == -1) return;
+        // Debounce: Nếu đang trong tiến trình tạo phòng cuộc gọi, bỏ qua lượt nhấn tiếp theo
+        if (callRoomLiveData.getValue() != null && callRoomLiveData.getValue().getStatus() == Resource.Status.LOADING) {
+            Timber.d("startCall: Handshake is already loading, ignoring request");
+            return;
+        }
         callRoomLiveData.setValue(Resource.loading(null));
         chatRepository.startCallHandshake(conversationId, partnerName);
     }

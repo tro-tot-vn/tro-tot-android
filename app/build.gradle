@@ -109,5 +109,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging'
 
     // WebRTC for Video Call
-    implementation 'io.github.webrtc-sdk:android:104.5112.03'
+    implementation 'io.github.webrtc-sdk:android:144.7559.05'
 }
