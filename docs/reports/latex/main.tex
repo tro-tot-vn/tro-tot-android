@@ -1,0 +1,62 @@
+% ============================================================
+%  MAIN.TEX — File gốc, KHÔNG chỉnh sửa trực tiếp nội dung
+%  Chỉ \input{} các chapter — trưởng nhóm giữ file này
+%  Compiler: XeLaTeX (khuyến nghị) hoặc pdfLaTeX
+%
+%  BUILD:
+%    xelatex main.tex
+%    biber main
+%    xelatex main.tex
+%    xelatex main.tex
+% ============================================================
+
+\documentclass[14pt, a4paper]{report}
+
+% ---- Load toàn bộ preamble --------------------------------
+\input{preamble}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ---------- Trang bìa (thành viên tự làm riêng) ------------
+% \input{cover}   % Bỏ comment khi có file bìa
+
+% ---------- Mục lục -----------------------------------------
+\tableofcontents
+\newpage
+
+% ---------- Danh mục hình ảnh -------------------------------
+\listoffigures
+\newpage
+
+% ---------- Danh mục bảng -----------------------------------
+\listoftables
+\newpage
+
+% ============================================================
+%  NỘI DUNG CHÍNH
+% ============================================================
+
+% --- Chương 1: Tổng quan hệ thống (trưởng nhóm) ------------
+\input{chapter1_system/chapter1}
+
+% --- Chương 2: Xác thực & Hồ sơ ----------------------------
+\input{chapter2_auth_profile/chapter2}
+
+% --- Chương 3: Bài đăng & Tìm kiếm -------------------------
+\input{chapter3_post_search/chapter3}
+
+% --- Chương 4: Chat & Video Call ----------------------------
+\input{chapter4_chat_videocall/chapter4}
+
+% --- Chương 5: Quản trị hệ thống (Admin) -------------------
+\input{chapter5_admin/chapter5}
+
+% ============================================================
+%  TÀI LIỆU THAM KHẢO
+% ============================================================
+\newpage
+\printbibliography[heading=bibintoc, title={Tài liệu tham khảo}]
+
+\end{document}
