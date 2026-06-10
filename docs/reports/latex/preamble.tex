@@ -3,9 +3,11 @@
 % ============================================================
 
 % --- Encoding & Language ---
-\usepackage[utf8]{inputenc}
-\usepackage[T5]{fontenc}
-\usepackage[vietnamese]{babel}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{vietnamese}
+% \setmainfont{Times New Roman} % Bỏ comment nếu muốn dùng font Times New Roman
+
 
 % --- Page Layout ---
 \usepackage[
@@ -41,7 +43,7 @@
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{array}
-\usepackage{makecell}
+% \usepackage{makecell} % Removed because makecell.sty is not found
 \renewcommand{\arraystretch}{1.4}
 
 % --- Colors ---
@@ -103,3 +105,7 @@
 \newcommand{\code}[1]{\texttt{\small #1}}
 \newcommand{\tech}[1]{\textbf{\textit{#1}}}
 \newcommand{\screen}[1]{\textit{``#1''}}
+
+% --- Bibliography ---
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
+\addbibresource{references.bib}
