@@ -1,0 +1,24 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryBorderColor': '#0288d1', 'primaryTextColor': '#01579b', 'lineColor': '#424242', 'secondaryColor': '#f3e5f5', 'tertiaryColor': '#e8f5e9'}}}%%
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant V as View (UI)
+    participant VM as ViewModel
+    participant R as Repository
+    participant D as Data Source (API/DB)
+
+    U->>V: Tương tác (Click/Load)
+    V->>VM: Gọi hàm tương ứng
+    activate VM
+    VM-->>V: Emit State = LOADING
+    VM->>R: Yêu cầu lấy dữ liệu
+    activate R
+    R->>D: Gọi lệnh lấy dữ liệu thực tế
+    activate D
+    D-->>R: Trả về kết quả (Success/Error)
+    deactivate D
+    R-->>VM: Trả về kết quả qua RxJava
+    deactivate R
+    VM-->>V: Emit State = SUCCESS / ERROR
+    deactivate VM
+    Note over V,VM: UI quan sát LiveData tự động cập nhật

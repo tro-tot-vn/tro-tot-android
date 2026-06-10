@@ -1,0 +1,150 @@
+% ============================================================
+%  CHƯƠNG 1: TỔNG QUAN HỆ THỐNG
+%  Phụ trách: [Trưởng nhóm]
+%  Ghi chú: File này được \input{} từ main.tex
+% ============================================================
+
+\chapter{Tổng quan hệ thống}
+
+% ============================================================
+\section{Giới thiệu đề tài}
+% ============================================================
+
+\subsection{Bối cảnh và vấn đề}
+Hiện nay, nhu cầu tìm kiếm phòng trọ tại các thành phố lớn ngày càng tăng cao. Tuy nhiên, việc tìm kiếm thông tin phòng trọ thường gặp nhiều khó khăn như thông tin không rõ ràng, hình ảnh không chân thực, hoặc khó khăn trong việc liên lạc trực tiếp với chủ trọ. Các ứng dụng hiện tại thường thiếu các tính năng tương tác trực tiếp và quản lý tiện lợi.
+
+\subsection{Mục tiêu đề tài}
+Dự án "Trọ Tốt Android" được phát triển nhằm cung cấp một nền tảng trên thiết bị di động (hệ điều hành Android) giúp kết nối người thuê và chủ nhà trọ một cách nhanh chóng, minh bạch và an toàn. Các mục tiêu cụ thể bao gồm:
+\begin{itemize}
+    \item Cung cấp thông tin phòng trọ chi tiết, có định vị bản đồ và đa phương tiện (ảnh, video).
+    \item Tích hợp tính năng Chat thời gian thực (Real-time Chat) và Gọi Video (Video Call) giúp hai bên dễ dàng trao đổi và xem phòng từ xa.
+    \item Cung cấp hệ thống quản lý tin đăng, đánh giá chủ trọ, và quản lý gói đăng ký (Subscription) cho tài khoản chủ trọ.
+\end{itemize}
+
+
+\subsection{Phạm vi ứng dụng}
+Ứng dụng được thiết kế cho hệ điều hành Android, nhắm tới hai đối tượng người dùng chính:
+\begin{itemize}
+    \item \textbf{Người thuê trọ:} Tìm kiếm, lọc phòng trọ, lưu tin, xem lịch sử, đánh giá, nhắn tin và gọi video với chủ trọ.
+    \item \textbf{Chủ nhà trọ:} Đăng tin cho thuê, quản lý tin đăng, mua gói dịch vụ (subscription), nhận tin nhắn/cuộc gọi từ người thuê.
+\end{itemize}
+
+% ============================================================
+\section{Công nghệ và thư viện sử dụng}
+% ============================================================
+
+\subsection{Ngôn ngữ lập trình}
+Dự án được phát triển 100\% bằng ngôn ngữ \textbf{Java} cho Android, đảm bảo tính ổn định và tương thích với các thiết bị Android từ API level 27 (Android 8.1) trở lên (Target SDK 36).
+
+\subsection{Thư viện và framework}
+Dự án tận dụng các thư viện và framework hiện đại, bao gồm:
+\begin{itemize}
+    \item \textbf{UI Components:} AndroidX AppCompat, Material Design, ConstraintLayout, SwipeRefreshLayout, DotsIndicator (cho xem ảnh/video trượt), PhotoView (zoom ảnh).
+    \item \textbf{Kiến trúc \& Lifecycle:} ViewModel, LiveData, Navigation Component, Paging 3 (cho Paging \& Infinite scroll).
+    \item \textbf{Networking \& API:} Retrofit 2, OkHttp 3 (kèm Logging Interceptor), Gson (chuyển đổi dữ liệu JSON).
+    \item \textbf{Lập trình phản ứng (Reactive Programming):} RxJava 3 và RxAndroid để xử lý luồng dữ liệu bất đồng bộ.
+    \item \textbf{Dependency Injection (DI):} Hilt (Dagger-Hilt) để quản lý dependency vòng đời ứng dụng.
+    \item \textbf{Cơ sở dữ liệu cục bộ (Local DB):} Room Database (tích hợp RxJava 3) để lưu trữ tin nhắn, hội thoại (Chat) cho tính năng Offline/Caching.
+    \item \textbf{Xử lý hình ảnh:} Glide (có tích hợp OkHttp3) cho việc tải và hiển thị hình ảnh mượt mà.
+    \item \textbf{Bản đồ \& Vị trí:} Google Play Services Maps và Location API.
+    \item \textbf{Thời gian thực (Real-time):} Socket.IO Client (v2.1.2) cho nhắn tin, WebRTC (phiên bản 104.5112) kết hợp Coturn (STUN/TURN) cho Gọi Video.
+    \item \textbf{Thông báo đẩy:} Firebase Cloud Messaging (FCM).
+    \item \textbf{Bảo mật:} EncryptedSharedPreferences (Android Security Crypto) để lưu trữ JWT an toàn.
+\end{itemize}
+
+
+% ============================================================
+\section{Kiến trúc tổng thể}
+% ============================================================
+
+\subsection{Mô hình kiến trúc MVVM kết hợp Clean Architecture}
+Ứng dụng được thiết kế theo mô hình kiến trúc MVVM (Model - View - ViewModel) kết hợp với nguyên lý Clean Architecture, đảm bảo tính dễ bảo trì, dễ kiểm thử và khả năng mở rộng cao. Hệ thống được chia thành 3 lớp (layers) phân tách rõ ràng trách nhiệm:
+
+\begin{itemize}
+    \item \textbf{Presentation Layer (Lớp Giao diện - \code{ui}):} Chứa các Activity và Fragment. Lớp này chỉ chịu trách nhiệm hiển thị dữ liệu và nhận tương tác. ViewBinding được dùng để ánh xạ giao diện an toàn. View quan sát (observe) \code{LiveData} từ ViewModel để tự động cập nhật UI, tuyệt đối không chứa logic nghiệp vụ hay gọi API trực tiếp.
+    \item \textbf{Domain Layer (Lớp Nghiệp vụ - \code{repository}):} Chứa các Repository interface đóng vai trò cầu nối. Trách nhiệm chính là trừu tượng hóa các thao tác xử lý logic, quyết định khi nào lấy dữ liệu từ Local và khi nào gọi lên Remote. Lớp này hoàn toàn độc lập và không phụ thuộc vào framework của Android.
+    \item \textbf{Data Layer (Lớp Dữ liệu - \code{data}):} Nơi triển khai lấy dữ liệu thực tế. Bao gồm \textbf{Remote Data} (Retrofit API, Socket) và \textbf{Local Data} (Room DB, EncryptedPrefs).
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/outputs/c1_clean_architecture.png}
+    \caption{Sơ đồ kiến trúc Clean Architecture kết hợp MVVM của hệ thống}
+    \label{fig:c1_clean_architecture}
+\end{figure}
+
+\subsection{Luồng đồng bộ dữ liệu (Unidirectional Data Flow)}
+Dự án áp dụng chặt chẽ cơ chế luồng dữ liệu một chiều (Unidirectional Data Flow) sử dụng RxJava kết hợp LiveData. Luồng lấy dữ liệu tuân thủ nguyên lý SSOT (Single Source of Truth):
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/outputs/c1_data_flow.png}
+    \caption{Luồng tương tác và luân chuyển dữ liệu trong hệ thống}
+    \label{fig:c1_data_flow}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Trigger:} View ghi nhận sự kiện người dùng (VD: nhấn nút Load) và gọi hàm tương ứng trong ViewModel.
+    \item \textbf{Process:} ViewModel phát tín hiệu Loading và gọi Repository để lấy dữ liệu.
+    \item \textbf{Fetch:} Repository thực thi Request tới Backend thông qua RxJava bằng luồng IO (\code{subscribeOn(Schedulers.io())}). 
+    \item \textbf{Emit:} Dữ liệu sau khi xử lý được trả về dưới dạng \code{Single} / \code{Observable}, ViewModel đóng gói lại và đẩy vào \code{LiveData} trên Main Thread (\code{observeOn(AndroidSchedulers.mainThread())}).
+    \item \textbf{Update UI:} View (đang observe LiveData) tự động nhận được tín hiệu và render lại màn hình.
+\end{enumerate}
+
+\subsection{Quản lý trạng thái với Resource Wrapper}
+Để chuẩn hóa việc xử lý trạng thái UI trên toàn app, toàn bộ phản hồi từ Data Layer được bao bọc trong một Generic Class là \code{Resource<T>}. Lớp này quy định 3 trạng thái cốt lõi:
+\begin{itemize}
+    \item \code{Status.LOADING}: Báo hiệu hệ thống đang xử lý. UI sẽ khóa các nút bấm không cần thiết và hiển thị ProgressBar/Shimmer.
+    \item \code{Status.SUCCESS}: Chứa payload dữ liệu \code{T} chuẩn xác trả về từ server để tiến hành hiển thị lên View.
+    \item \code{Status.ERROR}: Chứa chuỗi thông báo lỗi đã được chuẩn hóa bởi \code{ErrorHandler}. Hệ thống có khả năng tự động phân tích ngoại lệ (SocketTimeout, HTTP 401, 500...) thành câu thông báo tường minh bằng tiếng Việt để hiển thị Toast/Snackbar cho người dùng.
+\end{itemize}
+
+\subsection{Cấu trúc package}
+Source code được tổ chức theo tính năng (Feature-based Package) bên trong \code{com.trototvn.trototandroid}:
+\begin{itemize}
+    \item \code{data}: Lớp dữ liệu gồm \code{local} (Room), \code{remote} (Retrofit/Socket), \code{model} (Entities, DTOs) và \code{repository}.
+    \item \code{di}: Khai báo Dependency Injection container bằng Hilt (\code{AppModule}, \code{NetworkModule}).
+    \item \code{ui}: Lớp giao diện, chia nhỏ theo màn hình: \code{auth}, \code{main} (chứa \code{home}, \code{search}, \code{chat}, \code{profile}), \code{postdetail}, \code{videocall}...
+    \item \code{services}: Nơi chứa các Foreground/Background Services như FCM (\code{MyFirebaseMessagingService}) và cuộc gọi nền.
+    \item \code{utils}: Các hằng số (\code{Constants}), quản lý phiên bản (\code{SessionManager}) và các hàm hỗ trợ độc lập.
+\end{itemize}
+
+
+% ============================================================
+\section{Mô hình dữ liệu tổng thể}
+% ============================================================
+
+\subsection{Sơ đồ thực thể - quan hệ (ERD)}
+Dữ liệu cục bộ chủ yếu phục vụ cho tính năng Chat (Offline/Caching). Trong Room Database, các Entity chính bao gồm: \code{ConversationEntity}, \code{MessageEntity}, \code{ConversationParticipantEntity}, và \code{MessageAttachmentEntity}.
+
+\subsection{Giao tiếp với Server}
+Giao tiếp chính sử dụng Retrofit trả về kiểu dữ liệu luồng của RxJava (\code{Single}, \code{Observable}).
+Base URL của hệ thống được đặt tại biến \code{Constants.BASE\_URL}. Dữ liệu JSON trả về được parse tự động qua GsonConverter.
+
+
+% ============================================================
+\section{Dependency Injection (Hilt)}
+% ============================================================
+Dependency Injection (DI) trong ứng dụng được quản lý toàn diện bởi thư viện \textbf{Dagger-Hilt}. Lớp \code{App} được đánh dấu bằng \code{@HiltAndroidApp} để khởi tạo Hilt container.
+Hilt module được thiết lập trong package \code{di}:
+\begin{itemize}
+    \item \code{AppModule}: Cung cấp các instance cấp độ ứng dụng như \code{SessionManager}, \code{AppDatabase} (Room), và các thể hiện (implementation) của \code{Repository}.
+    \item \code{NetworkModule}: Cung cấp các network client như \code{OkHttpClient}, \code{Retrofit}, \code{Gson}, \code{ApiService}, \code{SocketIOManager}, kèm theo các Interceptor để xử lý xác thực (AuthInterceptor) và tự động nối lại token hết hạn (TokenAuthenticator).
+\end{itemize}
+
+
+% ============================================================
+\section{Cấu hình và bảo mật}
+% ============================================================
+
+\subsection{AndroidManifest và quyền truy cập}
+Ứng dụng khai báo chi tiết các quyền trong \code{AndroidManifest.xml} để đảm bảo tuân thủ bảo mật và trải nghiệm người dùng:
+\begin{itemize}
+    \item \textbf{Mạng \& Vị trí:} Quyền truy cập Internet, Mạng (\code{INTERNET}, \code{ACCESS\_NETWORK\_STATE}) và GPS (\code{ACCESS\_FINE\_LOCATION}, \code{ACCESS\_COARSE\_LOCATION}) cho tính năng tìm kiếm trên bản đồ.
+    \item \textbf{Video Call \& Chat:} Quyền truy cập Camera, Microphone (\code{CAMERA}, \code{RECORD\_AUDIO}), tinh chỉnh âm thanh (\code{MODIFY\_AUDIO\_SETTINGS}).
+    \item \textbf{Dịch vụ nền:} Quyền chạy Foreground Service (\code{FOREGROUND\_SERVICE}, \code{FOREGROUND\_SERVICE\_PHONE\_CALL}) và quyền hiện UI toàn màn hình (\code{USE\_FULL\_SCREEN\_INTENT}) phục vụ việc hiện luồng cuộc gọi đến khi khóa màn hình.
+    \item \textbf{Thông báo:} Quyền hiển thị thông báo (\code{POST\_NOTIFICATIONS}) cho Android 13+.
+\end{itemize}
+
+\subsection{Cấu hình mạng (Network Security Config)}
+Ứng dụng được cấu hình Network Security (\code{network\_security\_config.xml}) cho phép traffic dạng ClearText (HTTP) ở môi trường phát triển (với domain \code{trototvn.lamdx4.servebeer.com}) đồng thời cho phép tin cậy các chứng chỉ bảo mật ở cấp độ hệ thống để giao tiếp an toàn qua HTTPS ở Production. Token người dùng (JWT) được lưu trữ an toàn mã hóa qua \code{EncryptedSharedPreferences}.

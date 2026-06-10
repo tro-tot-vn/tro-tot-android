@@ -1,0 +1,98 @@
+% ============================================================
+%  CHƯƠNG 4: CHAT & VIDEO CALL
+%  Phụ trách: [Thành viên 4]
+%  Packages: ui/main/chat, ui/videocall,
+%            services/MyFirebaseMessagingService,
+%            services/CallForegroundService
+%  Models:   data/model/chat/*, data/model/video/*,
+%            data/model/notification/*
+%  Local DB: data/local/entity/*, data/local/dao/ChatDao
+%  Ghi chú: File này được \input{} từ main.tex
+% ============================================================
+
+\chapter{Chat và Gọi video}
+
+% ============================================================
+\section{Kiến trúc hệ thống Chat}
+% ============================================================
+
+\subsection{Tổng quan kiến trúc (Socket.IO + Room Database)}
+
+
+\subsection{Mô hình dữ liệu cục bộ (ConversationEntity, MessageEntity)}
+
+
+\subsection{Đồng bộ dữ liệu giữa Server và Local DB}
+
+
+% ============================================================
+\section{Danh sách hội thoại}
+% ============================================================
+
+\subsection{Hiển thị danh sách cuộc trò chuyện}
+
+
+\subsection{Huy hiệu tin nhắn chưa đọc (Unread Badge)}
+
+
+\subsection{Tìm kiếm và lọc hội thoại}
+
+
+% ============================================================
+\section{Nhắn tin thời gian thực}
+% ============================================================
+
+\subsection{Gửi và nhận tin nhắn văn bản}
+
+
+\subsection{Gửi tệp đính kèm (ảnh, file)}
+
+
+\subsection{Trạng thái tin nhắn (Sent / Delivered / Read)}
+
+
+\subsection{Đánh dấu đã đọc (Mark as Read)}
+
+
+% ============================================================
+\section{Thông báo đẩy (Push Notification)}
+% ============================================================
+
+\subsection{Tích hợp Firebase Cloud Messaging (FCM)}
+
+
+\subsection{Xử lý thông báo khi app ở foreground / background}
+
+
+\subsection{Lưu token FCM lên Server}
+
+
+% ============================================================
+\section{Gọi video (WebRTC)}
+% ============================================================
+
+\subsection{Tổng quan công nghệ WebRTC và Coturn STUN/TURN}
+
+
+\subsection{Luồng thiết lập cuộc gọi (Signaling qua Socket.IO)}
+
+
+\subsection{Màn hình gọi đến (IncomingCallActivity)}
+
+
+\subsection{Màn hình gọi video (VideoCallActivity)}
+
+
+\subsection{Kết thúc và từ chối cuộc gọi}
+
+
+% ============================================================
+\section{Dịch vụ nền cuộc gọi (CallForegroundService)}
+% ============================================================
+
+\subsection{Foreground Service và Notification khi đang gọi}
+
+
+\subsection{Xử lý cuộc gọi đến khi màn hình khóa}
+
+
