@@ -102,6 +102,17 @@ public class ChatRepository {
     private final java.util.concurrent.ConcurrentHashMap<String, String> activeHandshakes = new java.util.concurrent.ConcurrentHashMap<>();
     private final PublishSubject<Resource<CallRoomInfo>> callRoomSubject = PublishSubject.create();
 
+    private volatile boolean isIncomingCallRinging = false;
+
+    public void setIncomingCallRinging(boolean ringing) {
+        this.isIncomingCallRinging = ringing;
+        Timber.d("setIncomingCallRinging: %b", ringing);
+    }
+
+    public boolean isIncomingCallRinging() {
+        return isIncomingCallRinging;
+    }
+
     private void onRoomCreated(Object[] args) {
         Timber.d("onRoomCreated received in ChatRepository");
         if (args == null || args.length == 0 || args[0] == null) {
@@ -185,9 +196,9 @@ public class ChatRepository {
             String roomId = data.get("roomId").getAsString();
             long callerId = data.get("callerId").getAsLong();
 
-            // Check busy state: if user is already in a peer connection, auto-reject
-            if (webRtcManager.getPeerConnection() != null) {
-                Timber.d("User is busy, auto-rejecting incoming call: %s", roomId);
+            // Check busy state: if user is already in a peer connection or ringing, auto-reject
+            if (webRtcManager.getPeerConnection() != null || isIncomingCallRinging) {
+                Timber.d("User is busy (ringing=%b), auto-rejecting incoming call: %s", isIncomingCallRinging, roomId);
                 JsonObject payload = new JsonObject();
                 payload.addProperty("roomId", roomId);
                 payload.addProperty("reason", "Busy");
@@ -244,6 +255,8 @@ public class ChatRepository {
             }
             
             String roomId = data.get("roomId").getAsString();
+
+            isIncomingCallRinging = false; // Reset ringing status when call ends
 
             Intent cancelIntent = new Intent(com.trototvn.trototandroid.ui.videocall.IncomingCallActivity.ACTION_VIDEO_CALL_CANCELLED);
             cancelIntent.putExtra("roomId", roomId);
@@ -1081,6 +1094,10 @@ public class ChatRepository {
         Timber.d("startCallHandshake: socket connected = %b", socketIOManager.isConnected());
         if (!socketIOManager.isConnected()) {
             callRoomSubject.onNext(Resource.error("Không có kết nối đến máy chủ cuộc gọi. Vui lòng kiểm tra lại mạng hoặc thử lại sau.", null));
+            return;
+        }
+        if (webRtcManager.getPeerConnection() != null || isIncomingCallRinging) {
+            callRoomSubject.onNext(Resource.error("Bạn đang trong một cuộc gọi khác hoặc đang có cuộc gọi đến.", null));
             return;
         }
         Disposable d = getPartnerId(conversationId)

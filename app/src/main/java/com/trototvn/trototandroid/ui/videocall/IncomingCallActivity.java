@@ -16,7 +16,10 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.WindowManager;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.JsonObject;
@@ -46,6 +49,22 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
 
     @Inject
     SessionManager sessionManager;
+
+    @Inject
+    com.trototvn.trototandroid.data.repository.ChatRepository chatRepository;
+
+    private final ActivityResultLauncher<String[]> requestAcceptPermissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                Boolean cameraGranted = result.get(android.Manifest.permission.CAMERA);
+                Boolean recordAudioGranted = result.get(android.Manifest.permission.RECORD_AUDIO);
+                if (cameraGranted != null && cameraGranted && recordAudioGranted != null && recordAudioGranted) {
+                    acceptCall();
+                } else {
+                    Timber.w("IncomingCallActivity - Quyền CAMERA hoặc RECORD_AUDIO bị từ chối khi chấp nhận cuộc gọi");
+                    showToast("Bạn cần cấp quyền Camera và Micro để trả lời cuộc gọi");
+                    onDeclineAction();
+                }
+            });
 
     private String roomId;
     private String callerId;
@@ -98,6 +117,8 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
             return;
         }
 
+        chatRepository.setIncomingCallRinging(true);
+
         // Đảm bảo Socket đã kết nối khi Activity được mở trực tiếp từ FCM push khi app bị đóng (killed state)
         String userId = sessionManager.getUserId();
         if (userId != null) {
@@ -108,11 +129,12 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
 
         // Đăng ký BroadcastReceiver lắng nghe tín hiệu hủy cuộc gọi từ FCM
         IntentFilter filter = new IntentFilter(ACTION_VIDEO_CALL_CANCELLED);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(callCancelledReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(callCancelledReceiver, filter);
-        }
+        ContextCompat.registerReceiver(
+                this,
+                callCancelledReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+        );
 
         // Bắt đầu đếm ngược 30 giây để tự động từ chối
         timeoutHandler.postDelayed(timeoutRunnable, 30000);
@@ -187,6 +209,34 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
 
     private void onAcceptAction() {
         Timber.d("Chấp nhận cuộc gọi cho phòng: %s", roomId);
+
+        // 1. Kiểm tra kết nối Socket
+        if (!socketIOManager.isConnected()) {
+            showToast("Không có kết nối đến máy chủ cuộc gọi. Vui lòng đợi trong giây lát...");
+            String userId = sessionManager.getUserId();
+            if (userId != null) {
+                socketIOManager.connect(userId);
+            }
+            return;
+        }
+
+        // 2. Kiểm tra quyền Camera & Micro trước khi kết nối
+        String[] permissions = new String[]{
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.RECORD_AUDIO
+        };
+
+        boolean hasCamera = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        boolean hasAudio = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+
+        if (hasCamera && hasAudio) {
+            acceptCall();
+        } else {
+            requestAcceptPermissionsLauncher.launch(permissions);
+        }
+    }
+
+    private void acceptCall() {
         stopRingtoneAndVibrator();
         timeoutHandler.removeCallbacks(timeoutRunnable);
 
@@ -212,11 +262,13 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
         stopRingtoneAndVibrator();
         timeoutHandler.removeCallbacks(timeoutRunnable);
 
-        if (roomId != null) {
+        if (roomId != null && socketIOManager.isConnected()) {
             JsonObject payload = new JsonObject();
             payload.addProperty("roomId", roomId);
             payload.addProperty("reason", "Declined by user");
             socketIOManager.emit(SocketEvents.EMIT_REJECTED, payload);
+        } else if (roomId != null) {
+            Timber.w("onDeclineAction: Socket not connected, could not emit reject event to server");
         }
 
         finish();
@@ -227,6 +279,7 @@ public class IncomingCallActivity extends BaseActivity<ActivityIncomingCallBindi
         super.onDestroy();
         stopRingtoneAndVibrator();
         timeoutHandler.removeCallbacks(timeoutRunnable);
+        chatRepository.setIncomingCallRinging(false); // Reset trạng thái đổ chuông
         try {
             unregisterReceiver(callCancelledReceiver);
         } catch (Exception e) {

@@ -161,6 +161,9 @@ public class WebRtcManager {
         rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
         rtcConfig.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
 
+//        Timber.d("iceConfig: %s", gson.toJson(iceConfig));
+//        Timber.d("iceServers: %s", gson.toJson(iceServers));
+
         peerConnection = factory.createPeerConnection(rtcConfig, peerConnectionObserver);
 
         // 4. Đính kèm Media Tracks vào PeerConnection
