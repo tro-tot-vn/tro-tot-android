@@ -430,6 +430,16 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             }
 
             @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                boolean wasLast = (oldItemPosition == getOldListSize() - 1);
+                boolean isLast = (newItemPosition == getNewListSize() - 1);
+                if (wasLast != isLast) {
+                    return false;
+                }
+                return super.areContentsTheSame(oldItemPosition, newItemPosition);
+            }
+
+            @Override
             protected boolean areContentsTheSame(MessageEntity oldItem, MessageEntity newItem) {
                 // Kiểm tra nội dung thay đổi
                 return oldItem.content.equals(newItem.content) &&

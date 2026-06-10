@@ -204,7 +204,7 @@ public class MyPostsAdapter extends ListAdapter<MyPost, MyPostsAdapter.ViewHolde
             try {
                 // Parse ISO-8601 Format (Standard UTC returned by Backend)
                 SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
-                isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                isoFormat.setTimeZone(TimeZone.getTimeZone("GMT+7"));
                 Date date = isoFormat.parse(dateStr);
                 if (date != null) {
                     SimpleDateFormat outputFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());

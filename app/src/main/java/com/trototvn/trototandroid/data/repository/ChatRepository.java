@@ -486,21 +486,137 @@ public class ChatRepository {
      * Huỷ bằng {@link #stopObservingIncomingMessages()}.
      */
     public void observeIncomingMessages() {
-        Disposable d = socketIOManager.getMessageReceived()
+        Disposable dReceived = socketIOManager.getMessageReceived()
                 .subscribeOn(Schedulers.io())
+                .flatMapCompletable(raw -> saveIncomingMessage(raw.toString()).onErrorComplete(err -> {
+                    Timber.e(err, "Error in saveIncomingMessage stream");
+                    return true;
+                }))
                 .subscribe(
-                        raw -> saveIncomingMessage(raw.toString()),
+                        () -> {},
                         error -> Timber.e(error, "Socket message stream error"));
-        socketDisposables.add(d);
+        socketDisposables.add(dReceived);
+
+        Disposable dRead = socketIOManager.getMessageRead()
+                .subscribeOn(Schedulers.io())
+                .flatMapCompletable(raw -> handleMessageReadEvent(raw.toString()).onErrorComplete(err -> {
+                    Timber.e(err, "Error in handleMessageReadEvent stream");
+                    return true;
+                }))
+                .subscribe(
+                        () -> {},
+                        error -> Timber.e(error, "Socket message read stream error"));
+        socketDisposables.add(dRead);
+    }
+
+    public void joinConversation(long conversationId) {
+        socketIOManager.joinConversation(conversationId);
+    }
+
+    public void leaveConversation(long conversationId) {
+        socketIOManager.leaveConversation(conversationId);
+    }
+
+    /**
+     * Xử lý sự kiện message:read từ Socket.IO và cập nhật trạng thái trong database thành READ
+     */
+    public Completable handleMessageReadEvent(String jsonPayload) {
+        return Completable.fromAction(() -> {
+            Timber.d("handleMessageReadEvent: raw payload = %s", jsonPayload);
+        })
+        .andThen(Completable.defer(() -> {
+            if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
+                return Completable.complete();
+            }
+
+            com.google.gson.JsonElement element = gson.fromJson(jsonPayload, com.google.gson.JsonElement.class);
+            List<Long> readIds = new ArrayList<>();
+
+            if (element.isJsonObject()) {
+                com.google.gson.JsonObject obj = element.getAsJsonObject();
+                // 1. Trường hợp data envelope của Socket.IO chứa "data" key
+                if (obj.has("data") && !obj.get("data").isJsonNull()) {
+                    com.google.gson.JsonElement dataElement = obj.get("data");
+                    if (dataElement.isJsonObject()) {
+                        com.google.gson.JsonObject dataObj = dataElement.getAsJsonObject();
+                        extractIdsFromJsonObject(dataObj, readIds);
+                    } else if (dataElement.isJsonArray()) {
+                        extractIdsFromJsonArray(dataElement.getAsJsonArray(), readIds);
+                    } else if (dataElement.isJsonPrimitive()) {
+                        try {
+                            readIds.add(dataElement.getAsLong());
+                        } catch (Exception ignored) {}
+                    }
+                } else {
+                    // 2. Trường hợp Object trực tiếp (không nằm trong envelope "data")
+                    extractIdsFromJsonObject(obj, readIds);
+                }
+            } else if (element.isJsonArray()) {
+                // 3. Trường hợp payload là mảng ID trực tiếp
+                extractIdsFromJsonArray(element.getAsJsonArray(), readIds);
+            } else if (element.isJsonPrimitive()) {
+                // 4. Trường hợp payload là ID đơn lẻ dạng số/chuỗi
+                try {
+                    readIds.add(element.getAsLong());
+                } catch (Exception ignored) {}
+            }
+
+            if (!readIds.isEmpty()) {
+                List<Completable> updates = new ArrayList<>();
+                for (Long id : readIds) {
+                    updates.add(chatDao.updateMessageStatus(id, MessageStatus.READ, System.currentTimeMillis()));
+                }
+                return Completable.merge(updates)
+                        .doOnComplete(() -> Timber.d("Successfully marked messages %s as READ from socket event", readIds))
+                        .doOnError(err -> Timber.e(err, "Failed to update message statuses for message:read socket event"));
+            } else {
+                Timber.w("No message IDs extracted from message:read payload: %s", jsonPayload);
+                return Completable.complete();
+            }
+        }))
+        .onErrorComplete(e -> {
+            Timber.e(e, "Error parsing message:read socket payload: %s", jsonPayload);
+            return true;
+        });
+    }
+
+    private void extractIdsFromJsonObject(com.google.gson.JsonObject obj, List<Long> readIds) {
+        if (obj.has("messageIds") && !obj.get("messageIds").isJsonNull()) {
+            com.google.gson.JsonElement idsElement = obj.get("messageIds");
+            if (idsElement.isJsonArray()) {
+                extractIdsFromJsonArray(idsElement.getAsJsonArray(), readIds);
+            }
+        } else if (obj.has("messageId") && !obj.get("messageId").isJsonNull()) {
+            try {
+                readIds.add(obj.get("messageId").getAsLong());
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private void extractIdsFromJsonArray(com.google.gson.JsonArray array, List<Long> readIds) {
+        for (com.google.gson.JsonElement item : array) {
+            if (item.isJsonPrimitive()) {
+                try {
+                    readIds.add(item.getAsLong());
+                } catch (Exception ignored) {}
+            } else if (item.isJsonObject()) {
+                com.google.gson.JsonObject itemObj = item.getAsJsonObject();
+                if (itemObj.has("messageId") && !itemObj.get("messageId").isJsonNull()) {
+                    try {
+                        readIds.add(itemObj.get("messageId").getAsLong());
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
     }
 
     /**
      * Lưu tin nhắn nhận được từ Socket vào Room DB và cập nhật hội thoại.
      */
-    public void saveIncomingMessage(String jsonPayload) {
-        Single.fromCallable(() -> {
-            MessageDto dto = gson.fromJson(jsonPayload, MessageDto.class);
-            return mapDtoToEntity(dto);
+    public Completable saveIncomingMessage(String jsonPayload) {
+        return Single.fromCallable(() -> {
+            SocketMessageEvent event = gson.fromJson(jsonPayload, SocketMessageEvent.class);
+            return mapSocketEventToEntity(event);
         })
         .flatMapCompletable(entity -> {
             String content = entity.content;
@@ -517,11 +633,8 @@ public class ChatRepository {
             return chatDao.insertMessage(entity)
                     .andThen(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
         })
-        .subscribeOn(Schedulers.io())
-        .subscribe(
-                () -> Timber.d("Saved incoming message & updated conversation"),
-                err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage())
-        );
+        .doOnComplete(() -> Timber.d("Saved incoming message & updated conversation"))
+        .doOnError(err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage()));
     }
 
     public void stopObservingIncomingMessages() {
@@ -603,7 +716,7 @@ public class ChatRepository {
                     }
 
                     java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                    isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
 
                     for (ConversationDto dto : response.getData()) {
                         Timber.d("ConversationDto JSON: %s", gson.toJson(dto));
@@ -662,22 +775,26 @@ public class ChatRepository {
                                 0, // unreadCount (UI field)
                                 dto.createdAt != null ? dto.createdAt : new Date(),
                                 lastDate));
+
+                        // Tự động gia nhập phòng chat socket cho hội thoại này
+                        joinConversation(dto.conversationId);
                     }
 
                     return chatDao.insertConversations(entities)
-                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities))
+                            .andThen(syncMissedMessages());
                 });
     }
 
     /**
      * Đồng bộ tin nhắn bị lỡ khi offline (Handshake Sync).
      */
-    public void performHandshakeSync() {
-        Single.fromCallable(() -> {
+    public Completable syncMissedMessages() {
+        return Single.fromCallable(() -> {
             java.util.Date latestDate = chatDao.getLatestMessageTimestampSync();
             if (latestDate != null) {
                 java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
                 return isoFormat.format(latestDate);
             }
             return "1970-01-01T00:00:00.000Z";
@@ -715,12 +832,17 @@ public class ChatRepository {
             return chatDao.insertMessages(entities)
                 .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
                 .andThen(Completable.merge(updates));
-        })
-        .subscribeOn(Schedulers.io())
-        .subscribe(
-            () -> Timber.d("Handshake sync completed successfully"),
-            error -> Timber.e(error, "Handshake sync failed")
-        );
+        });
+    }
+
+    public void performHandshakeSync() {
+        Disposable d = syncMissedMessages()
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                () -> Timber.d("Handshake sync completed successfully"),
+                error -> Timber.e(error, "Handshake sync failed")
+            );
+        socketDisposables.add(d);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -772,9 +894,14 @@ public class ChatRepository {
     /**
      * Gọi API báo cáo server tin nhắn đã đọc, sau đó cập nhật local DB.
      */
-    public Completable markMessagesAsRead(List<Long> messageIds) {
+    public Completable markMessagesAsRead(long conversationId, List<Long> messageIds) {
         if (messageIds == null || messageIds.isEmpty())
             return Completable.complete();
+
+        // Emit qua socket để bên gửi nhận được sự kiện Đã xem thời gian thực lập tức
+        if (socketIOManager.isConnected()) {
+            socketIOManager.emitMessageRead(conversationId, messageIds);
+        }
 
         return apiService.markAsRead(new MarkReadRequest(messageIds))
                 .subscribeOn(Schedulers.io())
@@ -827,17 +954,61 @@ public class ChatRepository {
     // MAPPER helpers (private)
     // ─────────────────────────────────────────────────────────────
 
+    private java.util.Date parseSafeDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return new java.util.Date();
+        }
+        String cleanStr = dateStr.trim();
+
+        // 1. Định dạng ISO 8601 kèm mili giây và Z (ví dụ: "2026-06-10T00:14:00.066Z")
+        try {
+            java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
+            isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
+            java.util.Date parsedDate = isoFormat.parse(cleanStr);
+            if (parsedDate != null) return parsedDate;
+        } catch (Exception ignored) {}
+
+        // 2. Định dạng ISO 8601 không kèm mili giây (ví dụ: "2026-06-10T00:14:00Z" hoặc "2026-06-10T00:14:00")
+        try {
+            String formatStr = cleanStr.endsWith("Z") ? "yyyy-MM-dd'T'HH:mm:ss'Z'" : "yyyy-MM-dd'T'HH:mm:ss";
+            java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat(formatStr, java.util.Locale.US);
+            if (cleanStr.endsWith("Z")) {
+                isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
+            }
+            java.util.Date parsedDate = isoFormat.parse(cleanStr);
+            if (parsedDate != null) return parsedDate;
+        } catch (Exception ignored) {}
+
+        // 3. Fallback: Dạng Số nguyên (Unix timestamp)
+        try {
+            long epochTime = Long.parseLong(cleanStr);
+            if (epochTime > 0) {
+                // Nếu epochTime là giây (dưới 10 tỷ), đổi sang mili giây
+                if (epochTime < 10000000000L) {
+                    return new java.util.Date(epochTime * 1000);
+                }
+                return new java.util.Date(epochTime);
+            }
+        } catch (NumberFormatException ignored) {}
+
+        return new java.util.Date();
+    }
+
     private MessageEntity mapSocketEventToEntity(SocketMessageEvent event) {
-        return new MessageEntity(
+        java.util.Date createdAt = event.createdAt != null ? event.createdAt : new java.util.Date();
+        java.util.Date updatedAt = event.updatedAt != null ? event.updatedAt : createdAt;
+        MessageEntity entity = new MessageEntity(
                 event.messageId,
                 event.conversationId,
                 event.senderId,
                 event.content != null ? event.content : "",
                 normalizeMessageType(event.messageType),
                 normalizeMessageStatus(event.messageStatus),
-                new Date(event.createdAt),
-                new Date(event.updatedAt > 0 ? event.updatedAt : event.createdAt),
+                createdAt,
+                updatedAt,
                 null);
+        entity.setAttachments(event.attachments);
+        return entity;
     }
 
     private MessageEntity mapDtoToEntity(MessageDto dto) {

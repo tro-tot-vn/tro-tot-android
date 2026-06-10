@@ -27,8 +27,11 @@ public class SocketMessageEvent {
     public String messageStatus;
 
     @SerializedName("createdAt")
-    public long createdAt; // epoch ms
+    public java.util.Date createdAt;
 
     @SerializedName("updatedAt")
-    public long updatedAt; // epoch ms
+    public java.util.Date updatedAt;
+
+    @SerializedName("attachments")
+    public java.util.List<AttachmentDto> attachments;
 }
