@@ -86,7 +86,7 @@ Dự án áp dụng chặt chẽ cơ chế luồng dữ liệu một chiều (Un
 \begin{enumerate}
     \item \textbf{Trigger:} View ghi nhận sự kiện người dùng (VD: nhấn nút Load) và gọi hàm tương ứng trong ViewModel.
     \item \textbf{Process:} ViewModel phát tín hiệu Loading và gọi Repository để lấy dữ liệu.
-    \item \textbf{Fetch:} Repository thực thi Request tới Backend thông qua RxJava bằng luồng IO (\code{subscribeOn(Schedulers.io())}). 
+    \item \textbf{Fetch:} Repository thực thi Request tới Backend qua RxJava, đăng ký xử lý trên luồng IO bằng \code{subscribeOn(Schedulers.io())}.
     \item \textbf{Emit:} Dữ liệu sau khi xử lý được trả về dưới dạng \code{Single} / \code{Observable}, ViewModel đóng gói lại và đẩy vào \code{LiveData} trên Main Thread (\code{observeOn(AndroidSchedulers.mainThread())}).
     \item \textbf{Update UI:} View (đang observe LiveData) tự động nhận được tín hiệu và render lại màn hình.
 \end{enumerate}
@@ -104,10 +104,30 @@ Source code được tổ chức theo tính năng (Feature-based Package) bên t
 \begin{itemize}
     \item \code{data}: Lớp dữ liệu gồm \code{local} (Room), \code{remote} (Retrofit/Socket), \code{model} (Entities, DTOs) và \code{repository}.
     \item \code{di}: Khai báo Dependency Injection container bằng Hilt (\code{AppModule}, \code{NetworkModule}).
-    \item \code{ui}: Lớp giao diện, chia nhỏ theo màn hình: \code{auth}, \code{main} (chứa \code{home}, \code{search}, \code{chat}, \code{profile}), \code{postdetail}, \code{videocall}...
+    \item \code{ui}: Lớp giao diện, chia nhỏ theo màn hình: \code{auth}, \code{main} (chứa \code{home}, \code{search}, \code{chat}, \code{profile}, \code{viewhistory}, \code{savedposts}), \code{postdetail}, \code{videocall}...
     \item \code{services}: Nơi chứa các Foreground/Background Services như FCM (\code{MyFirebaseMessagingService}) và cuộc gọi nền.
     \item \code{utils}: Các hằng số (\code{Constants}), quản lý phiên bản (\code{SessionManager}) và các hàm hỗ trợ độc lập.
 \end{itemize}
+
+
+% ============================================================
+\section{Lịch sử xem}
+% ============================================================
+
+\subsection{Ghi nhận lịch sử xem tự động}
+
+
+\subsection{Hiển thị và xóa lịch sử}
+
+
+% ============================================================
+\section{Bài đăng đã lưu}
+% ============================================================
+
+\subsection{Lưu và bỏ lưu bài đăng}
+
+
+\subsection{Danh sách bài đã lưu}
 
 
 % ============================================================
@@ -142,7 +162,7 @@ Hilt module được thiết lập trong package \code{di}:
 \begin{itemize}
     \item \textbf{Mạng \& Vị trí:} Quyền truy cập Internet, Mạng (\code{INTERNET}, \code{ACCESS\_NETWORK\_STATE}) và GPS (\code{ACCESS\_FINE\_LOCATION}, \code{ACCESS\_COARSE\_LOCATION}) cho tính năng tìm kiếm trên bản đồ.
     \item \textbf{Video Call \& Chat:} Quyền truy cập Camera, Microphone (\code{CAMERA}, \code{RECORD\_AUDIO}), tinh chỉnh âm thanh (\code{MODIFY\_AUDIO\_SETTINGS}).
-    \item \textbf{Dịch vụ nền:} Quyền chạy Foreground Service (\code{FOREGROUND\_SERVICE}, \code{FOREGROUND\_SERVICE\_PHONE\_CALL}) và quyền hiện UI toàn màn hình (\code{USE\_FULL\_SCREEN\_INTENT}) phục vụ việc hiện luồng cuộc gọi đến khi khóa màn hình.
+    \item \textbf{Dịch vụ nền:} Quyền chạy Foreground Service (\code{FOREGROUND\_SERVICE} và \code{FOREGROUND\_SERVICE\_\allowbreak PHONE\_CALL}) cùng quyền hiện UI toàn màn hình (\code{USE\_FULL\_SCREEN\_INTENT}) phục vụ việc hiện luồng cuộc gọi đến khi khóa màn hình.
     \item \textbf{Thông báo:} Quyền hiển thị thông báo (\code{POST\_NOTIFICATIONS}) cho Android 13+.
 \end{itemize}
 

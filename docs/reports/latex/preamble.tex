@@ -13,7 +13,8 @@
 \usepackage[
   a4paper,
   top=2.5cm, bottom=2.5cm,
-  left=3cm,  right=2cm
+  left=3cm,  right=2cm,
+  headheight=14pt  % du cho cho fancyhdr (tranh warning headheight too small)
 ]{geometry}
 
 % --- Typography ---
@@ -23,6 +24,9 @@
 \usepackage{indentfirst}
 \setlength{\parindent}{1.5em}
 \setlength{\parskip}{6pt}
+% Cho phep gian dong khi gap chuoi khong be duoc (ten class/API dang \code)
+% -> giam Overfull \hbox
+\setlength{\emergencystretch}{3em}
 
 % --- Fonts ---
 \usepackage{lmodern}

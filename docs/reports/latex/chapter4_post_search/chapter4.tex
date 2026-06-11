@@ -1,0 +1,418 @@
+% ============================================================
+%  CHƯƠNG 4: BÀI ĐĂNG & TÌM KIẾM
+%  Phụ trách: [Thành viên 3]
+%  Packages: ui/main/home, ui/main/search, ui/postdetail,
+%            ui/main/myposts
+%  Models:   data/model/post/*, data/model/search/*,
+%            data/model/rating/*, data/model/location/*
+%  Ghi chú: File này được \input{} từ main.tex
+% ============================================================
+
+\chapter{Bài đăng và Tìm kiếm}
+
+Chương này trình bày phân hệ trung tâm của ứng dụng Trọ Tốt: hiển thị, tìm kiếm,
+đăng tải và đánh giá bài đăng phòng trọ. Nhóm viết toàn bộ phân hệ bằng
+\tech{Java}, bám sát kiến trúc MVVM ở Chương 1. Giao diện dùng các thành phần
+chuẩn của Android (\code{TextView}, \code{RecyclerView} -- thành phần kế thừa và
+thay thế ListView/GridView). Tầng dữ liệu gọi API qua \tech{Retrofit}.
+
+% ============================================================
+\section{Màn hình Trang chủ (Home Feed)}
+% ============================================================
+
+\subsection{Yêu cầu chức năng}
+Trang chủ là màn hình đầu tiên người dùng nhìn thấy sau khi mở ứng dụng, với hai
+khối nội dung chính:
+\begin{itemize}
+    \item \textbf{Tin đăng mới nhất:} hiển thị 4 bài đăng đã duyệt gần nhất,
+    giúp người dùng nắm bắt nhanh nguồn cung phòng trọ mới.
+    \item \textbf{Gợi ý dành cho bạn (Recommendation):} hệ thống gợi ý bài
+    đăng theo lịch sử tương tác của từng người dùng, có phân trang để tải thêm.
+\end{itemize}
+Người dùng chưa đăng nhập vẫn xem được tin mới nhất; khối gợi ý cá nhân hóa
+yêu cầu đã đăng nhập (API gắn JWT).
+
+\subsection{Thiết kế giao diện}
+File \code{fragment\_home.xml} định nghĩa giao diện với các thành phần:
+\begin{itemize}
+    \item \code{TextView}: tiêu đề ứng dụng trên thanh công cụ và tiêu đề từng
+    khối nội dung (``Tin đăng mới nhất'', ``Gợi ý dành cho bạn'').
+    \item Hai \code{RecyclerView} (\code{rvLatestPosts}, \code{rvRecommendations})
+    dùng chung \code{PostAdapter} hiển thị thẻ bài đăng
+    (\code{item\_post\_card.xml}): ảnh đại diện tải bằng \tech{Glide}, tiêu đề,
+    giá thuê, diện tích và địa chỉ.
+    \item \code{ProgressBar} hiển thị trạng thái đang tải;
+    \code{MaterialButton} ``Thử lại'' khi lỗi mạng và ``Tải thêm''
+    (\code{btnLoadMore}) cho phân trang gợi ý.
+    \item Toàn bộ nội dung đặt trong \code{NestedScrollView} để cuộn mượt cả
+    hai danh sách.
+\end{itemize}
+
+% TODO: Bỏ comment sau khi chụp màn hình và lưu ảnh vào images/outputs/
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.45\textwidth]{images/outputs/c3_home_feed.png}
+%     \caption{Màn hình Trang chủ với tin mới nhất và gợi ý cá nhân hóa}
+%     \label{fig:c3_home_feed}
+% \end{figure}
+
+\subsection{Luồng xử lý}
+\begin{enumerate}
+    \item \code{HomeFragment} khởi chạy, gọi \code{loadLatestPosts()} và
+    \code{loadRecommendations()} trên \code{HomeViewModel}.
+    \item ViewModel phát trạng thái \code{Resource.loading()} -- UI hiện
+    \code{ProgressBar}.
+    \item \code{PostRepository} thực thi request Retrofit trên luồng IO
+    (\code{subscribeOn(Schedulers.io())}).
+    \item Repository bọc kết quả vào \code{Resource<List<Post>>} rồi đẩy vào
+    \code{LiveData} trên Main Thread.
+    \item Fragment (đang observe) cập nhật adapter; nếu lỗi thì hiển thị thông
+    báo cùng nút ``Thử lại''.
+    \item Khi người dùng nhấn ``Tải thêm'', ViewModel gọi
+    \code{loadMoreRecommendations()}: tăng \code{page}, gửi kèm
+    \code{recommendationLogId} của phiên gợi ý để backend ghi nhận chuỗi
+    tương tác, sau đó nối (append) kết quả mới vào danh sách hiện có.
+\end{enumerate}
+
+\subsection{Triển khai trên Android}
+\begin{itemize}
+    \item \textbf{Lớp chính:} \code{HomeFragment}, \code{HomeViewModel}
+    (\code{@HiltViewModel}), \code{PostAdapter} thuộc package
+    \code{ui/main/home}; \code{PostRepository} thuộc \code{data/repository}.
+    \item \textbf{API sử dụng:}
+    \begin{itemize}
+        \item \code{GET api/posts/latest?limit=4} $\rightarrow$
+        \code{ResponseData<List<Post>>}
+        \item \code{GET api/recommend?page\&pageSize\&logId} $\rightarrow$
+        \code{RecommendationResponse} (kèm \code{pagination.hasMore} và
+        \code{recommendationLogId})
+    \end{itemize}
+    \item ViewModel giữ toàn bộ \textbf{trạng thái phân trang} (trang hiện tại,
+    danh sách tích lũy \code{allRecommendations}, cờ \code{isLoadingMore},
+    \code{hasMoreRecommendations}). Nhờ đó dữ liệu không mất khi xoay màn hình.
+\end{itemize}
+
+\textit{Đáp ứng CLO1 (chức năng + giao diện hoàn chỉnh bằng Java) và CLO2: sử
+dụng TextView, RecyclerView và gọi API qua Retrofit.}
+
+% ============================================================
+\section{Tìm kiếm bài đăng}
+% ============================================================
+
+\subsection{Yêu cầu chức năng}
+Người dùng nhập từ khóa tự nhiên (ví dụ ``phòng trọ gần đại học có gác'') và
+thu hẹp kết quả bằng bộ lọc: tỉnh/thành phố, quận/huyện, phường/xã, khoảng
+giá, khoảng diện tích, tình trạng nội thất. Kết quả trả về theo trang
+(20 bài/trang), tải tiếp khi cuộn hết. Hệ thống đồng thời ghi nhận tương tác
+tìm kiếm (lượt nhấn kết quả, phản hồi chất lượng) phục vụ cải thiện mô hình
+gợi ý.
+
+\subsection{Thiết kế giao diện}
+Giao diện \code{fragment\_search.xml} gồm:
+\begin{itemize}
+    \item \code{TextInputEditText} nhập từ khóa kèm nút tìm kiếm.
+    \item \code{Chip} (Material) hiển thị bộ lọc đang áp dụng;
+    \code{MaterialButton} mở hộp thoại bộ lọc.
+    \item \code{RecyclerView} hiển thị danh sách kết quả, tái sử dụng
+    \code{PostAdapter} của Trang chủ.
+    \item \code{TextView} thông báo khi không có kết quả hoặc khi lỗi.
+\end{itemize}
+\code{SearchFilterBottomDialog} (kế thừa \code{BottomSheetDialogFragment})
+đảm nhận bộ lọc: ô nhập khoảng giá/diện tích, danh sách chọn địa giới hành
+chính và \code{ChipGroup} chọn tình trạng nội thất (\code{chipGroupInterior}).
+
+% TODO: Bỏ comment sau khi chụp màn hình tìm kiếm + bottom sheet bộ lọc
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/outputs/c3_search_results.png}
+%         \caption{Kết quả tìm kiếm}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/outputs/c3_search_filter.png}
+%         \caption{Bộ lọc tìm kiếm}
+%     \end{subfigure}
+%     \caption{Màn hình tìm kiếm bài đăng}
+%     \label{fig:c3_search}
+% \end{figure}
+
+\subsection{Luồng xử lý}
+\begin{enumerate}
+    \item Người dùng nhập từ khóa; \code{SearchViewModel} kiểm tra hợp lệ (từ
+    khóa không rỗng) trước khi tìm.
+    \item ViewModel gom từ khóa và toàn bộ bộ lọc đang chọn vào
+    \code{SearchParams} qua hàm \code{buildSearchParams()}, đồng thời reset
+    phân trang về trang 1.
+    \item \code{PostRepository.search()} gọi API tìm kiếm. Backend xử lý bằng
+    hybrid vector search -- phía Android chỉ gọi API và hiển thị kết quả.
+    \item ViewModel đẩy kết quả về UI qua
+    \code{LiveData<Resource<List<Post>>>} và giữ lại \code{searchLogId} trong
+    response.
+    \item Người dùng nhấn một kết quả: ứng dụng gọi
+    \code{logClick(searchLogItemId)} ghi nhận lượt nhấn gắn với
+    \code{searchLogId}, rồi điều hướng sang màn hình chi tiết.
+    \item Cuộn đến cuối danh sách và còn trang kế (\code{hasNextPage}),
+    ViewModel gọi \code{loadNextPage()} nối thêm kết quả.
+\end{enumerate}
+
+\subsection{Triển khai trên Android}
+\begin{itemize}
+    \item \textbf{Lớp chính:} \code{SearchFragment}, \code{SearchViewModel},
+    \code{SearchFilterBottomDialog} (package \code{ui/main/search}); model
+    \code{SearchParams}, \code{SearchResponse},
+    \code{SearchInteractionRequest} (package \code{data/model/search}).
+    \item \textbf{API sử dụng:}
+    \begin{itemize}
+        \item \code{GET api/search} với các query:
+        \code{query}, \code{city}, \code{district}, \code{ward},
+        \code{priceMin}, \code{priceMax}, \code{acreageMin}, \code{acreageMax},
+        \code{interiorCondition}, \code{page}, \code{pageSize}.
+        \item \code{POST api/search/click} -- ghi nhận lượt nhấn kết quả.
+        \item \code{POST api/search/feedback} -- gửi phản hồi chất lượng
+        tìm kiếm (hữu ích hay không, vấn đề gặp phải, bình luận).
+    \end{itemize}
+    \item Bottom sheet bộ lọc dùng chung ViewModel với Fragment cha: khởi tạo
+    \code{ViewModelProvider} với \code{getParentFragment()}. Trạng thái lọc
+    vì vậy không mất khi đóng/mở bottom sheet.
+\end{itemize}
+
+\textit{Đáp ứng CLO2: thành phần nhập liệu (TextInputEditText, ChipGroup),
+RecyclerView hiển thị danh sách và gọi API tìm kiếm có tham số.}
+
+% ============================================================
+\section{Chi tiết bài đăng}
+% ============================================================
+
+\subsection{Yêu cầu chức năng}
+Màn hình chi tiết hiển thị đầy đủ thông tin một phòng trọ: thư viện ảnh/video,
+tiêu đề, giá thuê, mô tả, bảng thông số (diện tích, nội thất, địa chỉ), bản đồ
+vị trí, thông tin chủ trọ và khối đánh giá. Người dùng lưu tin, xem số điện
+thoại chủ trọ (yêu cầu đăng nhập) và gửi đánh giá ngay trên màn hình này.
+
+\subsection{Thiết kế giao diện}
+Giao diện \code{fragment\_post\_detail.xml} gồm:
+\begin{itemize}
+    \item \code{ViewPager2} (\code{vpImages}) kết hợp thư viện
+    \tech{DotsIndicator} tạo gallery ảnh trượt ngang;
+    \code{PostImageAdapter} tải ảnh bằng \tech{Glide}.
+    \item Các \code{TextView}: tiêu đề, giá (định dạng tiền tệ
+    \code{NumberFormat} locale vi-VN), mô tả rút gọn 3 dòng kèm nút
+    ``Xem thêm/Thu gọn''.
+    \item Bảng thông số dựng động từ các hàng
+    \code{item\_post\_detail\_row.xml}, mỗi hàng là cặp \code{TextView}
+    nhãn--giá trị (vai trò tương đương bảng dữ liệu dạng lưới).
+    \item \code{WebView} (\code{wvMap}) nhúng Google Maps Embed hiển thị vị trí
+    phòng trọ theo địa chỉ.
+    \item Khối chủ trọ: ảnh đại diện (Glide), tên, khu vực, ngày tham gia,
+    nút xem SĐT và nút Chat.
+    \item \code{FloatingActionButton} (\code{fabSave}) lưu/bỏ lưu tin với icon
+    bookmark đổi trạng thái.
+    \item Khối đánh giá: \code{RatingBar} thống kê, \code{RecyclerView}
+    (\code{rvRatings}) danh sách nhận xét, form gửi đánh giá gồm
+    \code{RatingBar} chọn sao và \code{EditText} bình luận.
+\end{itemize}
+
+% TODO: Bỏ comment sau khi chụp màn hình chi tiết bài đăng
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.45\textwidth]{images/outputs/c3_post_detail.png}
+%     \caption{Màn hình chi tiết bài đăng}
+%     \label{fig:c3_post_detail}
+% \end{figure}
+
+\subsection{Luồng xử lý}
+\begin{enumerate}
+    \item Fragment nhận \code{postId} qua \code{Bundle} khi điều hướng.
+    \item \code{PostDetailViewModel} tải song song: chi tiết bài đăng, thống kê
+    đánh giá, đánh giá của bản thân, danh sách nhận xét và trạng thái đã lưu.
+    \item Dữ liệu đổ về qua các \code{LiveData} riêng biệt; mỗi khối UI tự
+    cập nhật độc lập (ảnh, bảng thông số, bản đồ, đánh giá).
+    \item \textbf{Bảo vệ quyền riêng tư:} ứng dụng che số điện thoại chủ trọ
+    dạng \code{09xx***xxx} (\code{getMaskedPhone()}). Số đầy đủ chỉ hiện khi
+    người dùng đã đăng nhập và chủ động nhấn ``Hiện số''; hệ thống ghi nhật ký
+    liên hệ ngay tại thời điểm đó.
+    \item Nhấn \code{fabSave}: ViewModel gọi \code{toggleSavePost(postId)},
+    cập nhật icon theo kết quả và hiện Toast xác nhận.
+\end{enumerate}
+
+\subsection{Triển khai trên Android}
+\begin{itemize}
+    \item \textbf{Lớp chính:} \code{PostDetailFragment},
+    \code{PostDetailViewModel}, \code{PostImageAdapter},
+    \code{PostRatingAdapter} (package \code{ui/postdetail}).
+    \item \textbf{API sử dụng:}
+    \begin{itemize}
+        \item \code{GET api/posts/\{postId\}} -- chi tiết bài đăng
+        (\code{PostDetail} gồm \code{MultimediaFile}, \code{PostOwner}).
+        \item \code{POST api/customer/saved-posts/\{postId\}} /
+        \code{DELETE api/customer/saved-posts/\{postId\}} -- lưu/bỏ lưu tin;
+        \code{GET .../check} -- kiểm tra trạng thái đã lưu.
+        \item \code{POST api/interactions/contact} -- ghi nhật ký khi người
+        dùng xem số điện thoại liên hệ (\code{ContactLogRequest}).
+    \end{itemize}
+    \item Các API lưu tin và ghi nhật ký đều yêu cầu xác thực;
+    \code{AuthInterceptor} tự động gắn JWT vào header như mô tả ở Chương 1.
+\end{itemize}
+
+\textit{Đáp ứng CLO2: đa dạng thành phần giao diện (TextView, ViewPager2,
+WebView, RecyclerView), gọi nhiều API và bảo vệ quyền riêng tư số điện
+thoại bằng cơ chế che số kết hợp yêu cầu đăng nhập.}
+
+% ============================================================
+\section{Đăng và quản lý bài đăng của tôi}
+% ============================================================
+
+\subsection{Yêu cầu chức năng}
+Phân hệ dành riêng cho vai trò \textbf{chủ trọ} -- minh chứng trực tiếp cho
+yêu cầu phân quyền của học phần:
+\begin{itemize}
+    \item Đăng tin mới kèm nhiều ảnh (mỗi ảnh $\le$ 5MB) và một video
+    ($\le$ 25MB); nhập đủ tiêu đề, mô tả, giá, diện tích, địa chỉ, tình trạng
+    nội thất.
+    \item Xem danh sách tin của mình theo bộ lọc trạng thái, cuộn vô tận.
+    \item Chỉnh sửa, ẩn/hiện tin đã đăng và theo dõi tiến độ kiểm duyệt.
+\end{itemize}
+
+\subsection{Thiết kế giao diện}
+\begin{itemize}
+    \item \code{fragment\_myposts.xml}: dùng \code{RecyclerView}
+    (\code{rvMyPosts}) với \code{LinearLayoutManager}, bọc trong
+    \code{SwipeRefreshLayout} hỗ trợ kéo làm mới; thanh công cụ có nút tạo
+    tin mới. Mỗi thẻ tin hiển thị trạng thái duyệt bằng nhãn màu
+    (\code{TextView}).
+    \item \code{fragment\_post\_create.xml}: form nhập liệu với bộ đếm ký tự,
+    danh sách ảnh đã chọn (ảnh đầu mang nhãn ``ảnh bìa''), thẻ xem trước
+    video, và hộp thoại chọn địa chỉ hợp nhất (tỉnh $\rightarrow$ quận
+    $\rightarrow$ phường) dùng \code{AutoCompleteTextView}.
+\end{itemize}
+
+% TODO: Bỏ comment sau khi chụp màn hình quản lý tin + form đăng tin
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/outputs/c3_my_posts.png}
+%         \caption{Quản lý tin của tôi}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{images/outputs/c3_post_create.png}
+%         \caption{Đăng tin mới}
+%     \end{subfigure}
+%     \caption{Phân hệ đăng và quản lý bài đăng}
+%     \label{fig:c3_my_posts}
+% \end{figure}
+
+\subsection{Luồng xử lý}
+\textbf{Đăng tin mới:}
+\begin{enumerate}
+    \item Người dùng chọn ảnh/video qua \code{ActivityResultLauncher}
+    (\code{GetContent}); ứng dụng kiểm tra kích thước tệp ngay tại client
+    trước khi chấp nhận.
+    \item Chọn địa giới hành chính: danh sách tỉnh/quận đọc từ
+    \code{provinces.json} trong \code{assets}; danh sách phường lấy động qua
+    API \code{GET api/location/wards/\{districtId\}}.
+    \item Khi nhấn Đăng, \code{PostFormViewModel} đóng gói toàn bộ trường
+    thành \code{multipart/form-data} (mỗi trường text là một
+    \code{RequestBody}, ảnh/video là \code{MultipartBody.Part}) rồi gọi API.
+    \item Tin mới mang trạng thái chờ duyệt; màn hình ``Tin của tôi'' hiển thị
+    kết quả kiểm duyệt.
+\end{enumerate}
+\textbf{Quản lý tin:} danh sách phân trang theo con trỏ (cursor-based). Khi
+\code{OnScrollListener} phát hiện đã cuộn tới cuối và \code{hasMore()} còn
+\code{true}, ViewModel gọi trang kế với \code{cursor} là ID bài cuối cùng.
+Cách này tránh trùng lặp dữ liệu khi có tin mới chen vào giữa hai lần tải.
+
+\subsection{Triển khai trên Android}
+\begin{itemize}
+    \item \textbf{Lớp chính:} màn hình quản lý gồm \code{MyPostsFragment},
+    \code{MyPostsViewModel} và \code{MyPostsAdapter}; form đăng/sửa tin gồm
+    \code{PostCreateFragment}, \code{PostEditFragment} và
+    \code{PostFormViewModel} (package \code{ui/main/myposts}).
+    \item \textbf{API sử dụng:}
+    \begin{itemize}
+        \item \code{GET api/posts/me?status\&cursor\&limit} -- danh sách tin
+        của tôi (\code{MyPostsResponse}).
+        \item \code{POST api/posts} (multipart) -- tạo tin;
+        \code{PUT api/posts/\{postId\}} (multipart) -- cập nhật tin, kèm
+        trường \code{oldFiles} liệt kê tệp giữ lại.
+        \item \code{POST api/posts/\{postId\}/hide} / \code{.../unhide} --
+        ẩn/hiện tin.
+        \item \code{GET api/posts/me/\{postId\}} -- lấy chi tiết tin của mình
+        để đổ vào form chỉnh sửa.
+    \end{itemize}
+    \item Trạng thái bài đăng (\code{PostStatus}: chờ duyệt, đã duyệt, bị từ
+    chối, đã ẩn) là enum dùng chung với phân hệ kiểm duyệt trình bày ở
+    Chương 6.
+\end{itemize}
+
+\textit{Đáp ứng CLO1 và CLO2: chức năng nghiệp vụ hoàn chỉnh cho vai trò chủ
+trọ (phân quyền), upload đa phương tiện qua API multipart, RecyclerView với
+phân trang con trỏ.}
+
+% ============================================================
+\section{Đánh giá chủ trọ}
+% ============================================================
+
+\subsection{Yêu cầu chức năng}
+Người thuê đã đăng nhập đánh giá bài đăng theo thang 5 sao kèm bình luận.
+Mỗi người chỉ có một đánh giá trên mỗi tin và chỉ xóa được đánh giá của mình.
+Mọi người dùng xem được điểm trung bình, tổng lượt đánh giá và danh sách
+nhận xét.
+
+\subsection{Thiết kế giao diện}
+Khối đánh giá nằm trong màn hình chi tiết bài đăng:
+\begin{itemize}
+    \item Thống kê: \code{TextView} điểm trung bình (1 chữ số thập phân),
+    \code{RatingBar} hiển thị sao và \code{TextView} số lượt đánh giá.
+    \item Danh sách nhận xét: \code{RecyclerView} (\code{rvRatings}) với
+    \code{item\_rating.xml} gồm tên người đánh giá, số sao và bình luận.
+    \item Form gửi: \code{RatingBar} chọn sao (mặc định 5),
+    \code{EditText} nhập bình luận, \code{MaterialButton} gửi. Với người đã
+    đánh giá, UI thay form bằng khối ``đánh giá của tôi'' kèm nút xóa (có
+    \code{AlertDialog} xác nhận). Người chưa đăng nhập thấy lời nhắc đăng nhập.
+\end{itemize}
+
+\subsection{Luồng xử lý}
+\begin{enumerate}
+    \item Khi mở chi tiết bài, ViewModel tải đồng thời thống kê
+    (\code{RatingStats}), đánh giá của tôi và trang nhận xét đầu tiên.
+    \item UI phân nhánh theo ba trạng thái: chưa đăng nhập / đã đánh giá /
+    chưa đánh giá -- mỗi thời điểm chỉ hiện một khối tương ứng.
+    \item Gửi đánh giá: client kiểm tra số sao $\ge$ 1, gọi API, sau đó tải
+    lại thống kê và danh sách để đồng bộ.
+    \item Danh sách nhận xét phân trang theo con trỏ thời gian
+    (\code{cursor} là mốc ngày của nhận xét cuối).
+\end{enumerate}
+
+\subsection{Triển khai trên Android}
+\begin{itemize}
+    \item \textbf{Lớp chính:} \code{PostRatingAdapter},
+    \code{PostDetailViewModel}; model \code{Rating}, \code{RatingStats},
+    \code{AddRatingRequest}, \code{RatingListResponse}
+    (package \code{data/model/rating}).
+    \item \textbf{API sử dụng:}
+    \begin{itemize}
+        \item \code{GET api/customer/posts/\{postId\}/rate-avg} -- thống kê
+        điểm trung bình và số lượt.
+        \item \code{GET api/customer/posts/\{postId\}/rates?limit\&cursor} --
+        danh sách nhận xét.
+        \item \code{POST api/customer/posts/\{postId\}/rate} -- gửi đánh giá
+        (yêu cầu đăng nhập).
+        \item \code{GET} / \code{DELETE api/customer/posts/\{postId\}/rate} --
+        xem / xóa đánh giá của tôi.
+    \end{itemize}
+\end{itemize}
+
+\textit{Đáp ứng CLO2: thành phần RatingBar, RecyclerView, EditText; gọi API
+CRUD có xác thực; chỉ chủ sở hữu đánh giá mới xóa được đánh giá của mình
+(bảo vệ dữ liệu cá nhân).}
+
+% ============================================================
+\section{Kết chương}
+% ============================================================
+Phân hệ Bài đăng \& Tìm kiếm khép kín vòng đời một tin đăng: chủ trọ đăng tải,
+người thuê khám phá qua trang chủ/tìm kiếm, xem chi tiết và phản hồi bằng đánh
+giá. Phân hệ dùng xuyên suốt các thành phần giao diện chuẩn Android, giao tiếp
+với backend hoàn toàn qua API REST có xác thực JWT, và phân tách rõ vai trò
+người thuê -- chủ trọ đúng yêu cầu phân quyền của học phần.
