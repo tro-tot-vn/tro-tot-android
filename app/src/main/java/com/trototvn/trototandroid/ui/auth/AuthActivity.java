@@ -9,7 +9,11 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.databinding.ActivityAuthBinding;
+import com.trototvn.trototandroid.ui.admin.AdminActivity;
 import com.trototvn.trototandroid.ui.main.MainActivity;
+import com.trototvn.trototandroid.utils.SessionManager;
+
+import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -19,6 +23,9 @@ import dagger.hilt.android.AndroidEntryPoint;
  */
 @AndroidEntryPoint
 public class AuthActivity extends AppCompatActivity {
+
+    @Inject
+    SessionManager sessionManager;
 
     private ActivityAuthBinding binding;
     private NavController navController;
@@ -45,7 +52,9 @@ public class AuthActivity extends AppCompatActivity {
      * Call this method from fragments after successful login
      */
     public void navigateToMainApp() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = sessionManager.isAdminUser()
+                ? new Intent(this, AdminActivity.class)
+                : new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

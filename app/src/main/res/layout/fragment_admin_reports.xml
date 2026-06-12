@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvMockBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#1AF5A623"
+        android:padding="12dp"
+        android:textColor="#F5A623"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:text="@string/admin_reports_mock_banner" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvReports"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="16dp" />
+</LinearLayout>

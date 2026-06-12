@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/admin_nav_graph"
+    app:startDestination="@id/adminDashboardFragment">
+
+    <fragment
+        android:id="@+id/adminDashboardFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.dashboard.AdminDashboardFragment"
+        android:label="@string/admin_dashboard_title" />
+
+    <fragment
+        android:id="@+id/adminReviewFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.review.AdminReviewFragment"
+        android:label="@string/admin_review_title">
+        <action
+            android:id="@+id/action_review_to_detail"
+            app:destination="@id/adminPostDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminPostDetailFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.review.AdminPostDetailFragment"
+        android:label="@string/admin_review_title">
+        <argument
+            android:name="postId"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="postJson"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminModeratorsFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.moderators.AdminModeratorsFragment"
+        android:label="@string/admin_moderators_title" />
+
+    <fragment
+        android:id="@+id/adminReportsFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.reports.AdminReportsFragment"
+        android:label="@string/admin_reports_title" />
+
+    <fragment
+        android:id="@+id/adminProfileFragment"
+        android:name="com.trototvn.trototandroid.ui.admin.profile.AdminProfileFragment"
+        android:label="@string/admin_profile_title" />
+</navigation>

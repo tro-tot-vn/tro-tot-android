@@ -6,6 +6,8 @@ import androidx.room.Room;
 
 import com.trototvn.trototandroid.data.local.AppDatabase;
 import com.trototvn.trototandroid.data.local.dao.ChatDao;
+import com.trototvn.trototandroid.data.repository.AdminRepository;
+import com.trototvn.trototandroid.data.repository.AdminRepositoryImpl;
 import com.trototvn.trototandroid.data.repository.PostDetailRepository;
 import com.trototvn.trototandroid.data.repository.PostDetailRepositoryImpl;
 import com.trototvn.trototandroid.data.repository.PostRepository;
@@ -39,6 +41,12 @@ public class AppModule {
     @Provides
     @Singleton
     public PostRepository providePostRepository(PostRepositoryImpl impl) {
+        return impl;
+    }
+
+    @Provides
+    @Singleton
+    public AdminRepository provideAdminRepository(AdminRepositoryImpl impl) {
         return impl;
     }
 

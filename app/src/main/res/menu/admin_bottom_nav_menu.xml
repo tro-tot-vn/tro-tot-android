@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/adminDashboardFragment"
+        android:icon="@drawable/ic_admin_dashboard"
+        android:title="@string/admin_nav_dashboard" />
+
+    <item
+        android:id="@+id/adminReviewFragment"
+        android:icon="@drawable/ic_post"
+        android:title="@string/admin_nav_review" />
+
+    <item
+        android:id="@+id/adminModeratorsFragment"
+        android:icon="@drawable/ic_admin_moderators"
+        android:title="@string/admin_nav_moderators" />
+
+    <item
+        android:id="@+id/adminReportsFragment"
+        android:icon="@drawable/ic_admin_reports"
+        android:title="@string/admin_nav_reports" />
+
+    <item
+        android:id="@+id/adminProfileFragment"
+        android:icon="@drawable/ic_user"
+        android:title="@string/admin_nav_profile" />
+</menu>

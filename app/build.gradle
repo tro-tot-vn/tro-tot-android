@@ -44,6 +44,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.room.common.jvm
     testImplementation libs.junit
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 
@@ -91,6 +92,9 @@ dependencies {
     // Post Detail UI Libraries
     implementation 'com.tbuonomo:dotsindicator:4.3'
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
+
+    // Admin Dashboard charting
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     implementation 'com.google.android.gms:play-services-maps:19.0.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'

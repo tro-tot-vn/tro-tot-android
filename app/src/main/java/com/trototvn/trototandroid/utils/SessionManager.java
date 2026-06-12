@@ -142,6 +142,54 @@ public class SessionManager {
     }
 
     /**
+     * Get the account role name (e.g. "Customer", "Moderator", "Manager").
+     * Decoded from the JWT payload (account.role.roleName), mirroring getUserId()/getAccountId().
+     */
+    public String getRole() {
+        String token = getToken();
+        if (token != null && !token.isEmpty()) {
+            try {
+                String[] parts = token.split("\\.");
+                if (parts.length >= 2) {
+                    String payload = new String(
+                            android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE), "UTF-8");
+                    org.json.JSONObject json = new org.json.JSONObject(payload);
+                    if (json.has("role")) {
+                        Object roleObj = json.get("role");
+                        if (roleObj instanceof org.json.JSONObject) {
+                            String roleName = ((org.json.JSONObject) roleObj).optString("roleName", null);
+                            if (roleName != null && !roleName.isEmpty()) {
+                                return roleName;
+                            }
+                        } else if (roleObj instanceof String) {
+                            return (String) roleObj;
+                        }
+                    }
+                    if (json.has("roleName")) {
+                        String roleName = json.optString("roleName", null);
+                        if (roleName != null && !roleName.isEmpty()) {
+                            return roleName;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // Fall through to null
+            }
+        }
+        return null;
+    }
+
+    /** True if the current account may enter the admin area (Moderator or Manager). */
+    public boolean isAdminUser() {
+        return com.trototvn.trototandroid.utils.Role.isAdminArea(getRole());
+    }
+
+    /** True if the current account is a Manager (full moderator-management rights). */
+    public boolean isManager() {
+        return com.trototvn.trototandroid.utils.Role.isManager(getRole());
+    }
+
+    /**
      * Get user name
      */
     public String getUserName() {
