@@ -4,7 +4,6 @@
     <string name="admin_nav_dashboard">Tổng quan</string>
     <string name="admin_nav_review">Duyệt tin</string>
     <string name="admin_nav_moderators">Kiểm duyệt viên</string>
-    <string name="admin_nav_reports">Báo cáo</string>
     <string name="admin_nav_profile">Hồ sơ</string>
 
     <!-- Dashboard -->
@@ -45,13 +44,6 @@
     <string name="admin_profile_change_password">Đổi mật khẩu</string>
     <string name="admin_logout">Đăng xuất</string>
     <string name="admin_profile_updated">Đã cập nhật hồ sơ</string>
-
-    <!-- Reports (mock) -->
-    <string name="admin_reports_title">Báo cáo</string>
-    <string name="admin_reports_users">Báo cáo người dùng</string>
-    <string name="admin_reports_posts">Báo cáo bài đăng</string>
-    <string name="admin_reports_comments">Báo cáo bình luận</string>
-    <string name="admin_reports_mock_banner">Dữ liệu demo — backend chưa hỗ trợ</string>
 
     <!-- Common -->
     <string name="admin_retry">Thử lại</string>

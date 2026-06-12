@@ -62,9 +62,6 @@ public class AdminActivity extends AppCompatActivity {
             if (menu.findItem(R.id.adminModeratorsFragment) != null) {
                 menu.findItem(R.id.adminModeratorsFragment).setVisible(false);
             }
-            if (menu.findItem(R.id.adminReportsFragment) != null) {
-                menu.findItem(R.id.adminReportsFragment).setVisible(false);
-            }
         }
     }
 

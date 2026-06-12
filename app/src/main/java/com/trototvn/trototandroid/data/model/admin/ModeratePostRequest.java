@@ -19,11 +19,17 @@ public class ModeratePostRequest {
     }
 
     public static ModeratePostRequest approve(String reason) {
-        return new ModeratePostRequest(ACTION_APPROVED, reason, false);
+        // Approval reason is optional. Send null (Gson omits it) when blank, otherwise the
+        // backend DTO's @minLength(1) on `reason` rejects an empty string with HTTP 400.
+        return new ModeratePostRequest(ACTION_APPROVED, blankToNull(reason), false);
     }
 
     public static ModeratePostRequest reject(String reason, boolean isHateContent) {
-        return new ModeratePostRequest(ACTION_REJECTED, reason, isHateContent);
+        return new ModeratePostRequest(ACTION_REJECTED, blankToNull(reason), isHateContent);
+    }
+
+    private static String blankToNull(String s) {
+        return (s == null || s.trim().isEmpty()) ? null : s;
     }
 
     public String getActionType() {

@@ -16,11 +16,6 @@
         android:title="@string/admin_nav_moderators" />
 
     <item
-        android:id="@+id/adminReportsFragment"
-        android:icon="@drawable/ic_admin_reports"
-        android:title="@string/admin_nav_reports" />
-
-    <item
         android:id="@+id/adminProfileFragment"
         android:icon="@drawable/ic_user"
         android:title="@string/admin_nav_profile" />

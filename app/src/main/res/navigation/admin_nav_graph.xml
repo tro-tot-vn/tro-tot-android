@@ -39,11 +39,6 @@
         android:label="@string/admin_moderators_title" />
 
     <fragment
-        android:id="@+id/adminReportsFragment"
-        android:name="com.trototvn.trototandroid.ui.admin.reports.AdminReportsFragment"
-        android:label="@string/admin_reports_title" />
-
-    <fragment
         android:id="@+id/adminProfileFragment"
         android:name="com.trototvn.trototandroid.ui.admin.profile.AdminProfileFragment"
         android:label="@string/admin_profile_title" />
