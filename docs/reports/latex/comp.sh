@@ -30,9 +30,9 @@ compile() {
 # Chay lan dau tien
 compile
 
-# Theo doi .tex / .bib (bo qua thu muc build)
+# Theo doi thay doi (bo qua thu muc build outputs/)
+# Luu y: inotifywait khong cho dung --include va --exclude cung luc
 while inotifywait -r -e modify,move,create,delete . \
-    --exclude "(^|/)${OUTPUT_DIR}/" \
-    --include '.*\.(tex|bib)$'; do
+    --exclude "(^|/)${OUTPUT_DIR}/"; do
     compile
 done

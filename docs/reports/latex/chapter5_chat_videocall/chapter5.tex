@@ -13,6 +13,18 @@
 \chapter{Chat và Gọi video}
 
 % ============================================================
+\section{Mô hình dữ liệu tổng thể}
+% ============================================================
+
+\subsection{Sơ đồ thực thể - quan hệ (ERD)}
+Dữ liệu cục bộ chủ yếu phục vụ cho tính năng Chat (Offline/Caching). Trong Room Database, các Entity chính bao gồm: \code{ConversationEntity}, \code{MessageEntity}, \code{ConversationParticipantEntity}, và \code{MessageAttachmentEntity}.
+
+\subsection{Giao tiếp với Server}
+Giao tiếp chính sử dụng Retrofit trả về kiểu dữ liệu luồng của RxJava (\code{Single}, \code{Observable}).
+Base URL của hệ thống được đặt tại biến \code{Constants.BASE\_URL}. Dữ liệu JSON trả về được parse tự động qua GsonConverter.
+
+
+% ============================================================
 \section{Kiến trúc hệ thống Chat}
 % ============================================================
 

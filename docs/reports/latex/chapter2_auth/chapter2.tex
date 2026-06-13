@@ -1,274 +1,282 @@
 % ============================================================
 %  CHƯƠNG 2: XÁC THỰC NGƯỜI DÙNG
 %  Phụ trách: [Thành viên 2]
-%  Packages: ui/splash, ui/auth, data/model/auth,
-%            data/remote (AuthInterceptor, TokenAuthenticator),
-%            utils/SessionManager
+%  Packages: ui/splash, ui/auth, ui/admin (routing sau login),
+%            data/model/auth, data/remote (AuthInterceptor,
+%            TokenAuthenticator), utils (SessionManager, Role)
 %  Ghi chú: File này được \input{} từ main.tex
 % ============================================================
 
 \chapter{Xác thực người dùng}
 
 Chương này trình bày phân hệ xác thực của ứng dụng Trọ Tốt: đăng ký, đăng
-nhập, điều hướng theo phiên và bảo vệ tài khoản bằng JWT. Nhóm viết toàn bộ
-phân hệ bằng \tech{Java} theo kiến trúc MVVM ở Chương 1. Đây là lớp chắn đầu
-tiên của ứng dụng: mọi API nghiệp vụ (đăng tin, chat, đánh giá) đều yêu cầu
-token hợp lệ do phân hệ này cấp phát và duy trì.
+nhập, phân luồng theo vai trò (Customer / Moderator / Manager) và bảo vệ
+phiên bằng JWT. Nhóm viết toàn bộ phân hệ bằng \tech{Java} theo kiến trúc
+MVVM ở Chương 1.
+
+Khác với mô hình chỉ có một màn hình chính sau đăng nhập, ứng dụng dùng
+\textbf{một form đăng nhập chung} cho mọi vai trò; server trả JWT kèm
+\code{role.roleName}, client đọc role từ token rồi mở \code{MainActivity}
+(khu vực người dùng) hoặc \code{AdminActivity} (khu vực quản trị). Không
+có màn hình chọn vai trò riêng.
 
 % ============================================================
 \section{Màn hình khởi động (Splash Screen)}
 % ============================================================
 
 \subsection{Yêu cầu chức năng}
-Khi mở ứng dụng, người dùng không phải đăng nhập lại nếu phiên trước đó còn
-hiệu lực. Màn hình khởi động hiển thị logo thương hiệu trong thời gian ngắn,
-kiểm tra trạng thái phiên rồi tự chuyển đến màn hình phù hợp -- không yêu cầu
-bất kỳ thao tác nào từ người dùng.
+Khi mở ứng dụng, người dùng không phải đăng nhập lại nếu phiên trước còn
+hiệu lực. Màn hình khởi động hiển thị logo trong thời gian ngắn, kiểm tra
+phiên và \textbf{tự điều hướng theo vai trò} -- không yêu cầu thao tác từ
+người dùng.
 
 \subsection{Thiết kế giao diện}
 Layout \code{activity\_splash.xml} tối giản: \code{FrameLayout} nền thương
-hiệu, bên trong là \code{LinearLayout} căn giữa chứa \code{ImageView} (logo)
+hiệu, bên trong \code{LinearLayout} căn giữa chứa \code{ImageView} (logo)
 và \code{TextView} (tên ứng dụng). Màn hình chỉ hiển thị 1,5 giây nên không
 đặt thêm thành phần tương tác.
 
-\subsection{Chuyển hướng tự động (Auto-navigation)}
+% TODO: Bỏ comment sau khi chụp màn hình và lưu ảnh vào images/outputs/
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.4\textwidth]{images/outputs/c2_splash_screen.png}
+%     \caption{Màn hình khởi động}
+%     \label{fig:c2_splash}
+% \end{figure}
 
 \subsection{Luồng kiểm tra phiên và chuyển hướng tự động}
 \begin{enumerate}
-    \item \code{SplashActivity} khởi chạy, Hilt inject sẵn
-    \code{SessionManager} (annotation \code{@AndroidEntryPoint}).
-    \item \code{Handler.postDelayed()} hẹn giờ 1,5 giây để logo hiển thị đủ
-    lâu trước khi điều hướng.
-    \item Hết thời gian chờ, Activity gọi \code{sessionManager.isLoggedIn()}
-    -- giá trị đọc từ bộ nhớ phiên đã mã hóa (trình bày ở mục~\ref{sec:c2_session}).
-    \item Nếu đã đăng nhập, ứng dụng mở thẳng \code{MainActivity}; ngược lại
-    mở \code{AuthActivity} chứa luồng đăng nhập/đăng ký.
-    \item \code{SplashActivity} gọi \code{finish()} để tự gỡ khỏi back stack
-    -- nhấn Back từ màn hình kế tiếp sẽ không quay lại splash.
+    \item \code{SplashActivity} khởi chạy, Hilt inject \code{SessionManager}
+    (\code{@AndroidEntryPoint}).
+    \item \code{Handler.postDelayed()} hẹn 1,5 giây trước khi điều hướng.
+    \item Gọi \code{sessionManager.isLoggedIn()} -- đọc từ
+    \code{EncryptedSharedPreferences} (mục~\ref{sec:c2_session}).
+    \item \textbf{Chưa đăng nhập:} mở \code{AuthActivity} (luồng đăng
+    nhập/đăng ký).
+    \item \textbf{Đã đăng nhập:} gọi \code{sessionManager.isAdminUser()} --
+    bóc tách \code{role.roleName} từ JWT (mục~\ref{sec:c2_role}):
+    \begin{itemize}
+        \item \code{Moderator} hoặc \code{Manager} $\rightarrow$
+        \code{AdminActivity}.
+        \item \code{Customer} (mặc định) $\rightarrow$ \code{MainActivity}.
+    \end{itemize}
+    \item \code{SplashActivity.finish()} gỡ khỏi back stack.
 \end{enumerate}
 
 \subsection{Triển khai trên Android}
 \begin{itemize}
     \item \textbf{Lớp chính:} \code{SplashActivity} (package
-    \code{ui/splash}), \code{SessionManager} (package \code{utils}).
-    \item Không gọi API nào ở bước này: trạng thái phiên đọc cục bộ nên màn
-    hình khởi động hoạt động cả khi mất mạng.
+    \code{ui/splash}), \code{SessionManager}, \code{Role} (package
+    \code{utils}).
+    \item Không gọi API: trạng thái phiên và role đọc cục bộ từ JWT nên
+    splash hoạt động cả khi mất mạng.
 \end{itemize}
 
-\textit{Đáp ứng CLO1: luồng khởi động hoàn chỉnh, tự động duy trì phiên đăng
-nhập cho người dùng.}
+\textit{Đáp ứng CLO1: luồng khởi động hoàn chỉnh, tự duy trì phiên và phân
+luồng theo vai trò.}
 
 % ============================================================
 \section{Đăng ký tài khoản}
 % ============================================================
 
 \subsection{Yêu cầu chức năng}
-Người dùng mới (người thuê hoặc chủ trọ) tạo tài khoản bằng số điện thoại và
-email. Form đăng ký thu thập: họ tên, ngày sinh, giới tính, mật khẩu, nơi ở
-hiện tại (tỉnh/thành phố $\rightarrow$ quận/huyện) và nghề nghiệp (sinh viên
-/ đã đi làm) -- hai trường sau phục vụ mô hình gợi ý bài đăng. Ứng dụng chặn
-đăng ký nếu người dùng chưa đủ 18 tuổi. Đăng ký thành công, ứng dụng đưa
-người dùng về màn hình đăng nhập.
+Form đăng ký trên app \textbf{chỉ dành cho Customer} (người thuê / chủ
+trọ). Tài khoản \code{Moderator} và \code{Manager} do Manager tạo qua khu
+vực quản trị (Chương 6), không đăng ký qua màn hình này.
+
+Người dùng mới nhập số điện thoại, email, họ tên, ngày sinh, giới tính,
+mật khẩu, nơi ở (tỉnh $\rightarrow$ quận) và nghề nghiệp. Ứng dụng chặn
+đăng ký nếu chưa đủ 18 tuổi. Thành công thì quay về màn hình đăng nhập --
+không tự đăng nhập.
 
 \subsection{Thiết kế giao diện}
-Layout \code{fragment\_register.xml} đặt toàn bộ form trong \code{ScrollView}
-để cuộn được trên màn hình nhỏ:
+Layout \code{fragment\_register.xml} đặt form trong \code{ScrollView}:
 \begin{itemize}
-    \item Cặp \code{TextInputLayout} + \code{TextInputEditText} (Material)
-    cho số điện thoại, email, họ, tên, mật khẩu -- lỗi validation hiển thị
-    ngay dưới từng ô nhập qua \code{setError()}.
-    \item \code{AutoCompleteTextView} dạng dropdown cho giới tính, nghề
-    nghiệp, tỉnh/thành phố và quận/huyện; danh sách quận/huyện nạp lại theo
-    tỉnh đã chọn.
-    \item Ô ngày sinh mở \code{DatePickerDialog}; ngày tối đa bị khóa ở mốc
-    18 năm trước nên người dùng không thể chọn ngày sinh chưa đủ tuổi.
-    \item \code{Button} đăng ký, \code{ProgressBar} trạng thái chờ,
-    \code{MaterialCardView} (\code{cardError}) hiển thị lỗi từ server và
-    \code{TextView} dẫn về màn hình đăng nhập.
+    \item Cặp \code{TextInputLayout} + \code{TextInputEditText} cho số
+    điện thoại, email, họ, tên, mật khẩu; lỗi hiển thị qua
+    \code{setError()}.
+    \item \code{AutoCompleteTextView} cho giới tính, nghề nghiệp, tỉnh/thành
+    phố và quận/huyện (quận nạp lại theo tỉnh đã chọn).
+    \item Ô ngày sinh mở \code{DatePickerDialog}, khóa tối đa ở mốc 18 năm
+    trước.
+    \item \code{Button} (\code{btnRegister}), \code{ProgressBar},
+    \code{MaterialCardView} (\code{cardError}) và \code{TextView} dẫn về
+    đăng nhập (\code{tvLoginLink}).
 \end{itemize}
-
-% TODO: Bỏ comment sau khi chụp màn hình và lưu ảnh vào images/outputs/
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.4\textwidth]{images/outputs/c2_register_screen.png}
-%     \caption{Màn hình đăng ký tài khoản}
-%     \label{fig:c2_register}
-% \end{figure}
 
 \subsection{Luồng xử lý và validation}
 \begin{enumerate}
-    \item \code{RegisterFragment} gom dữ liệu từ form, gọi
+    \item \code{RegisterFragment} gom dữ liệu, gọi
     \code{viewModel.register(...)}.
-    \item \code{RegisterViewModel} xóa lỗi cũ rồi validate từng trường: số
-    điện thoại theo mẫu \code{0} + 9 chữ số (regex), email theo regex, họ/tên
-    tối thiểu 2 ký tự, mật khẩu tối thiểu 6 ký tự, ngày sinh phải đủ 18 tuổi
-    (kiểm tra lại bằng \code{Calendar} dù UI đã khóa -- chặn cả trường hợp
-    nhập tay).
-    \item Trường nào sai, ViewModel phát thông báo qua \code{LiveData} lỗi
-    tương ứng; Fragment observe và đẩy vào \code{TextInputLayout.setError()}.
-    Luồng dừng tại đây, không gọi mạng.
-    \item Hợp lệ, ViewModel phát \code{Resource.loading()} và tạo
-    \code{RegisterRequest} gửi cho \code{AuthRepository}.
-    \item Repository gọi API trên luồng IO qua RxJava, bọc kết quả vào
-    \code{Resource} rồi trả về Main Thread.
-    \item Thành công: Fragment hiện Toast \screen{Đăng ký thành công! Vui lòng
-    đăng nhập} và điều hướng về \code{LoginFragment} qua Navigation Component.
-    Thất bại: hiện \code{cardError} với thông báo từ server (ví dụ trùng
-    email).
+    \item \code{RegisterViewModel} validate: SĐT (\code{0} + 9 chữ số),
+    email regex, họ/tên $\geq$ 2 ký tự, mật khẩu $\geq$ 6 ký tự, ngày sinh
+    đủ 18 tuổi.
+    \item Hợp lệ: tạo \code{RegisterRequest}, gọi
+    \code{POST api/auth/register} qua \code{AuthRepository} (RxJava, luồng
+    IO).
+    \item Server gán role \code{Customer} cho tài khoản mới.
+    \item Thành công: Toast \screen{Đăng ký thành công! Vui lòng đăng
+    nhập}, điều hướng về \code{LoginFragment}. Thất bại: hiện
+    \code{cardError}.
 \end{enumerate}
 
 \subsection{Triển khai trên Android}
 \begin{itemize}
     \item \textbf{Lớp chính:} \code{RegisterFragment},
-    \code{RegisterViewModel} (\code{@HiltViewModel}) thuộc package
-    \code{ui/auth/register}; \code{AuthRepository} thuộc
-    \code{data/repository}.
-    \item \textbf{API sử dụng:} \code{POST api/auth/register} với body
+    \code{RegisterViewModel} (\code{@HiltViewModel}, package
+    \code{ui/auth/register}); \code{AuthRepository}.
+    \item \textbf{API:} \code{POST api/auth/register} với
     \code{RegisterRequest} $\rightarrow$ \code{RegisterResponse}.
-    \item Danh sách tỉnh/quận đọc từ \code{LocationService} (dữ liệu hành
-    chính đóng gói sẵn trong app), không tốn request mạng khi mở form.
+    \item Danh sách tỉnh/quận từ \code{LocationService} (offline).
 \end{itemize}
 
-\textit{Đáp ứng CLO1 và CLO2: form nhập liệu hoàn chỉnh với TextInputEditText,
-AutoCompleteTextView, validation hai lớp và gọi API qua Retrofit.}
+\textit{Đáp ứng CLO1 và CLO2: form nhập liệu hoàn chỉnh, gọi API qua
+Retrofit; phân tách rõ đăng ký Customer vs tài khoản quản trị.}
 
 % ============================================================
-\section{Đăng nhập}
+\section{Đăng nhập và phân luồng theo vai trò}
 % ============================================================
 
 \subsection{Yêu cầu chức năng}
-Người dùng đăng nhập bằng \textbf{email hoặc số điện thoại} (một ô nhập
-chung -- identifier) cùng mật khẩu. Tùy chọn \screen{Ghi nhớ đăng nhập} lưu
-lại identifier để điền sẵn ở lần mở sau. Đăng nhập thành công, ứng dụng vào
-thẳng màn hình chính và duy trì phiên cho tới khi người dùng chủ động đăng
-xuất hoặc refresh token hết hạn.
+Mọi vai trò (\code{Customer}, \code{Moderator}, \code{Manager}) dùng
+\textbf{cùng một màn hình đăng nhập}: identifier (email hoặc SĐT) + mật
+khẩu. Tùy chọn \screen{Ghi nhớ đăng nhập} lưu identifier cho lần sau.
 
-\subsection{Thiết kế giao diện}
-Layout \code{fragment\_login.xml} gồm:
+Sau đăng nhập thành công, ứng dụng \textbf{không} luôn vào màn hình chính
+người dùng mà đọc role từ JWT:
 \begin{itemize}
-    \item \code{ImageView} logo, \code{TextView} tên thương hiệu và tiêu đề.
-    \item Hai cặp \code{TextInputLayout} + \code{TextInputEditText}: ô
-    identifier (email/số điện thoại) và ô mật khẩu có nút ẩn/hiện.
-    \item \code{MaterialCheckBox} (\code{cbRememberMe}) ghi nhớ đăng nhập;
-    \code{TextView} \screen{Quên mật khẩu?} và liên kết chuyển sang đăng ký.
-    \item \code{MaterialButton} (\code{btnLogin}) bị khóa trong lúc chờ,
-    \code{ProgressBar} báo trạng thái và \code{MaterialCardView}
-    (\code{cardError}) hiển thị lỗi đăng nhập sai.
+    \item \textbf{Customer} $\rightarrow$ \code{MainActivity} (trang chủ,
+    tìm kiếm, chat, hồ sơ).
+    \item \textbf{Moderator / Manager} $\rightarrow$ \code{AdminActivity}
+    (dashboard, kiểm duyệt bài đăng, quản lý moderator với Manager).
 \end{itemize}
 
-% TODO: Bỏ comment sau khi chụp màn hình và lưu ảnh vào images/outputs/
+Không có màn hình chọn vai trò -- server quyết định role khi cấp token.
+
+\subsection{Thiết kế giao diện}
+Layout \code{fragment\_login.xml} -- form chung, không widget chọn role:
+\begin{itemize}
+    \item \code{ImageView}, \code{TextView} (\code{tvBrand}, \code{tvTitle}).
+    \item \code{TextInputLayout} + \code{TextInputEditText}:
+    \code{tilIdentifier}/\code{etIdentifier}, \code{tilPassword}/
+    \code{etPassword}.
+    \item \code{MaterialCheckBox} (\code{cbRememberMe}),
+    \code{TextView} \screen{Quên mật khẩu?} (\code{tvForgotPassword}),
+    liên kết đăng ký (\code{tvRegisterLink}).
+    \item \code{MaterialButton} (\code{btnLogin}), \code{ProgressBar},
+    \code{MaterialCardView} (\code{cardError}).
+\end{itemize}
+
+% TODO: Bỏ comment sau khi chụp màn hình
 % \begin{figure}[H]
 %     \centering
 %     \includegraphics[width=0.4\textwidth]{images/outputs/c2_login_screen.png}
-%     \caption{Màn hình đăng nhập}
+%     \caption{Màn hình đăng nhập (dùng chung cho Customer và quản trị viên)}
 %     \label{fig:c2_login}
 % \end{figure}
 
 \subsection{Luồng xử lý}
 \begin{enumerate}
-    \item \code{LoginFragment} lấy identifier + mật khẩu, gọi
-    \code{viewModel.login(...)}.
-    \item \code{LoginViewModel} validate: identifier phải đúng định dạng
-    email hoặc số điện thoại, mật khẩu tối thiểu 6 ký tự. Sai thì báo lỗi
-    qua \code{LiveData}, không gọi mạng.
-    \item ViewModel phát \code{Resource.loading()}; \code{AuthRepository}
-    gửi \code{POST api/auth/login} trên luồng IO.
-    \item Server trả về cặp token (access + refresh) và thông tin tài khoản;
-    Repository lưu ngay vào \code{SessionManager} rồi phát
-    \code{Resource.success()}.
-    \item Nếu bật ghi nhớ, ViewModel lưu identifier để điền sẵn lần sau;
-    đồng thời đăng ký FCM token lên server để nhận thông báo đẩy trên
-    thiết bị này.
-    \item Fragment điều hướng sang \code{MainActivity} với cờ
-    \code{FLAG\_ACTIVITY\_CLEAR\_TASK} -- xóa sạch back stack, nhấn Back
-    không quay lại được màn hình đăng nhập.
-    \item Đăng nhập sai: \code{cardError} hiện thông báo lỗi do
-    \code{ErrorHandler} chuẩn hóa từ phản hồi server.
+    \item \code{LoginFragment} gọi \code{viewModel.login(identifier, password)}.
+    \item \code{LoginViewModel} validate định dạng email/SĐT và mật khẩu.
+    \item \code{AuthRepository} gửi \code{POST api/auth/login}; server trả
+    access + refresh token và thông tin \code{Account}.
+    \item Repository lưu token vào \code{SessionManager}; role nằm trong
+    payload JWT (\code{role.roleName}), không lưu riêng vào SharedPreferences.
+    \item Đồng bộ FCM token nếu có; lưu identifier nếu bật Ghi nhớ.
+    \item \code{LoginFragment} gọi \code{AuthActivity.navigateToMainApp()}:
+    \begin{itemize}
+        \item \code{isAdminUser()} = true (Moderator/Manager)
+        $\rightarrow$ \code{AdminActivity}.
+        \item ngược lại $\rightarrow$ \code{MainActivity}.
+    \end{itemize}
+    \item Cả hai Activity mở với \code{FLAG\_ACTIVITY\_CLEAR\_TASK}.
 \end{enumerate}
 
 \subsection{Triển khai trên Android}
 \begin{itemize}
-    \item \textbf{Lớp chính:} \code{AuthActivity} (host Navigation),
-    \code{LoginFragment}, \code{LoginViewModel} thuộc package
-    \code{ui/auth/login}; \code{AuthRepository} thuộc \code{data/repository}.
-    \item \textbf{API sử dụng:} \code{POST api/auth/login} với body
-    \code{LoginRequest\{identifier, password\}} $\rightarrow$
-    \code{LoginResponse} chứa \code{Token} và \code{Account}.
-    \item Ba màn hình đăng nhập/đăng ký/quên mật khẩu là Fragment trong cùng
-    \code{AuthActivity}, chuyển cảnh bằng \tech{Navigation Component} --
-    không tạo Activity riêng cho từng bước.
+    \item \textbf{Lớp chính:} \code{AuthActivity} (host \code{auth\_nav\_graph}),
+    \code{LoginFragment}, \code{LoginViewModel}; sau login có thể vào
+    \code{AdminActivity} hoặc \code{MainActivity}.
+    \item \textbf{API:} \code{POST api/auth/login} --
+    \code{LoginRequest} $\rightarrow$ \code{LoginResponse} (chứa
+    \code{Token} + \code{Account}).
+    \item Ba Fragment trong \code{AuthActivity}: Login, Register, Forgot
+    Password (stub) -- chuyển cảnh bằng Jetpack Navigation Component.
 \end{itemize}
 
-\textit{Đáp ứng CLO2: chức năng login làm cơ sở phân quyền người thuê / chủ
-trọ trong toàn ứng dụng.}
+\textit{Đáp ứng CLO2: login + phân quyền theo role, làm cơ sở tách khu
+vực Customer và khu vực quản trị.}
 
 % ============================================================
-\section{Quản lý phiên và bảo mật token}
-\label{sec:c2_session}
+\section{Mô hình vai trò và quản lý phiên}
+\label{sec:c2_role}
 % ============================================================
 
 \subsection{Yêu cầu chức năng}
-Phiên đăng nhập phải thỏa ba ràng buộc: token không bị lộ khi thiết bị bị
-trích xuất dữ liệu, mọi request nghiệp vụ tự động mang token mà tầng UI không
-phải bận tâm, và access token hết hạn phải được làm mới ngầm -- người dùng
-không bị văng ra giữa chừng.
+Hệ thống có ba role do backend gán (enum \code{roleName}):
+\begin{itemize}
+    \item \textbf{Customer:} người thuê / chủ trọ -- toàn bộ nghiệp vụ
+    người dùng thông thường.
+    \item \textbf{Moderator:} kiểm duyệt bài đăng, xử lý báo cáo; vào
+    \code{AdminActivity} nhưng \textbf{không} thấy tab quản lý Moderator.
+    \item \textbf{Manager:} toàn quyền quản trị, gồm tạo/khóa tài khoản
+    Moderator (tab ẩn với Moderator qua \code{applyRoleVisibility()}).
+\end{itemize}
+
+Phiên đăng nhập phải: mã hóa token khi lưu, tự gắn Bearer vào mọi request,
+tự refresh khi 401, và đọc role từ JWT mỗi lần cần phân luồng UI.
+
+\subsection{Đọc role từ JWT}
+\code{SessionManager.getRole()} giải mã payload access token (Base64),
+ưu tiên \code{role.roleName} (object lồng nhau), fallback
+\code{roleName} hoặc chuỗi \code{role} đơn giản. Class \code{Role} cung
+cấp helper:
+\begin{itemize}
+    \item \code{isAdminArea(role)} -- \code{Moderator} hoặc \code{Manager}.
+    \item \code{isManager(role)} -- chỉ \code{Manager}.
+\end{itemize}
+\code{SessionManager.isAdminUser()} và \code{isManager()} bọc hai hàm
+trên, dùng ở \code{SplashActivity}, \code{AuthActivity} và
+\code{AdminActivity}.
+
+Role \textbf{không} ghi vào SharedPreferences -- luôn lấy từ token hiện
+tại, nên sau refresh token role vẫn đồng bộ với server.
 
 \subsection{Cơ chế JWT và lưu trữ token an toàn}
-Server cấp hai JWT khi đăng nhập: \textbf{access token} (thời hạn ngắn, gắn
-vào từng request) và \textbf{refresh token} (thời hạn dài, chỉ dùng để xin
-access token mới). \code{SessionManager} lưu cả hai bằng
-\code{EncryptedSharedPreferences} của thư viện AndroidX Security: khóa mã hóa
-theo scheme \code{AES256\_SIV}, giá trị theo \code{AES256\_GCM}, master key
-sinh và giữ trong Android Keystore. Dữ liệu phiên vì vậy vẫn an toàn kể cả
-khi file preferences bị sao chép ra ngoài. Ngoài ra, \code{SessionManager}
-còn bóc tách payload của JWT (Base64) để đọc \code{accountId} dùng cho kênh
-chat/video call, thay vì tin vào dữ liệu rời rạc có thể thiếu.
+\label{sec:c2_session}
+Server cấp access token (ngắn hạn) và refresh token (dài hạn).
+\code{SessionManager.saveSession()} lưu token + id/tên/email bằng
+\code{EncryptedSharedPreferences} (AES256-SIV/GCM, master key trong
+Android Keystore). \code{getUserId()} / \code{getAccountId()} cũng bóc
+tách từ JWT (\code{customerId}, \code{accountId}) phục vụ chat/WebRTC.
 
-\subsection{Tự động gắn token vào request}
-\code{AuthInterceptor} (OkHttp Interceptor) chặn mọi request đi ra:
-\begin{itemize}
-    \item Gắn header \code{Authorization: Bearer <accessToken>} nếu phiên
-    đang có token.
-    \item Bỏ qua các đường dẫn \code{/auth/login}, \code{/auth/register},
-    \code{/auth/refresh-token} -- tránh gửi kèm token cũ đã hết hạn vào
-    chính các API xác thực.
-    \item Bổ sung các header chung (\code{Accept},
-    \code{Content-Type: application/json}) cho request có body.
-\end{itemize}
-Nhờ đặt ở tầng OkHttp, toàn bộ Repository gọi API mà không lặp lại mã xử lý
-token ở bất kỳ đâu.
+\subsection{Tự động gắn token và refresh}
+\code{AuthInterceptor} gắn \code{Authorization: Bearer} cho mọi request
+trừ \code{/auth/login}, \code{/auth/register}, \code{/auth/refresh-token}.
 
-\subsection{Tự động làm mới token (Token Refresh)}
-\code{TokenAuthenticator} cài đặt \code{okhttp3.Authenticator} -- OkHttp tự
-kích hoạt khi server trả \code{401 Unauthorized}:
-\begin{enumerate}
-    \item Đếm số lần request đã thử lại; quá 2 lần thì bỏ cuộc, tránh lặp
-    vô hạn.
-    \item Nếu chính request refresh bị 401 (refresh token hết hạn) hoặc body
-    lỗi báo \code{INVALID\_ACCESS\_TOKEN} (token bị can thiệp), xóa phiên
-    ngay -- người dùng phải đăng nhập lại.
-    \item Trường hợp còn lại, gọi đồng bộ \code{POST api/auth/refresh-token}
-    với refresh token hiện có.
-    \item Server chỉ trả access token mới; \code{SessionManager} lưu token
-    mới nhưng \textbf{giữ nguyên refresh token cũ}.
-    \item Trả về request gốc đã thay header Authorization -- OkHttp tự gửi
-    lại, tầng UI không nhận biết có gián đoạn.
-\end{enumerate}
+\code{TokenAuthenticator} xử lý 401: gọi đồng bộ
+\code{POST api/auth/refresh-token}, lưu access token mới, giữ refresh token
+cũ, retry request gốc. Refresh thất bại hoặc \code{INVALID\_ACCESS\_TOKEN}
+$\rightarrow$ \code{clearSession()}, buộc đăng nhập lại.
+
+Đăng xuất (Customer hoặc Admin): \code{clearSession()}, hủy FCM token,
+quay \code{SplashActivity}.
 
 \subsection{Triển khai trên Android}
 \begin{itemize}
-    \item \textbf{Lớp chính:} \code{SessionManager} (package \code{utils});
-    \code{AuthInterceptor}, \code{TokenAuthenticator} (package
-    \code{data/remote}) -- cả hai đăng ký vào \code{OkHttpClient} qua
-    \code{NetworkModule} (Hilt).
-    \item \textbf{API sử dụng:} \code{POST api/auth/refresh-token} với body
-    \code{RefreshTokenRequest\{refreshToken\}} $\rightarrow$
-    \code{RefreshTokenResponse\{accessToken\}}. Riêng API này khai báo bằng
-    \code{retrofit2.Call} thay vì RxJava vì \code{Authenticator} chạy đồng
-    bộ.
-    \item Đăng xuất: xóa phiên trong \code{SessionManager} và hủy đăng ký
-    FCM token trên server để thiết bị ngừng nhận thông báo.
+    \item \textbf{Lớp chính:} \code{Role}, \code{SessionManager}
+    (\code{utils}); \code{AuthInterceptor}, \code{TokenAuthenticator}
+    (\code{data/remote}, đăng ký qua \code{NetworkModule}).
+    \item \textbf{API phiên:} \code{POST api/auth/refresh-token} --
+    \code{RefreshTokenRequest} $\rightarrow$
+    \code{RefreshTokenResponse\{accessToken\}} (dùng \code{retrofit2.Call}
+    vì Authenticator chạy đồng bộ).
+    \item \textbf{Phân luồng UI:} \code{SplashActivity} /
+    \code{AuthActivity} $\rightarrow$ \code{MainActivity} |
+    \code{AdminActivity}; \code{AdminActivity.logout()} $\rightarrow$
+    \code{SplashActivity}.
 \end{itemize}
 
-\textit{Đáp ứng CLO2: bảo vệ tài khoản cá nhân và quyền riêng tư -- token mã
-hóa khi lưu trữ, tự động làm mới phiên, thu hồi khi đăng xuất.}
+\textit{Đáp ứng CLO2: phân quyền Customer / Moderator / Manager, bảo vệ
+tài khoản bằng JWT mã hóa và refresh tự động.}
