@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom navigation -->
+    <string name="admin_nav_dashboard">Tổng quan</string>
+    <string name="admin_nav_review">Duyệt tin</string>
+    <string name="admin_nav_moderators">Kiểm duyệt viên</string>
+    <string name="admin_nav_profile">Hồ sơ</string>
+
+    <!-- Dashboard -->
+    <string name="admin_dashboard_title">Bảng điều khiển</string>
+    <string name="admin_stat_pending">Tin chờ duyệt</string>
+    <string name="admin_stat_approved_week">Đã duyệt trong tuần</string>
+    <string name="admin_stat_rejected_week">Đã từ chối trong tuần</string>
+    <string name="admin_chart_title">Thống kê bài đăng trong tuần</string>
+
+    <!-- Post review -->
+    <string name="admin_review_title">Tin chờ duyệt</string>
+    <string name="admin_review_empty">Không có tin nào chờ duyệt</string>
+    <string name="admin_action_approve">Duyệt</string>
+    <string name="admin_action_reject">Từ chối</string>
+    <string name="admin_reason_hint">Lý do (bắt buộc khi từ chối)</string>
+    <string name="admin_reason_required">Vui lòng nhập lý do từ chối</string>
+    <string name="admin_moderate_success_approved">Đã duyệt bài đăng</string>
+    <string name="admin_moderate_success_rejected">Đã từ chối bài đăng</string>
+    <string name="admin_history_title">Lịch sử duyệt</string>
+    <string name="admin_history_empty">Chưa có lịch sử duyệt</string>
+    <string name="admin_hate_content">Đánh dấu nội dung vi phạm</string>
+
+    <!-- Moderator management -->
+    <string name="admin_moderators_title">Quản lý kiểm duyệt viên</string>
+    <string name="admin_moderators_search_hint">Tìm theo email hoặc SĐT</string>
+    <string name="admin_moderators_add">Thêm kiểm duyệt viên</string>
+    <string name="admin_moderators_empty">Chưa có kiểm duyệt viên nào</string>
+    <string name="admin_status_active">Hoạt động</string>
+    <string name="admin_status_inactive">Tạm khóa</string>
+    <string name="admin_reset_password_confirm">Khôi phục mật khẩu mặc định cho kiểm duyệt viên này?</string>
+    <string name="admin_create_success">Đã thêm kiểm duyệt viên</string>
+    <string name="admin_status_updated">Đã cập nhật trạng thái</string>
+    <string name="admin_password_reset_done">Đã đặt lại mật khẩu</string>
+
+    <!-- Profile -->
+    <string name="admin_profile_title">Hồ sơ của tôi</string>
+    <string name="admin_profile_save">Lưu</string>
+    <string name="admin_profile_change_password">Đổi mật khẩu</string>
+    <string name="admin_logout">Đăng xuất</string>
+    <string name="admin_profile_updated">Đã cập nhật hồ sơ</string>
+
+    <!-- Common -->
+    <string name="admin_retry">Thử lại</string>
+    <string name="admin_cancel">Hủy</string>
+    <string name="admin_confirm">Xác nhận</string>
+</resources>

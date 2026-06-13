@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.trototvn.trototandroid.data.remote.AdminApiService;
 import com.trototvn.trototandroid.data.remote.ApiClient;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.data.remote.AuthInterceptor;
@@ -165,6 +166,12 @@ public class NetworkModule {
     @Singleton
     public ProfileApiService provideProfileApiService(Retrofit retrofit) {
         return retrofit.create(ProfileApiService.class);
+    }
+
+    @Provides
+    @Singleton
+    public AdminApiService provideAdminApiService(Retrofit retrofit) {
+        return retrofit.create(AdminApiService.class);
     }
 
     @Provides

@@ -8,6 +8,7 @@ import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.trototvn.trototandroid.R;
+import com.trototvn.trototandroid.ui.admin.AdminActivity;
 import com.trototvn.trototandroid.ui.auth.AuthActivity;
 import com.trototvn.trototandroid.ui.main.MainActivity;
 import com.trototvn.trototandroid.utils.SessionManager;
@@ -41,8 +42,10 @@ public class SplashActivity extends AppCompatActivity {
         Intent intent;
         
         if (sessionManager.isLoggedIn()) {
-            // User is logged in → go to MainActivity
-            intent = new Intent(this, MainActivity.class);
+            // Logged in → route by role: Moderator/Manager → AdminActivity, else MainActivity
+            intent = sessionManager.isAdminUser()
+                    ? new Intent(this, AdminActivity.class)
+                    : new Intent(this, MainActivity.class);
         } else {
             // User not logged in → go to AuthActivity
             intent = new Intent(this, AuthActivity.class);

@@ -74,6 +74,11 @@
             android:name=".ui.main.MainActivity"
             android:exported="false" />
 
+        <!-- Admin Activity - Moderation area for Moderator/Manager roles -->
+        <activity
+            android:name=".ui.admin.AdminActivity"
+            android:exported="false" />
+
         <!-- Incoming Call UI -->
         <activity
             android:name=".ui.videocall.IncomingCallActivity"
