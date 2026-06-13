@@ -39,6 +39,10 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class AdminModeratorsFragment extends Fragment
         implements ModeratorAdapter.OnModeratorActionListener {
 
+    // Mirror the backend AddModeratorRequest constraints (admin.dto.ts)
+    private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+    private static final String PHONE_REGEX = "^(0|84)(3|5|7|8|9)\\d{8}$";
+
     @Inject
     SessionManager sessionManager;
 
@@ -194,6 +198,12 @@ public class AdminModeratorsFragment extends Fragment
 
     @Nullable
     private AddModeratorRequest validateAddForm(DialogAddModeratorBinding b) {
+        b.tilFirstName.setError(null);
+        b.tilLastName.setError(null);
+        b.tilEmail.setError(null);
+        b.tilPhone.setError(null);
+        b.tilBirthday.setError(null);
+
         String firstName = text(b.etFirstName);
         String lastName = text(b.etLastName);
         String email = text(b.etEmail);
@@ -201,20 +211,46 @@ public class AdminModeratorsFragment extends Fragment
         String birthday = text(b.etBirthday);
         String gender = b.rbFemale.isChecked() ? "Female" : "Male";
 
-        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()
-                || phone.isEmpty() || birthday.isEmpty()) {
-            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-            return null;
+        boolean valid = true;
+        if (firstName.isEmpty() || firstName.length() > 30) {
+            b.tilFirstName.setError("Họ từ 1–30 ký tự");
+            valid = false;
         }
-        if (!phone.matches("^(0|84)(3|5|7|8|9)\\d{8}$")) {
-            Toast.makeText(requireContext(), "Số điện thoại không hợp lệ", Toast.LENGTH_SHORT).show();
-            return null;
+        if (lastName.isEmpty() || lastName.length() > 30) {
+            b.tilLastName.setError("Tên từ 1–30 ký tự");
+            valid = false;
         }
-        if (!birthday.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
-            Toast.makeText(requireContext(), "Ngày sinh phải có dạng yyyy-MM-dd", Toast.LENGTH_SHORT).show();
+        if (!email.matches(EMAIL_REGEX)) {
+            b.tilEmail.setError("Email không hợp lệ");
+            valid = false;
+        }
+        if (!phone.matches(PHONE_REGEX)) {
+            b.tilPhone.setError("SĐT phải dạng 0xxxxxxxxx hoặc 84xxxxxxxxx");
+            valid = false;
+        }
+        if (!isValidBirthday(birthday)) {
+            b.tilBirthday.setError("Ngày sinh hợp lệ, dạng yyyy-MM-dd");
+            valid = false;
+        }
+        if (!valid) {
             return null;
         }
         return new AddModeratorRequest(firstName, lastName, email, phone, gender, birthday);
+    }
+
+    /** Format yyyy-MM-dd, a real calendar date, not in the future. */
+    private static boolean isValidBirthday(String s) {
+        if (s == null || !s.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+            return false;
+        }
+        java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        fmt.setLenient(false);
+        try {
+            java.util.Date date = fmt.parse(s);
+            return date != null && !date.after(new java.util.Date());
+        } catch (java.text.ParseException e) {
+            return false;
+        }
     }
 
     private void showProfileDialog(Moderator m) {

@@ -12,6 +12,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/tilFirstName"
             android:hint="Họ"
             xmlns:tools="http://schemas.android.com/tools"
             tools:ignore="HardcodedText">
@@ -27,6 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:id="@+id/tilLastName"
             android:hint="Tên"
             xmlns:tools="http://schemas.android.com/tools"
             tools:ignore="HardcodedText">
@@ -42,6 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:id="@+id/tilEmail"
             android:hint="Email"
             xmlns:tools="http://schemas.android.com/tools"
             tools:ignore="HardcodedText">
@@ -57,6 +60,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:id="@+id/tilPhone"
             android:hint="Số điện thoại (0xxxxxxxxx)"
             xmlns:tools="http://schemas.android.com/tools"
             tools:ignore="HardcodedText">
@@ -72,6 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:id="@+id/tilBirthday"
             android:hint="Ngày sinh (yyyy-MM-dd)"
             xmlns:tools="http://schemas.android.com/tools"
             tools:ignore="HardcodedText">

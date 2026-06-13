@@ -66,15 +66,27 @@ public class AdminRepositoryImplTest {
     }
 
     @Test
-    public void getDashboardStats_nonSuccessStatus_mapsToResourceErrorWithMessage() {
+    public void getDashboardStats_nonSuccessStatus_translatesCodeToVietnamese() {
+        // Defensive branch: 2xx HTTP but body.status != 200 -> translateCode maps the known code.
         FakeAdminApiService api = new FakeAdminApiService();
         api.dashboard = response(500, "INTERNAL_SERVER_ERROR", null);
 
         Resource<DashboardStats> result = new AdminRepositoryImpl(api).getDashboardStats().blockingGet();
 
         assertEquals(Resource.Status.ERROR, result.getStatus());
-        assertEquals("INTERNAL_SERVER_ERROR", result.getMessage());
+        assertEquals("Lỗi máy chủ, vui lòng thử lại sau", result.getMessage());
         assertNull(result.getData());
+    }
+
+    @Test
+    public void getDashboardStats_unknownCode_fallsBackToDefaultMessage() {
+        FakeAdminApiService api = new FakeAdminApiService();
+        api.dashboard = response(500, "SOME_UNMAPPED_CODE", null);
+
+        Resource<DashboardStats> result = new AdminRepositoryImpl(api).getDashboardStats().blockingGet();
+
+        assertEquals(Resource.Status.ERROR, result.getStatus());
+        assertEquals("Không thể tải thống kê", result.getMessage());
     }
 
     @Test
@@ -99,7 +111,7 @@ public class AdminRepositoryImplTest {
                 .blockingGet();
 
         assertEquals(Resource.Status.ERROR, result.getStatus());
-        assertEquals("EMAIL_ALREADY_EXISTS", result.getMessage());
+        assertEquals("Email đã được sử dụng", result.getMessage());
     }
 
     @Test

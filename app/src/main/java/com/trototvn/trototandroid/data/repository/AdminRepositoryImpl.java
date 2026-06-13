@@ -11,6 +11,7 @@ import com.trototvn.trototandroid.data.model.admin.ModeratorActionHistoryItem;
 import com.trototvn.trototandroid.data.model.admin.PostModerationHistoryItem;
 import com.trototvn.trototandroid.data.model.admin.UpdateModeratorStatusRequest;
 import com.trototvn.trototandroid.data.remote.AdminApiService;
+import com.trototvn.trototandroid.data.remote.ApiErrorParser;
 
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,6 @@ import timber.log.Timber;
  */
 @Singleton
 public class AdminRepositoryImpl implements AdminRepository {
-
-    private static final String GENERIC_ERROR = "Lỗi kết nối";
 
     private final AdminApiService api;
 
@@ -119,11 +118,11 @@ public class AdminRepositoryImpl implements AdminRepository {
                     if (response.getStatus() == 200) {
                         return Resource.success(response.getData());
                     }
-                    return Resource.<T>error(messageOr(response.getMessage(), defaultError), null);
+                    return Resource.<T>error(ApiErrorParser.translateCode(response.getMessage(), defaultError), null);
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Admin request failed");
-                    return Resource.error(messageOr(throwable.getMessage(), GENERIC_ERROR), null);
+                    return Resource.error(ApiErrorParser.message(throwable), null);
                 });
     }
 
@@ -142,15 +141,11 @@ public class AdminRepositoryImpl implements AdminRepository {
                         }
                         return Resource.success(msg != null ? msg : "");
                     }
-                    return Resource.<String>error(messageOr(response.getMessage(), defaultError), null);
+                    return Resource.<String>error(ApiErrorParser.translateCode(response.getMessage(), defaultError), null);
                 })
                 .onErrorReturn(throwable -> {
                     Timber.e(throwable, "Admin action failed");
-                    return Resource.error(messageOr(throwable.getMessage(), GENERIC_ERROR), null);
+                    return Resource.error(ApiErrorParser.message(throwable), null);
                 });
-    }
-
-    private static String messageOr(String message, String fallback) {
-        return (message != null && !message.isEmpty()) ? message : fallback;
     }
 }
