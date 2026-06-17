@@ -287,7 +287,18 @@ public class ChatRepository {
      * ViewModel subscribe trên IO, observe trên Main.
      */
     public Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> observeConversations() {
-        return chatDao.getConversationsWithStatus()
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException e) {
+                    Timber.e(e, "Failed to parse currentUserId: %s", uid);
+                }
+            }
+        }
+        return chatDao.getConversationsWithStatus(currentUserId)
                 .subscribeOn(Schedulers.io());
     }
 

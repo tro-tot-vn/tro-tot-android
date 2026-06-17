@@ -85,11 +85,13 @@ public interface ChatDao {
     @Query("SELECT * FROM conversations ORDER BY updated_at DESC")
     Flowable<List<ConversationEntity>> getAllConversations();
 
-    @Query("SELECT c.*, " +
+    @Query("SELECT c.conversation_id, c.partner_name, c.partner_avatar, c.last_message, " +
+           "(SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.conversation_id AND m.sender_id != :currentUserId AND m.message_status = 'SENT' AND m.deleted_at IS NULL) AS unread_count, " +
+           "c.created_at, c.updated_at, " +
            "(SELECT sender_id FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS lastMessageSenderId, " +
            "(SELECT message_status FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS lastMessageStatus " +
            "FROM conversations c ORDER BY c.updated_at DESC")
-    Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> getConversationsWithStatus();
+    Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> getConversationsWithStatus(long currentUserId);
 
     @Query("SELECT MAX(created_at) FROM messages")
     java.util.Date getLatestMessageTimestampSync();
