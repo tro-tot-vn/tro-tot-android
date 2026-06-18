@@ -56,7 +56,8 @@ public class NetworkModule {
                     new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US),
                     new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US),
                     new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.US),
-                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                    new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US),
+                    new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             };
             for (java.text.SimpleDateFormat f : formats) {
                 f.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));

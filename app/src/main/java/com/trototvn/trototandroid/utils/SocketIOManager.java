@@ -138,6 +138,27 @@ public class SocketIOManager {
         socket.on(SocketEvents.USER_OFFLINE, args -> userStatusSubject.onNext(args[0]));
 
         socket.on("error", args -> Timber.e("Socket business error: %s", args[0]));
+
+        // Debug candidate socket status events
+        String[] debugEvents = {
+            "message:delivered",
+            "message:status",
+            "message:update",
+            "message:delivered_status",
+            "message:sent",
+            "status",
+            "delivered",
+            "received"
+        };
+        for (String ev : debugEvents) {
+            socket.on(ev, args -> {
+                if (args != null && args.length > 0 && args[0] != null) {
+                    Timber.d("DEBUG_SOCKET: Received event '%s' with payload: %s", ev, args[0]);
+                } else {
+                    Timber.d("DEBUG_SOCKET: Received event '%s' with no payload", ev);
+                }
+            });
+        }
     }
 
     /**
@@ -214,6 +235,37 @@ public class SocketIOManager {
             } catch (Exception e) {
                 Timber.e(e, "Error emitting message:read");
             }
+        }
+    }
+
+    /**
+     * Emit message received (delivered) event
+     */
+    public void emitMessageReceived(long conversationId, java.util.List<Long> messageIds) {
+        if (socket != null && socket.connected()) {
+            com.google.gson.JsonObject data = new com.google.gson.JsonObject();
+            data.addProperty("conversationId", conversationId);
+            
+            com.google.gson.JsonArray idsArray = new com.google.gson.JsonArray();
+            for (Long id : messageIds) {
+                idsArray.add(id);
+            }
+            data.add("messageIds", idsArray);
+            
+            if (!messageIds.isEmpty()) {
+                data.addProperty("messageId", messageIds.get(messageIds.size() - 1));
+            }
+            
+            try {
+                org.json.JSONObject payload = new org.json.JSONObject(data.toString());
+                socket.emit(SocketEvents.MESSAGE_RECEIVED, payload);
+                Timber.d("Emitted message:received via socket: %s", payload);
+            } catch (Exception e) {
+                Timber.e(e, "Error emitting message:received");
+            }
+        } else {
+            Timber.w("emitMessageReceived: Cannot emit message:received. Socket is %s", 
+                    socket == null ? "NULL" : "DISCONNECTED");
         }
     }
 
