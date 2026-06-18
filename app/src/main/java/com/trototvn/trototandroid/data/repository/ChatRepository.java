@@ -82,6 +82,22 @@ public class ChatRepository {
         }
     }
 
+    public static class InAppNotificationEvent {
+        public final long conversationId;
+        public final String partnerName;
+        public final String partnerAvatar;
+        public final String messageContent;
+        public final String messageType;
+
+        public InAppNotificationEvent(long conversationId, String partnerName, String partnerAvatar, String messageContent, String messageType) {
+            this.conversationId = conversationId;
+            this.partnerName = partnerName;
+            this.partnerAvatar = partnerAvatar;
+            this.messageContent = messageContent;
+            this.messageType = messageType;
+        }
+    }
+
     // Số tin nhắn tối đa giữ lại mỗi conversation khi cleanup
     private static final int KEEP_MESSAGES_COUNT = 100;
 
@@ -95,6 +111,12 @@ public class ChatRepository {
 
     // Dùng CompositeDisposable để quản lý Socket subscription
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
+
+    private final PublishSubject<InAppNotificationEvent> inAppNotificationSubject = PublishSubject.create();
+
+    public Observable<InAppNotificationEvent> getInAppNotificationEvents() {
+        return inAppNotificationSubject;
+    }
 
     private final io.socket.emitter.Emitter.Listener onIncomingCallRequestListener = this::onIncomingCallRequest;
     private final io.socket.emitter.Emitter.Listener onIncomingCallEndedListener = this::onIncomingCallEnded;
@@ -646,25 +668,55 @@ public class ChatRepository {
         }
         final String lastMsg = content;
 
-        // TODO: Triển khai In-app Notification tại đây.
+        // Triển khai In-app Notification tại đây.
         // Nếu người dùng đang online nhưng KHÔNG ở trong phòng chat này (activeConversationId != entity.conversationId)
         // thì kích hoạt hiển thị một Custom In-app Banner/Popup thông báo tin nhắn mới trượt từ trên xuống.
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        final long myId = currentUserId;
+
+        if (entity.senderId != myId) {
+            String activeId = com.trototvn.trototandroid.App.activeConversationId;
+            boolean isCurrentChatActive = activeId != null && activeId.equals(String.valueOf(entity.conversationId));
+            if (!isCurrentChatActive) {
+                chatDao.getConversationById(entity.conversationId)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                conv -> {
+                                    inAppNotificationSubject.onNext(new InAppNotificationEvent(
+                                            entity.conversationId,
+                                            conv.partnerName,
+                                            conv.partnerAvatar,
+                                            lastMsg,
+                                            entity.messageType
+                                    ));
+                                },
+                                throwable -> {
+                                    inAppNotificationSubject.onNext(new InAppNotificationEvent(
+                                            entity.conversationId,
+                                            "Tin nhắn mới",
+                                            null,
+                                            lastMsg,
+                                            entity.messageType
+                                    ));
+                                }
+                        );
+            }
+        }
 
         return chatDao.insertMessage(entity)
                 .andThen(chatDao.updateConversationLastMessage(entity.conversationId, lastMsg, entity.createdAt))
                 .andThen(Completable.fromAction(() -> {
-                    long currentUserId = 0;
-                    if (sessionManager != null) {
-                        String uid = sessionManager.getUserId();
-                        if (uid != null && !uid.isEmpty()) {
-                            try {
-                                currentUserId = Long.parseLong(uid);
-                            } catch (NumberFormatException ignored) {}
-                        }
-                    }
                     Timber.d("saveIncomingMessageEntity: messageId=%d, senderId=%d, currentUserId=%d, status=%s", 
-                            entity.messageId, entity.senderId, currentUserId, entity.messageStatus);
-                    if (entity.senderId != currentUserId 
+                            entity.messageId, entity.senderId, myId, entity.messageStatus);
+                    if (entity.senderId != myId 
                             && !MessageStatus.READ.equals(entity.messageStatus) 
                             && !MessageStatus.DELIVERED.equals(entity.messageStatus)) {
                         Timber.d("saveIncomingMessageEntity: Emitting DELIVERED receipt back to server for messageId: %d", entity.messageId);

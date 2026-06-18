@@ -29,6 +29,15 @@ public class MainViewModel extends BaseViewModel {
     private final SocketIOManager socketIOManager;
 
     private final MutableLiveData<Boolean> logoutCompleted = new MutableLiveData<>();
+    private final MutableLiveData<ChatRepository.InAppNotificationEvent> inAppNotificationEvent = new MutableLiveData<>();
+
+    public LiveData<ChatRepository.InAppNotificationEvent> getInAppNotificationEvent() {
+        return inAppNotificationEvent;
+    }
+
+    public void clearInAppNotificationEvent() {
+        inAppNotificationEvent.setValue(null);
+    }
 
     @Inject
     public MainViewModel(
@@ -62,6 +71,17 @@ public class MainViewModel extends BaseViewModel {
 
             // 4. Listen to incoming calls globally
             chatRepository.observeIncomingCalls();
+
+            // 5. Listen to in-app notification events
+            addDisposable(
+                    chatRepository.getInAppNotificationEvents()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    event -> inAppNotificationEvent.setValue(event),
+                                    throwable -> Timber.e(throwable, "Error observing in-app notifications")
+                            )
+            );
         }
     }
 
