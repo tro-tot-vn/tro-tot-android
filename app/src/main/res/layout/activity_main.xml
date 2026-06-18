@@ -40,4 +40,89 @@
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 
+    <!-- In-app Notification Banner -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/inAppNotificationBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="?attr/colorOutline"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/notificationAvatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.App.Circle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:src="@drawable/ic_user" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/notificationTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Title"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                app:layout_constraintEnd_toStartOf="@id/notificationCloseBtn"
+                app:layout_constraintStart_toEndOf="@id/notificationAvatar"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Nguyễn Văn A" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/notificationBody"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp"
+                app:layout_constraintEnd_toStartOf="@id/notificationCloseBtn"
+                app:layout_constraintStart_toEndOf="@id/notificationAvatar"
+                app:layout_constraintTop_toBottomOf="@id/notificationTitle"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:text="Chào bạn, phòng còn trống không ạ?" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/notificationCloseBtn"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:padding="4dp"
+                android:scaleType="fitCenter"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Close notification"
+                android:src="@drawable/icons8_close"
+                app:tint="@color/icon_fill_muted"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

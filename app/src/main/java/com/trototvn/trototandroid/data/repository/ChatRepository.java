@@ -82,6 +82,22 @@ public class ChatRepository {
         }
     }
 
+    public static class InAppNotificationEvent {
+        public final long conversationId;
+        public final String partnerName;
+        public final String partnerAvatar;
+        public final String messageContent;
+        public final String messageType;
+
+        public InAppNotificationEvent(long conversationId, String partnerName, String partnerAvatar, String messageContent, String messageType) {
+            this.conversationId = conversationId;
+            this.partnerName = partnerName;
+            this.partnerAvatar = partnerAvatar;
+            this.messageContent = messageContent;
+            this.messageType = messageType;
+        }
+    }
+
     // Số tin nhắn tối đa giữ lại mỗi conversation khi cleanup
     private static final int KEEP_MESSAGES_COUNT = 100;
 
@@ -95,6 +111,12 @@ public class ChatRepository {
 
     // Dùng CompositeDisposable để quản lý Socket subscription
     private final CompositeDisposable socketDisposables = new CompositeDisposable();
+
+    private final PublishSubject<InAppNotificationEvent> inAppNotificationSubject = PublishSubject.create();
+
+    public Observable<InAppNotificationEvent> getInAppNotificationEvents() {
+        return inAppNotificationSubject;
+    }
 
     private final io.socket.emitter.Emitter.Listener onIncomingCallRequestListener = this::onIncomingCallRequest;
     private final io.socket.emitter.Emitter.Listener onIncomingCallEndedListener = this::onIncomingCallEnded;
@@ -287,7 +309,18 @@ public class ChatRepository {
      * ViewModel subscribe trên IO, observe trên Main.
      */
     public Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> observeConversations() {
-        return chatDao.getConversationsWithStatus()
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException e) {
+                    Timber.e(e, "Failed to parse currentUserId: %s", uid);
+                }
+            }
+        }
+        return chatDao.getConversationsWithStatus(currentUserId)
                 .subscribeOn(Schedulers.io());
     }
 
@@ -624,29 +657,89 @@ public class ChatRepository {
     }
 
     /**
+     * Lưu tin nhắn nhận được (Entity) vào Room DB, cập nhật hội thoại và phát sự kiện phản hồi đã nhận.
+     */
+    public Completable saveIncomingMessageEntity(MessageEntity entity) {
+        String content = entity.content;
+        if (MessageType.IMAGE.equals(entity.messageType)) {
+            content = "[Hình ảnh]";
+        } else if (MessageType.FILE.equals(entity.messageType)) {
+            content = "[Tập tin đính kèm]";
+        }
+        final String lastMsg = content;
+
+        // Triển khai In-app Notification tại đây.
+        // Nếu người dùng đang online nhưng KHÔNG ở trong phòng chat này (activeConversationId != entity.conversationId)
+        // thì kích hoạt hiển thị một Custom In-app Banner/Popup thông báo tin nhắn mới trượt từ trên xuống.
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        final long myId = currentUserId;
+
+        if (entity.senderId != myId) {
+            String activeId = com.trototvn.trototandroid.App.activeConversationId;
+            boolean isCurrentChatActive = activeId != null && activeId.equals(String.valueOf(entity.conversationId));
+            if (!isCurrentChatActive) {
+                chatDao.getConversationById(entity.conversationId)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                conv -> {
+                                    inAppNotificationSubject.onNext(new InAppNotificationEvent(
+                                            entity.conversationId,
+                                            conv.partnerName,
+                                            conv.partnerAvatar,
+                                            lastMsg,
+                                            entity.messageType
+                                    ));
+                                },
+                                throwable -> {
+                                    inAppNotificationSubject.onNext(new InAppNotificationEvent(
+                                            entity.conversationId,
+                                            "Tin nhắn mới",
+                                            null,
+                                            lastMsg,
+                                            entity.messageType
+                                    ));
+                                }
+                        );
+            }
+        }
+
+        return chatDao.insertMessage(entity)
+                .andThen(chatDao.updateConversationLastMessage(entity.conversationId, lastMsg, entity.createdAt))
+                .andThen(Completable.fromAction(() -> {
+                    Timber.d("saveIncomingMessageEntity: messageId=%d, senderId=%d, currentUserId=%d, status=%s", 
+                            entity.messageId, entity.senderId, myId, entity.messageStatus);
+                    if (entity.senderId != myId 
+                            && !MessageStatus.READ.equals(entity.messageStatus) 
+                            && !MessageStatus.DELIVERED.equals(entity.messageStatus)) {
+                        Timber.d("saveIncomingMessageEntity: Emitting DELIVERED receipt back to server for messageId: %d", entity.messageId);
+                        socketIOManager.emitMessageReceived(entity.conversationId, java.util.Collections.singletonList(entity.messageId));
+                    } else {
+                        Timber.d("saveIncomingMessageEntity: Condition NOT met for emitting receipt (sender is current user OR status is READ/DELIVERED)");
+                    }
+                }));
+    }
+
+    /**
      * Lưu tin nhắn nhận được từ Socket vào Room DB và cập nhật hội thoại.
      */
     public Completable saveIncomingMessage(String jsonPayload) {
+        Timber.d("saveIncomingMessage: Received raw socket payload: %s", jsonPayload);
         return Single.fromCallable(() -> {
             SocketMessageEvent event = gson.fromJson(jsonPayload, SocketMessageEvent.class);
+            Timber.d("saveIncomingMessage: Parsed socket event: msgId=%d, senderId=%d, status=%s", 
+                    event.messageId, event.senderId, event.messageStatus);
             return mapSocketEventToEntity(event);
         })
-        .flatMapCompletable(entity -> {
-            String content = entity.content;
-            if (MessageType.IMAGE.equals(entity.messageType)) {
-                content = "[Hình ảnh]";
-            } else if (MessageType.FILE.equals(entity.messageType)) {
-                content = "[Tập tin đính kèm]";
-            }
-
-            // TODO: Triển khai In-app Notification tại đây.
-            // Nếu người dùng đang online nhưng KHÔNG ở trong phòng chat này (activeConversationId != entity.conversationId)
-            // thì kích hoạt hiển thị một Custom In-app Banner/Popup thông báo tin nhắn mới trượt từ trên xuống.
-
-            return chatDao.insertMessage(entity)
-                    .andThen(chatDao.updateConversationLastMessage(entity.conversationId, content, entity.createdAt));
-        })
-        .doOnComplete(() -> Timber.d("Saved incoming message & updated conversation"))
+        .flatMapCompletable(this::saveIncomingMessageEntity)
+        .doOnComplete(() -> Timber.d("Saved incoming message & updated conversation successfully"))
         .doOnError(err -> Timber.e(err, "Failed to save incoming message: %s", err.getMessage()));
     }
 
@@ -844,7 +937,37 @@ public class ChatRepository {
             
             return chatDao.insertMessages(entities)
                 .andThen(attachments.isEmpty() ? Completable.complete() : chatDao.insertAttachments(attachments))
-                .andThen(Completable.merge(updates));
+                .andThen(Completable.merge(updates))
+                .andThen(Completable.fromAction(() -> {
+                    long currentUserId = 0;
+                    if (sessionManager != null) {
+                        String uid = sessionManager.getUserId();
+                        if (uid != null && !uid.isEmpty()) {
+                            try {
+                                currentUserId = Long.parseLong(uid);
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                    final long myId = currentUserId;
+                    
+                    java.util.Map<Long, java.util.List<Long>> convToMsgIds = new java.util.HashMap<>();
+                    for (MessageDto dto : dtos) {
+                        if (dto.senderId != myId 
+                                && !MessageStatus.READ.equalsIgnoreCase(dto.messageStatus) 
+                                && !MessageStatus.DELIVERED.equalsIgnoreCase(dto.messageStatus)) {
+                            java.util.List<Long> ids = convToMsgIds.get(dto.conversationId);
+                            if (ids == null) {
+                                ids = new java.util.ArrayList<>();
+                                convToMsgIds.put(dto.conversationId, ids);
+                            }
+                            ids.add(dto.messageId);
+                        }
+                    }
+                    
+                    for (java.util.Map.Entry<Long, java.util.List<Long>> entry : convToMsgIds.entrySet()) {
+                        socketIOManager.emitMessageReceived(entry.getKey(), entry.getValue());
+                    }
+                }));
         });
     }
 

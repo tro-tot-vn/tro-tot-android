@@ -50,6 +50,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Inject
     com.trototvn.trototandroid.data.repository.AuthRepository authRepository;
 
+    @Inject
+    com.trototvn.trototandroid.data.repository.ChatRepository chatRepository;
+
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
@@ -169,8 +172,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     new Date(System.currentTimeMillis()),
                     null);
 
-            // Insert trực tiếp vào Room DB trên luồng background
-            chatDao.insertMessage(entity)
+            chatRepository.saveIncomingMessageEntity(entity)
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                             () -> Timber.d("FCM chat message synced to Room: %s", messageId),

@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -22,6 +21,14 @@ import androidx.lifecycle.ViewModelProvider;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import com.trototvn.trototandroid.di.GlideApp;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+
 /**
  * MainActivity - Main app container with bottom navigation
  * Hosts Home, Search, MyPosts, and Profile fragments
@@ -32,6 +39,10 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private NavController navController;
     private MainViewModel viewModel;
+
+    private final Handler bannerHandler = new Handler(Looper.getMainLooper());
+    private Runnable hideBannerRunnable;
+    private boolean isBannerShowing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +62,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize session and socket connection inside ViewModel
         viewModel.initSessionSync();
+
+        viewModel.getInAppNotificationEvent().observe(this, event -> {
+            if (event != null) {
+                showInAppBanner(event);
+                viewModel.clearInAppNotificationEvent();
+            }
+        });
 
         setupNavigation();
         setupBottomNavigation();
@@ -153,8 +171,86 @@ public class MainActivity extends AppCompatActivity {
         return navController != null && navController.navigateUp() || super.onSupportNavigateUp();
     }
 
+    private void showInAppBanner(com.trototvn.trototandroid.data.repository.ChatRepository.InAppNotificationEvent event) {
+        if (binding == null) return;
+
+        binding.notificationTitle.setText(event.partnerName);
+        binding.notificationBody.setText(event.messageContent);
+
+        // Load avatar using Glide
+        GlideApp.with(this)
+                .load(event.partnerAvatar)
+                .placeholder(R.drawable.ic_user)
+                .error(R.drawable.ic_user)
+                .circleCrop()
+                .into(binding.notificationAvatar);
+
+        // Click on banner to open chat
+        binding.inAppNotificationBanner.setOnClickListener(v -> {
+            hideInAppBanner(true);
+            if (navController != null) {
+                Bundle bundle = new Bundle();
+                bundle.putLong("conversationId", event.conversationId);
+                bundle.putString("partnerName", event.partnerName);
+                navController.navigate(R.id.chatDetailFragment, bundle);
+            }
+        });
+
+        // Click close button to hide
+        binding.notificationCloseBtn.setOnClickListener(v -> hideInAppBanner(true));
+
+        if (!isBannerShowing) {
+            isBannerShowing = true;
+            binding.inAppNotificationBanner.setVisibility(View.VISIBLE);
+            binding.inAppNotificationBanner.setAlpha(0f);
+            binding.inAppNotificationBanner.setTranslationY(-300f);
+            binding.inAppNotificationBanner.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+        }
+
+        // Auto hide after 4 seconds
+        if (hideBannerRunnable != null) {
+            bannerHandler.removeCallbacks(hideBannerRunnable);
+        }
+        hideBannerRunnable = () -> hideInAppBanner(true);
+        bannerHandler.postDelayed(hideBannerRunnable, 4000);
+    }
+
+    private void hideInAppBanner(boolean animate) {
+        if (binding == null || !isBannerShowing) return;
+
+        isBannerShowing = false;
+        if (hideBannerRunnable != null) {
+            bannerHandler.removeCallbacks(hideBannerRunnable);
+            hideBannerRunnable = null;
+        }
+
+        if (animate) {
+            binding.inAppNotificationBanner.animate()
+                    .alpha(0f)
+                    .translationY(-300f)
+                    .setDuration(250)
+                    .setInterpolator(new AccelerateInterpolator())
+                    .withEndAction(() -> {
+                        if (binding != null) {
+                            binding.inAppNotificationBanner.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+        } else {
+            binding.inAppNotificationBanner.setVisibility(View.GONE);
+        }
+    }
+
     @Override
     protected void onDestroy() {
+        if (hideBannerRunnable != null) {
+            bannerHandler.removeCallbacks(hideBannerRunnable);
+        }
         super.onDestroy();
         binding = null;
     }
