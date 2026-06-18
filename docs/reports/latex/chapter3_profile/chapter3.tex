@@ -13,41 +13,320 @@
 \section{Xem và cập nhật hồ sơ cá nhân}
 % ============================================================
 
-\subsection{Hiển thị thông tin tài khoản}
+\subsubsection*{3.1.1 Yêu cầu chức năng}
+Người dùng (người thuê hoặc chủ trọ) có thể xem thông tin cá nhân của mình, bao gồm ảnh đại diện, họ tên, giới tính, ngày sinh, email, số điện thoại, thành phố, quận/huyện và mô tả bản thân. Ngoài ra, người dùng có thể chỉnh sửa các thông tin cơ bản này và cập nhật ảnh đại diện mới. Yêu cầu bắt buộc là người dùng phải đăng nhập và thiết bị có kết nối mạng.
 
+\subsubsection*{3.1.2 Thiết kế giao diện}
+Giao diện được chia làm hai màn hình: màn hình hiển thị hồ sơ (Profile) và màn hình chỉnh sửa (Edit Profile). Các trường thông tin được thiết kế trực quan và dễ sử dụng.
 
-\subsection{Chỉnh sửa thông tin hồ sơ}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_profile_screen.png}
+    \caption{Màn hình hiển thị và chỉnh sửa hồ sơ}
+    \label{fig:c3_profile}
+\end{figure}
 
+Các widget chính được sử dụng:
+\begin{itemize}
+    \item \texttt{ImageView} kết hợp với thư viện Glide để load và bo tròn ảnh đại diện.
+    \item \texttt{TextView} để hiển thị các thông tin tĩnh như email và label.
+    \item \texttt{TextInputEditText} lồng trong \texttt{TextInputLayout} để nhập liệu các thông tin cá nhân (họ tên, ngày sinh, giới tính, khu vực, mô tả bản thân) khi chỉnh sửa.
+    \item \texttt{MaterialButton} cho các nút hành động lưu thông tin.
+    \item \texttt{RecyclerView} (thay thế ListView) để hiển thị danh sách các tuỳ chọn menu cài đặt tài khoản.
+\end{itemize}
 
-\subsection{Thay đổi ảnh đại diện}
+\subsubsection*{3.1.3 Luồng xử lý}
+Luồng xem và cập nhật hồ sơ diễn ra như sau:
+\begin{enumerate}
+    \item \textbf{View}: Khi vào màn hình hồ sơ, Fragment gửi yêu cầu lấy thông tin đến ViewModel.
+    \item \textbf{ViewModel}: \texttt{ProfileViewModel} gọi \texttt{ProfileRepository} để fetch dữ liệu từ server.
+    \item \textbf{Repository}: Gửi request API và trả dữ liệu về dạng Single (RxJava).
+    \item \textbf{Render Data}: ViewModel nhận dữ liệu và cập nhật lên LiveData, View observe LiveData này và render thông tin lên các widget.
+    \item \textbf{Cập nhật (Chỉnh sửa text)}: Nếu người dùng lưu thông tin text mới, View gom dữ liệu và gọi ViewModel thực thi request cập nhật.
+    \item \textbf{Cập nhật (Avatar)}: Nếu người dùng chọn ảnh mới, luồng sử dụng \texttt{ContentResolver} đọc InputStream thành file tạm, đóng gói \texttt{MultipartBody.Part} và đẩy lên server.
+    \item \textbf{Đồng bộ UI}: Sau khi API trả về thành công, ViewModel fetch lại data mới nhất và cập nhật UI ngay lập tức.
+\end{enumerate}
 
+\subsubsection*{3.1.4 Triển khai trên Android}
+Tính năng này được triển khai trong package \texttt{ui.main.profile} với các class chính là \texttt{ProfileFragment}, \texttt{EditProfileFragment} và \texttt{ProfileViewModel}.
 
+Các API endpoint sử dụng từ \texttt{ProfileApiService}:
+\begin{itemize}
+    \item Lấy hồ sơ: \texttt{GET /api/customer/me}
+    \item Cập nhật profile (text): \texttt{POST /api/customer/me}
+    \item Cập nhật profile (avatar): \texttt{POST /api/customer/me} (sử dụng Multipart)
+\end{itemize}
+
+Đoạn code sau minh họa việc định nghĩa API bằng Retrofit để gửi file ảnh đại diện kết hợp dữ liệu text lên server:
+
+\begin{lstlisting}[language=Java]
+@Multipart
+@POST("api/customer/me")
+Single<ResponseData<Void>> updateProfileWithAvatar(
+    @Part("firstName") okhttp3.RequestBody firstName,
+    @Part("lastName") okhttp3.RequestBody lastName,
+    @Part okhttp3.MultipartBody.Part avatar
+);
+\end{lstlisting}
+
+Đáp ứng CLO1 (hoàn thiện chức năng và giao diện xem/sửa hồ sơ) và CLO2 (gọi API qua Retrofit, xử lý ảnh đại diện).
 % ============================================================
 \section{Cài đặt tài khoản}
 % ============================================================
 
 \subsection{Đổi mật khẩu}
 
+\subsubsection*{1. Yêu cầu chức năng}
+Người dùng có thể thay đổi mật khẩu tài khoản của mình để bảo vệ an toàn thông tin. Hệ thống yêu cầu người dùng phải nhập mật khẩu hiện tại chính xác, sau đó nhập mật khẩu mới đạt chuẩn bảo mật (ít nhất 8 ký tự, có chữ hoa, chữ thường và chữ số), khớp với ô nhập lại và không trùng với mật khẩu cũ.
 
+\subsubsection*{2. Thiết kế giao diện}
+Giao diện đổi mật khẩu sử dụng các trường nhập liệu có khả năng hiển thị lỗi ngay bên dưới khi người dùng nhập sai quy tắc. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_change_password.png}
+    \caption{Giao diện đổi mật khẩu với các thông báo lỗi trực quan}
+    \label{fig:c3_password}
+\end{figure}
+
+Các widget chính được sử dụng:
+\begin{itemize}
+    \item \texttt{TextInputEditText} lồng trong \texttt{TextInputLayout} để nhập mật khẩu.
+    \item \texttt{TextView} để hiển thị các thông báo lỗi validation chi tiết.
+    \item \texttt{MaterialButton} cho nút xác nhận (hỗ trợ ẩn text và hiện \texttt{ProgressBar} khi đang loading).
+\end{itemize}
+
+\subsubsection*{3. Luồng xử lý}
+Luồng đổi mật khẩu được thực hiện như sau:
+\begin{enumerate}
+    \item \textbf{Xác thực phía client}: Fragment kiểm tra tính hợp lệ của mật khẩu (độ dài, ký tự hoa/thường/số, độ khớp). Nếu có lỗi, hiển thị lên các \texttt{TextView} báo lỗi tương ứng.
+    \item \textbf{Gửi API}: Nếu hợp lệ, \texttt{ChangePasswordFragment} gọi \texttt{AccountSettingsViewModel} để gửi dữ liệu lên server. Nút bấm chuyển sang trạng thái loading.
+    \item \textbf{Xử lý kết quả}: Khi API trả về thành công, hiển thị \texttt{Snackbar}, xóa trắng các ô nhập liệu và tự động quay về màn hình trước (navigateUp) sau 1.5 giây. Nếu lỗi, hiển thị \texttt{Snackbar} báo lỗi.
+\end{enumerate}
+
+\subsubsection*{4. Triển khai trên Android}
+Tính năng này được triển khai tại \texttt{ChangePasswordFragment} và \texttt{AccountSettingsViewModel}. API endpoint: \texttt{POST /api/auth/change-password}.
+
+Đoạn code sau minh họa logic kiểm tra độ mạnh của mật khẩu bằng Regular Expression (Regex) trước khi gửi API:
+
+\begin{lstlisting}[language=Java]
+private List<String> validatePasswordStrength(String password) {
+    List<String> errors = new ArrayList<>();
+    if (password.length() < 8) errors.add("• Ít nhất 8 ký tự");
+    if (!password.matches(".*[A-Z].*")) errors.add("• Ít nhất 1 chữ in hoa");
+    if (!password.matches(".*[a-z].*")) errors.add("• Ít nhất 1 chữ thường");
+    if (!password.matches(".*[0-9].*")) errors.add("• Ít nhất 1 chữ số");
+    return errors;
+}
+\end{lstlisting}
+Đáp ứng CLO2 (bảo vệ tài khoản cá nhân, xác thực thông tin bằng Regex, gọi API đổi mật khẩu an toàn).
+
+% ------------------------------------------------------------
 \subsection{Đăng xuất}
+
+\subsubsection*{1. Yêu cầu chức năng}
+Tính năng đăng xuất cho phép người dùng kết thúc phiên làm việc an toàn, xóa bỏ token xác thực (JWT) đang lưu trữ trên thiết bị. Hệ thống cần hiển thị cảnh báo xác nhận để tránh người dùng thao tác nhầm.
+
+\subsubsection*{2. Thiết kế giao diện}
+Thao tác đăng xuất không có màn hình riêng biệt mà sử dụng hộp thoại cảnh báo tiêu chuẩn của hệ điều hành (\texttt{AlertDialog}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_logout_dialog.png}
+    \caption{Hộp thoại xác nhận đăng xuất}
+    \label{fig:c3_logout}
+\end{figure}
+
+\subsubsection*{3. Luồng xử lý}
+\begin{enumerate}
+    \item \textbf{Xác nhận}: Tại \texttt{ProfileFragment}, khi chọn Đăng xuất, ứng dụng hiển thị \texttt{AlertDialog}. 
+    \item \textbf{Xóa phiên làm việc}: Nếu chọn "OK", Fragment gọi hàm \texttt{logout()} của \texttt{MainActivity} để xóa SharedPreferences chứa thông tin đăng nhập.
+    \item \textbf{Chuyển hướng}: Khởi động lại luồng Auth (trang Đăng nhập) và xóa toàn bộ backstack để tránh rò rỉ bảo mật.
+\end{enumerate}
+
+\subsubsection*{4. Triển khai trên Android}
+Tính năng này tương tác qua \texttt{ProfileFragment} và \texttt{SessionManager}.
+Đoạn code sau minh họa logic hiển thị hộp thoại xác nhận đăng xuất:
+
+\begin{lstlisting}[language=Java]
+private void showLogoutConfirmation() {
+    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        .setTitle(R.string.logout)
+        .setMessage(R.string.logout_confirm)
+        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+            ((MainActivity) getActivity()).logout();
+        })
+        .setNegativeButton(android.R.string.cancel, null)
+        .show();
+}
+\end{lstlisting}
+Đáp ứng CLO2 (bảo vệ quyền riêng tư, kết thúc phiên làm việc an toàn qua SharedPreferences/Session).
 
 
 % ============================================================
 \section{Lịch sử xem}
 % ============================================================
 
-\subsection{Ghi nhận lịch sử xem tự động}
+\subsubsection*{3.3.1 Yêu cầu chức năng}
+Tính năng lịch sử xem cho phép người dùng xem lại danh sách các phòng trọ/bài đăng mà họ đã từng nhấn vào xem chi tiết. Danh sách này được lưu trữ và sắp xếp từ phía Server, giúp người dùng dễ dàng tìm lại những bài đăng đã quan tâm mà không cần phải thực hiện tìm kiếm lại từ đầu. Việc ghi nhận lịch sử được Server thực hiện tự động khi người dùng mở xem một bài đăng bất kỳ.
 
+\subsubsection*{3.3.2 Thiết kế giao diện}
+Giao diện bao gồm một danh sách hiển thị các bài đăng dưới dạng thẻ (Card), bao gồm ảnh đại diện, tiêu đề, mức giá, diện tích và khu vực.
 
-\subsection{Hiển thị và xóa lịch sử}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_view_history.png}
+    \caption{Màn hình hiển thị danh sách lịch sử xem}
+    \label{fig:c3_history}
+\end{figure}
 
+Các widget chính được sử dụng:
+\begin{itemize}
+    \item \texttt{RecyclerView} kết hợp với \texttt{LinearLayoutManager} để tạo danh sách cuộn dọc.
+    \item \texttt{CardView} lồng các \texttt{TextView} và \texttt{ImageView} để cấu trúc item bài đăng.
+    \item Nút \texttt{ImageButton} (mũi tên quay lại) gắn ở thanh tiêu đề.
+\end{itemize}
 
+\subsubsection*{3.3.3 Luồng xử lý}
+\begin{enumerate}
+    \item \textbf{Khởi tạo}: Khi vào \texttt{ViewHistoryFragment}, gọi ViewModel tiến hành fetch dữ liệu từ server.
+    \item \textbf{Tải dữ liệu}: \texttt{ViewHistoryViewModel} gọi Repository thực hiện GET request để lấy danh sách lịch sử.
+    \item \textbf{Map dữ liệu}: Danh sách \texttt{Post} trả về từ API được đưa qua hàm \texttt{convertPostsToPostItems()} để trích xuất URL ảnh (từ Google Drive), nối chuỗi địa chỉ đầy đủ (Phường, Quận, Thành phố) và đẩy vào model \texttt{PostItem} rút gọn.
+    \item \textbf{Render UI}: \texttt{ViewHistoryPostAdapter} nhận danh sách \texttt{PostItem} và hiển thị lên giao diện.
+    \item \textbf{Tương tác}: Người dùng nhấn vào một thẻ bài đăng, luồng sẽ đóng gói \texttt{postId} qua \texttt{Bundle} và điều hướng (navigate) sang màn hình chi tiết bài đăng (\texttt{PostDetailFragment}).
+\end{enumerate}
+
+\subsubsection*{3.3.4 Triển khai trên Android}
+Tính năng được triển khai trọn vẹn trong package \texttt{ui.main.viewhistory}. API endpoint: \texttt{GET /api/customer/view-history}.
+
+Đoạn code sau minh họa hàm map dữ liệu từ \texttt{Post} API sang \texttt{PostItem} để xử lý format ảnh Google Drive và nối chuỗi địa chỉ trước khi đưa lên Adapter:
+
+\begin{lstlisting}[language=Java]
+private List<PostItem> convertPostsToPostItems(List<Post> posts) {
+    List<PostItem> postItems = new ArrayList<>();
+    for (Post post : posts) {
+        String imageUrl = getGoogleDriveImageUrl(post);
+        String fullLoc = post.getWard() + ", " + post.getDistrict() + ", " + post.getCity();
+        PostItem item = new PostItem(
+            post.getPostId(), imageUrl, post.getTitle(), 
+            post.getPrice(), (int) post.getAcreage(), fullLoc
+        );
+        postItems.add(item);
+    }
+    return postItems;
+}
+\end{lstlisting}
+Đáp ứng CLO1 (hoàn thiện chức năng giao diện) và CLO2 (sử dụng RecyclerView hiển thị danh sách, gọi API lấy dữ liệu).
 % ============================================================
 \section{Bài đăng đã lưu}
 % ============================================================
 
-\subsection{Lưu và bỏ lưu bài đăng}
+\subsubsection*{3.4.1 Yêu cầu chức năng}
+Tính năng bài đăng đã lưu cho phép người dùng xem lại danh sách các phòng trọ mà họ đã đánh dấu yêu thích. Điểm nổi bật của tính năng này là người dùng có thể loại bỏ (bỏ lưu) bài đăng khỏi danh sách bằng thao tác vuốt (swipe) trực quan. Ngoài ra, hệ thống cung cấp cơ chế "Hoàn tác" (Undo) trong một khoảng thời gian ngắn nếu người dùng lỡ tay vuốt nhầm, trước khi thực sự gửi yêu cầu xóa lên Server.
 
+\subsubsection*{3.4.2 Thiết kế giao diện}
+Giao diện bao gồm một danh sách hiển thị các bài đăng đã lưu dưới dạng thẻ. Nếu danh sách trống, màn hình sẽ hiển thị trạng thái Empty State để hướng dẫn người dùng.
 
-\subsection{Danh sách bài đã lưu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_saved_posts.png}
+    \caption{Màn hình danh sách bài đăng đã lưu và thông báo Hoàn tác (Snackbar)}
+    \label{fig:c3_saved}
+\end{figure}
 
+Các widget chính được sử dụng:
+\begin{itemize}
+    \item \texttt{RecyclerView} để hiển thị danh sách bài đăng.
+    \item \texttt{ItemTouchHelper} để hỗ trợ nhận diện cử chỉ vuốt trái/phải trên từng thẻ bài đăng.
+    \item \texttt{Snackbar} để hiển thị thông báo hành động kèm nút "Hoàn tác".
+    \item Một \texttt{ViewGroup} (Empty State) chứa hình ảnh và dòng text thông báo khi danh sách rỗng.
+\end{itemize}
+
+\subsubsection*{3.4.3 Luồng xử lý}
+Luồng hiển thị và bỏ lưu bài đăng diễn ra như sau:
+\begin{enumerate}
+    \item \textbf{Tải dữ liệu}: Khi mở màn hình, \texttt{SavedPostsViewModel} gọi API lấy danh sách. Nếu mảng trả về rỗng, lập tức hiển thị giao diện Empty State.
+    \item \textbf{Render UI}: Dữ liệu được map sang \texttt{PostItem} và đưa lên \texttt{RecyclerView}.
+    \item \textbf{Vuốt để xóa (Swipe-to-delete)}: Người dùng vuốt một thẻ bài đăng. Thẻ ngay lập tức bị ẩn khỏi giao diện (xóa khỏi list cục bộ) và hiển thị một \texttt{Snackbar} ở dưới cùng màn hình.
+    \item \textbf{Hoàn tác (Undo)}: Nếu người dùng bấm "Hoàn tác" trên \texttt{Snackbar}, thẻ bài đăng được khôi phục lại vị trí cũ trên giao diện.
+    \item \textbf{Thực thi xóa}: Nếu \texttt{Snackbar} tự động biến mất theo thời gian (timeout) mà không có thao tác "Hoàn tác", Fragment mới tiến hành gọi \texttt{ViewModel} gửi request \texttt{unsavePost} lên Server để xóa vĩnh viễn.
+\end{enumerate}
+
+\subsubsection*{3.4.4 Triển khai trên Android}
+Tính năng được triển khai tại package \texttt{ui.main.savedposts}. 
+Các API endpoint: lấy danh sách \texttt{GET} và xóa khỏi danh sách \texttt{DELETE}.
+
+Đoạn code sau minh họa logic sử dụng \texttt{Snackbar.Callback} để bắt sự kiện tự đóng, từ đó kết hợp với \texttt{ItemTouchHelper} tạo ra tính năng trì hoãn xóa (Undo) rất hiệu quả về mặt UX:
+
+\begin{lstlisting}[language=Java]
+Snackbar.make(binding.getRoot(), "Đã xoá bài viết", Snackbar.LENGTH_LONG)
+    .setAction("Hoàn tác", v -> {
+        // Khôi phục lại item vào local list
+        currentItems.add(position, deletedItem);
+        adapter.submitList(new ArrayList<>(currentItems));
+    })
+    .addCallback(new Snackbar.Callback() {
+        @Override
+        public void onDismissed(Snackbar transientBottomBar, int event) {
+            // Nếu tự tắt (timeout) mà không bấm Hoàn tác thì mới gọi API
+            if (event != DISMISS_EVENT_ACTION) {
+                viewModel.unsavePost(deletedItem.getId());
+            }
+        }
+    }).show();
+\end{lstlisting}
+Đáp ứng CLO1 (hoàn thiện chức năng giao diện) và CLO2 (sử dụng RecyclerView, gọi API tương tác để xóa dữ liệu).
+% ============================================================
+\section{Theo dõi khu vực}
+% ============================================================
+
+\subsubsection*{3.5.1 Yêu cầu chức năng}
+Tính năng theo dõi khu vực cho phép người dùng đăng ký nhận thông báo về các phòng trọ mới tại một Tỉnh/Thành phố và Quận/Huyện cụ thể. Người dùng có thể xem danh sách các khu vực đang theo dõi, thêm mới một khu vực hoặc hủy theo dõi (xóa) khu vực đã đăng ký.
+
+\subsubsection*{3.5.2 Thiết kế giao diện}
+Giao diện chính bao gồm danh sách các khu vực được thiết kế trực quan. Thao tác thêm mới được thực hiện qua một cửa sổ trượt từ dưới lên (Bottom Sheet) thay vì chuyển trang mới, mang lại trải nghiệm liền mạch.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/outputs/c3_subscriptions.png}
+    \caption{Danh sách khu vực theo dõi và Bottom Sheet thêm mới}
+    \label{fig:c3_subscriptions}
+\end{figure}
+
+Các widget chính được sử dụng:
+\begin{itemize}
+    \item \texttt{RecyclerView} để hiển thị danh sách khu vực.
+    \item \texttt{BottomSheetDialogFragment} để tạo cửa sổ popup thêm khu vực.
+    \item \texttt{Spinner} kết hợp với \texttt{ArrayAdapter} để tạo menu thả xuống chọn Tỉnh và Quận.
+    \item \texttt{AlertDialog.Builder} hiển thị hộp thoại xác nhận khi người dùng bấm xóa.
+\end{itemize}
+
+\subsubsection*{3.5.3 Luồng xử lý}
+\begin{enumerate}
+    \item \textbf{Khởi tạo}: Màn hình gọi API để lấy danh sách. Nếu trống, hiển thị dòng thông báo rỗng qua \texttt{TextView}.
+    \item \textbf{Thêm khu vực}: Người dùng bấm nút "Thêm", ứng dụng khởi tạo \texttt{AddSubscriptionBottomSheet}.
+    \item \textbf{Chọn khu vực (Cascading Dropdown)}: Dữ liệu Tỉnh được load vào Spinner 1. Khi người dùng chọn một Tỉnh, Spinner 2 lập tức tự động cập nhật danh sách Quận/Huyện trực thuộc Tỉnh đó.
+    \item \textbf{Gửi dữ liệu thêm}: Bấm "Lưu", dữ liệu truyền ngược về Fragment qua interface \texttt{OnSaveListener}, sau đó ViewModel gọi API POST để lưu lên Server.
+    \item \textbf{Xóa khu vực}: Bấm xóa trên một item, hệ thống hiện cảnh báo \texttt{AlertDialog}. Nếu "OK", gọi API DELETE. Các thao tác Thêm/Xóa thành công đều kích hoạt hàm tải lại danh sách để cập nhật giao diện.
+\end{enumerate}
+
+\subsubsection*{3.5.4 Triển khai trên Android}
+Tính năng được triển khai tại package \texttt{ui.main.subscriptions}.
+
+Đoạn code sau minh họa kỹ thuật "Cascading Dropdown" trong Android. Hàm được kích hoạt khi người dùng chọn một Tỉnh ở \texttt{Spinner} thứ nhất, từ đó cập nhật dữ liệu cho \texttt{Spinner} thứ hai:
+
+\begin{lstlisting}[language=Java]
+private void updateDistrictSpinner(City city) {
+    if (city == null || city.getDistricts() == null) return;
+    List<String> districtNames = new ArrayList<>();
+    for (District district : city.getDistricts()) {
+        districtNames.add(district.getName());
+    }
+    ArrayAdapter<String> districtAdapter = new ArrayAdapter<>(requireContext(),
+            android.R.layout.simple_spinner_item, districtNames);
+    districtAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    
+    binding.spinnerDistrict.setAdapter(districtAdapter);
+}
+\end{lstlisting}
+Đáp ứng CLO1 (hoàn thiện chức năng giao diện) và CLO2 (sử dụng RecyclerView, BottomSheet, Spinner động liên kết, gọi API tương tác dữ liệu).
