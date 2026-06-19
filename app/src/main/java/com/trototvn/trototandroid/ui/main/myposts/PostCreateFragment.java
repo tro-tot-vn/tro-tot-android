@@ -466,9 +466,12 @@ public class PostCreateFragment extends Fragment {
         if (newUris != null) {
             for (Uri uri : newUris) {
                 MultipartBody.Part part = getMultipartFromUri(uri, "images", "image/*");
-                if (part != null) {
-                    newImageParts.add(part);
+                if (part == null) {
+                    binding.tvFormErrorText.setText("Không thể đọc file ảnh đã chọn, vui lòng chọn lại");
+                    binding.tvFormErrorText.setVisibility(View.VISIBLE);
+                    return;
                 }
+                newImageParts.add(part);
             }
         }
 
@@ -476,6 +479,11 @@ public class PostCreateFragment extends Fragment {
         Uri newVideoUri = viewModel.getNewVideo().getValue();
         if (newVideoUri != null) {
             newVideoPart = getMultipartFromUri(newVideoUri, "video", "video/*");
+            if (newVideoPart == null) {
+                binding.tvFormErrorText.setText("Không thể đọc file video đã chọn, vui lòng chọn lại");
+                binding.tvFormErrorText.setVisibility(View.VISIBLE);
+                return;
+            }
         }
 
         viewModel.submitCreatePost(newImageParts, newVideoPart);

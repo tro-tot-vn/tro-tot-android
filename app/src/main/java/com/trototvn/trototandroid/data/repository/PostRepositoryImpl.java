@@ -6,6 +6,8 @@ import com.trototvn.trototandroid.data.model.post.RecommendationResponse;
 import com.trototvn.trototandroid.data.model.search.SearchParams;
 import com.trototvn.trototandroid.data.model.search.SearchInteractionRequest;
 import com.trototvn.trototandroid.data.model.search.SearchResponse;
+import com.trototvn.trototandroid.data.model.ResponseData;
+import com.trototvn.trototandroid.data.remote.ApiErrorParser;
 import com.trototvn.trototandroid.data.remote.ApiService;
 
 import java.util.List;
@@ -236,22 +238,10 @@ public class PostRepositoryImpl implements PostRepository {
             RequestBody interiorStatus,
             List<MultipartBody.Part> images,
             MultipartBody.Part video) {
-        return apiService.createPost(title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, images, video)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map(response -> {
-                    if (response.getStatus() == 200) {
-                        return Resource.<Void>success(null);
-                    } else {
-                        return Resource.<Void>error(
-                                response.getMessage() != null ? response.getMessage() : "Đăng tin thất bại", null);
-                    }
-                })
-                .onErrorReturn(throwable -> {
-                    Timber.e(throwable, "Error creating post");
-                    return Resource.<Void>error(
-                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
-                });
+        return mapPostVoid(
+                apiService.createPost(title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, images, video),
+                "Đăng tin thất bại",
+                "Error creating post");
     }
 
     @Override
@@ -270,21 +260,33 @@ public class PostRepositoryImpl implements PostRepository {
             RequestBody oldFiles,
             List<MultipartBody.Part> images,
             MultipartBody.Part video) {
-        return apiService.editPost(postId, title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, oldFiles, images, video)
+        return mapPostVoid(
+                apiService.editPost(postId, title, description, price, acreage, streetNumber, street, ward, district, city, interiorStatus, oldFiles, images, video),
+                "Cập nhật tin thất bại",
+                "Error editing post");
+    }
+
+    /**
+     * Maps a void post mutation endpoint, preserving {@code CONTENT_VIOLATION} for the UI dialog.
+     */
+    private Single<Resource<Void>> mapPostVoid(
+            Single<ResponseData<Void>> call,
+            String defaultError,
+            String logTag) {
+        return call
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> {
                     if (response.getStatus() == 200) {
                         return Resource.<Void>success(null);
-                    } else {
-                        return Resource.<Void>error(
-                                response.getMessage() != null ? response.getMessage() : "Cập nhật tin thất bại", null);
                     }
+                    return Resource.<Void>error(
+                            ApiErrorParser.postFormError(response.getMessage(), null, defaultError), null);
                 })
                 .onErrorReturn(throwable -> {
-                    Timber.e(throwable, "Error editing post");
+                    Timber.e(throwable, logTag);
                     return Resource.<Void>error(
-                            throwable.getMessage() != null ? throwable.getMessage() : "Lỗi kết nối", null);
+                            ApiErrorParser.postFormError(null, throwable, defaultError), null);
                 });
     }
 

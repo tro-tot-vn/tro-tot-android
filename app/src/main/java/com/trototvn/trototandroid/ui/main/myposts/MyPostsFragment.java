@@ -52,9 +52,14 @@ public class MyPostsFragment extends Fragment {
         setupRecyclerView();
         setupFilters();
         setupObservers();
+    }
 
-        // Initial Load
-        viewModel.loadMyPosts(true);
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.loadMyPosts(true);
+        }
     }
 
     private void setupToolbar() {

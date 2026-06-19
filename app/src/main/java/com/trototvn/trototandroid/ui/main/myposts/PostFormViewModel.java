@@ -13,7 +13,9 @@ import com.trototvn.trototandroid.data.model.location.WardListResponse;
 import com.trototvn.trototandroid.data.model.post.PostDetail;
 import com.trototvn.trototandroid.data.model.post.MultimediaFileDetail;
 import com.trototvn.trototandroid.data.model.post.MultimediaFile;
+import com.trototvn.trototandroid.data.model.post.FileType;
 import com.trototvn.trototandroid.data.repository.PostRepository;
+import com.trototvn.trototandroid.data.remote.ApiErrorParser;
 import com.trototvn.trototandroid.utils.LocationService;
 
 import java.io.File;
@@ -72,6 +74,11 @@ public class PostFormViewModel extends ViewModel {
     private final MutableLiveData<Resource<Void>> submitTransactionState = new MutableLiveData<>();
     private final MutableLiveData<Resource<PostDetail>> initialLoadState = new MutableLiveData<>();
 
+    /** Ward name to match after async ward list loads during edit prefill. */
+    private String pendingWardName;
+    /** True while {@link #syncAddressFromPostDetail} is driving city/district selection. */
+    private boolean isPrefillingAddress;
+
     @Inject
     public PostFormViewModel(PostRepository postRepository, LocationService locationService) {
         this.postRepository = postRepository;
@@ -108,6 +115,12 @@ public class PostFormViewModel extends ViewModel {
     }
 
     public void selectCity(City city) {
+        City current = selectedCity.getValue();
+        if (current != null && city != null && !current.getId().equals(city.getId())) {
+            clearAddressPrefillState();
+        } else if (!isPrefillingAddress) {
+            pendingWardName = null;
+        }
         selectedCity.setValue(city);
         selectedDistrict.setValue(null);
         selectedWard.setValue(null);
@@ -120,6 +133,12 @@ public class PostFormViewModel extends ViewModel {
     }
 
     public void selectDistrict(District district) {
+        District current = selectedDistrict.getValue();
+        if (current != null && district != null && !current.getId().equals(district.getId())) {
+            clearAddressPrefillState();
+        } else if (!isPrefillingAddress) {
+            pendingWardName = null;
+        }
         selectedDistrict.setValue(district);
         selectedWard.setValue(null);
         if (district != null) {
@@ -138,10 +157,35 @@ public class PostFormViewModel extends ViewModel {
         disposable.add(postRepository.getWards(districtId)
                 .subscribe(resource -> {
                     wardsLiveData.setValue(resource);
+                    tryMatchPendingWard(resource);
                 }, throwable -> {
                     Timber.e(throwable, "Error loading wards");
                     wardsLiveData.setValue(Resource.error(throwable.getMessage(), null));
+                    clearAddressPrefillState();
                 }));
+    }
+
+    private void tryMatchPendingWard(Resource<WardListResponse> resource) {
+        if (!isPrefillingAddress || pendingWardName == null) {
+            return;
+        }
+        if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+            List<Ward> wards = resource.getData().getWards();
+            if (wards != null) {
+                for (Ward ward : wards) {
+                    if (ward.getName().equalsIgnoreCase(pendingWardName)) {
+                        selectedWard.setValue(ward);
+                        break;
+                    }
+                }
+            }
+        }
+        clearAddressPrefillState();
+    }
+
+    private void clearAddressPrefillState() {
+        pendingWardName = null;
+        isPrefillingAddress = false;
     }
 
     // Media modifiers
@@ -239,7 +283,12 @@ public class PostFormViewModel extends ViewModel {
 
     private void syncAddressFromPostDetail(PostDetail detail) {
         List<City> cities = citiesLiveData.getValue();
-        if (cities == null) return;
+        if (cities == null) {
+            return;
+        }
+
+        isPrefillingAddress = true;
+        pendingWardName = detail.getWard();
 
         City matchedCity = null;
         for (City city : cities) {
@@ -249,43 +298,32 @@ public class PostFormViewModel extends ViewModel {
             }
         }
 
-        if (matchedCity != null) {
-            selectCity(matchedCity);
-            List<District> districts = districtsLiveData.getValue();
-            if (districts != null) {
-                District matchedDistrict = null;
-                for (District d : districts) {
-                    if (d.getName().equalsIgnoreCase(detail.getDistrict())) {
-                        matchedDistrict = d;
-                        break;
-                    }
-                }
-                if (matchedDistrict != null) {
-                    selectDistrict(matchedDistrict);
+        if (matchedCity == null) {
+            clearAddressPrefillState();
+            return;
+        }
 
-                    // Since ward is loaded dynamically from network, wait for network results to bind Ward
-                    final District finalMatchedDistrict = matchedDistrict;
-                    disposable.add(postRepository.getWards(finalMatchedDistrict.getId())
-                            .subscribe(resource -> {
-                                if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
-                                    List<Ward> wards = resource.getData().getWards();
-                                    Ward matchedWard = null;
-                                    if (wards != null) {
-                                        for (Ward w : wards) {
-                                            if (w.getName().equalsIgnoreCase(detail.getWard())) {
-                                                matchedWard = w;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    if (matchedWard != null) {
-                                        selectedWard.setValue(matchedWard);
-                                    }
-                                }
-                            }, throwable -> Timber.e(throwable, "Error matching dynamic ward")));
-                }
+        selectCity(matchedCity);
+        List<District> districts = districtsLiveData.getValue();
+        if (districts == null) {
+            clearAddressPrefillState();
+            return;
+        }
+
+        District matchedDistrict = null;
+        for (District district : districts) {
+            if (district.getName().equalsIgnoreCase(detail.getDistrict())) {
+                matchedDistrict = district;
+                break;
             }
         }
+
+        if (matchedDistrict == null) {
+            clearAddressPrefillState();
+            return;
+        }
+
+        selectDistrict(matchedDistrict);
     }
 
     /**
@@ -407,7 +445,8 @@ public class PostFormViewModel extends ViewModel {
                     submitTransactionState.setValue(resource);
                 }, throwable -> {
                     Timber.e(throwable, "Error creating post");
-                    submitTransactionState.setValue(Resource.error(throwable.getMessage(), null));
+                    submitTransactionState.setValue(Resource.error(
+                            ApiErrorParser.postFormError(null, throwable, "Lỗi kết nối"), null));
                 }));
     }
 
@@ -433,10 +472,14 @@ public class PostFormViewModel extends ViewModel {
         RequestBody reqCity = toTextRequestBody(selectedCity.getValue() != null ? selectedCity.getValue().getName() : "");
         RequestBody reqInterior = toTextRequestBody(interiorStatus.getValue());
 
-        // Construct oldFiles list JSON
+        // Construct oldFiles list JSON — exclude retained video IDs when a replacement is uploaded
         List<Integer> oldIds = new ArrayList<>();
+        boolean hasNewVideo = newVideo.getValue() != null;
         if (oldFiles.getValue() != null) {
             for (MultimediaFileDetail file : oldFiles.getValue()) {
+                if (hasNewVideo && file.getFileType() == FileType.VIDEO) {
+                    continue;
+                }
                 oldIds.add(file.getFileId());
             }
         }
@@ -450,7 +493,8 @@ public class PostFormViewModel extends ViewModel {
                     submitTransactionState.setValue(resource);
                 }, throwable -> {
                     Timber.e(throwable, "Error editing post");
-                    submitTransactionState.setValue(Resource.error(throwable.getMessage(), null));
+                    submitTransactionState.setValue(Resource.error(
+                            ApiErrorParser.postFormError(null, throwable, "Lỗi kết nối"), null));
                 }));
     }
 

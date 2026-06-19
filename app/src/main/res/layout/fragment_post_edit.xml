@@ -514,7 +514,7 @@
                         app:boxStrokeColor="?attr/colorOnSurface"
                         app:hintTextColor="?attr/colorOnSurface"
                         app:counterEnabled="true"
-                        app:counterMaxLength="999"
+                        app:counterMaxLength="1000"
                         android:layout_marginBottom="8dp">
 
                         <com.google.android.material.textfield.TextInputEditText

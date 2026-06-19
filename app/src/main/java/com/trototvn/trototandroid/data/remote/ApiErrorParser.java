@@ -44,6 +44,14 @@ public final class ApiErrorParser {
         CODE_MAP.put("USER_NOT_FOUND", "Không tìm thấy người dùng");
         CODE_MAP.put("ACCOUNT_NOT_FOUND", "Không tìm thấy tài khoản");
         CODE_MAP.put("POST_NOT_FOUND", "Không tìm thấy bài đăng");
+        CODE_MAP.put("CONTENT_VIOLATION", "Nội dung vi phạm chính sách, vui lòng chỉnh sửa và thử lại");
+        CODE_MAP.put("CUSTOMER_NOT_OWNER", "Bạn không phải chủ sở hữu bài đăng này");
+        CODE_MAP.put("STATE_NOT_ALLOW", "Không thể thực hiện thao tác với trạng thái bài đăng hiện tại");
+        CODE_MAP.put("UPLOAD_FAILED", "Tải file lên thất bại, vui lòng thử lại");
+        CODE_MAP.put("DELETED_FAILURE", "Xóa file cũ thất bại, vui lòng thử lại");
+        CODE_MAP.put("IMAGE_SIZE_LIMIT_EXCEEDED", "Kích thước ảnh vượt quá giới hạn cho phép");
+        CODE_MAP.put("VIDEO_SIZE_LIMIT_EXCEEDED", "Kích thước video vượt quá giới hạn cho phép");
+        CODE_MAP.put("FILE_SIZE_LIMIT_EXCEEDED", "Kích thước file vượt quá giới hạn cho phép");
         CODE_MAP.put("UPDATE_PROFILE_FAILED", "Cập nhật hồ sơ thất bại");
         // Auth / session
         CODE_MAP.put("ACCESS_TOKEN_EXPIRED", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
@@ -90,6 +98,42 @@ public final class ApiErrorParser {
     }
 
     /**
+     * Extracts the raw backend error code from an HTTP failure body ({@code ResponseData.message}).
+     *
+     * @return the code string, or {@code null} if the throwable is not an {@link HttpException}
+     *         or the body cannot be parsed
+     */
+    public static String errorCode(Throwable t) {
+        if (!(t instanceof HttpException)) {
+            return null;
+        }
+        return parseEnvelope(readErrorBody((HttpException) t)).messageCode;
+    }
+
+    /**
+     * Resolves an error for post create/edit flows.
+     *
+     * <p>{@code CONTENT_VIOLATION} is returned as the raw code so the UI can show a dedicated
+     * PhoBERT dialog; every other code is translated to Vietnamese.</p>
+     */
+    public static String postFormError(String responseCode, Throwable throwable, String defaultError) {
+        String code = responseCode;
+        if ((code == null || code.isEmpty()) && throwable != null) {
+            code = errorCode(throwable);
+        }
+        if ("CONTENT_VIOLATION".equals(code)) {
+            return code;
+        }
+        if (code != null && !code.isEmpty()) {
+            return translateCode(code, defaultError);
+        }
+        if (throwable != null) {
+            return message(throwable);
+        }
+        return defaultError != null ? defaultError : "Đã có lỗi xảy ra";
+    }
+
+    /**
      * Translate a backend error code carried in a (rare) 2xx body whose {@code status != 200}.
      */
     public static String translateCode(String code, String fallback) {
@@ -104,51 +148,55 @@ public final class ApiErrorParser {
     }
 
     private static String fromHttp(HttpException e) {
-        int code = e.code();
-        String messageCode = null;
-        String param = null;
+        int httpStatus = e.code();
+        Envelope envelope = parseEnvelope(readErrorBody(e));
 
-        String body = readErrorBody(e);
-        if (body != null && !body.isEmpty()) {
-            try {
-                JsonObject obj = JsonParser.parseString(body).getAsJsonObject();
-                if (obj.has("message") && !obj.get("message").isJsonNull()) {
-                    messageCode = obj.get("message").getAsString();
-                }
-                if (obj.has("error") && obj.get("error").isJsonArray()) {
-                    JsonArray arr = obj.getAsJsonArray("error");
-                    if (arr.size() > 0 && arr.get(0).isJsonObject()) {
-                        JsonObject detail = arr.get(0).getAsJsonObject();
-                        if (detail.has("param") && !detail.get("param").isJsonNull()) {
-                            param = detail.get("param").getAsString();
-                        }
-                    }
-                }
-            } catch (Exception ignored) {
-                // Non-JSON / unexpected body -> fall back to HTTP status below
-            }
+        if ("VALIDATION_ERROR".equals(envelope.messageCode)) {
+            return validationMessage(envelope.param);
         }
-
-        // 1) tsoa validation: surface the offending field clearly
-        if ("VALIDATION_ERROR".equals(messageCode)) {
-            return validationMessage(param);
-        }
-        // 2) 403/423 carry a misleading message code ("INTERNAL_ERROR") -> resolve by status
-        if (code == 403) {
+        if (httpStatus == 403) {
             return "Bạn không có quyền thực hiện thao tác này";
         }
-        if (code == 423) {
+        if (httpStatus == 423) {
             return "Tài khoản đang bị khóa";
         }
-        // 3) known business / auth code
-        if (messageCode != null) {
-            String mapped = CODE_MAP.get(messageCode);
+        if (envelope.messageCode != null) {
+            String mapped = CODE_MAP.get(envelope.messageCode);
             if (mapped != null) {
                 return mapped;
             }
         }
-        // 4) HTTP-status fallback
-        return httpMessage(code);
+        return httpMessage(httpStatus);
+    }
+
+    private static Envelope parseEnvelope(String body) {
+        Envelope envelope = new Envelope();
+        if (body == null || body.isEmpty()) {
+            return envelope;
+        }
+        try {
+            JsonObject obj = JsonParser.parseString(body).getAsJsonObject();
+            if (obj.has("message") && !obj.get("message").isJsonNull()) {
+                envelope.messageCode = obj.get("message").getAsString();
+            }
+            if (obj.has("error") && obj.get("error").isJsonArray()) {
+                JsonArray arr = obj.getAsJsonArray("error");
+                if (arr.size() > 0 && arr.get(0).isJsonObject()) {
+                    JsonObject detail = arr.get(0).getAsJsonObject();
+                    if (detail.has("param") && !detail.get("param").isJsonNull()) {
+                        envelope.param = detail.get("param").getAsString();
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Non-JSON / unexpected body -> caller falls back to HTTP status
+        }
+        return envelope;
+    }
+
+    private static final class Envelope {
+        String messageCode;
+        String param;
     }
 
     private static String validationMessage(String param) {
