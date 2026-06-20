@@ -236,8 +236,8 @@ public class RegisterFragment extends BaseFragment<FragmentRegisterBinding> {
 
             case SUCCESS:
                 showLoading(false);
-                showToast("Đăng ký thành công! Vui lòng đăng nhập.");
-                navigateToLogin();
+                showToast("Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP.");
+                navigateToVerifyOtp((String) resource.getData());
                 break;
 
             case ERROR:
@@ -253,6 +253,17 @@ public class RegisterFragment extends BaseFragment<FragmentRegisterBinding> {
     private void navigateToLogin() {
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_registerFragment_to_loginFragment);
+    }
+
+    /**
+     * Navigate to OTP verification screen
+     */
+    private void navigateToVerifyOtp(String email) {
+        Bundle bundle = new Bundle();
+        bundle.putString("EMAIL", email);
+        bundle.putString("OTP_TYPE", "REGISTER");
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_registerFragment_to_verifyOtpFragment, bundle);
     }
 
     /**

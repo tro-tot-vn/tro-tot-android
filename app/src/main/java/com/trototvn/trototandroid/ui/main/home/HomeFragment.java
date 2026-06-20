@@ -9,37 +9,31 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.trototvn.trototandroid.R;
-import com.trototvn.trototandroid.data.model.Resource;
 import com.trototvn.trototandroid.databinding.FragmentHomeBinding;
 import com.trototvn.trototandroid.utils.SessionManager;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import timber.log.Timber;
 
 /**
- * HomeFragment - Main feed with latest posts and recommendations
+ * HomeFragment - Main feed with ViewPager2 for Latest posts and Recommendations tabs
  */
 @AndroidEntryPoint
 public class HomeFragment extends Fragment {
 
     private FragmentHomeBinding binding;
     private HomeViewModel viewModel;
-    private PostAdapter latestPostsAdapter;
-    private PostAdapter recommendationsAdapter;
 
     @Inject
     SessionManager sessionManager;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -48,103 +42,25 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initialize ViewModel here so child fragments can share it
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
-        setupRecyclerViews();
-        setupObservers();
-        setupClickListeners();
-
-        // Load data
-        viewModel.loadLatestPosts();
-
-        // Load recommendations only if logged in
-        if (sessionManager.isLoggedIn()) {
-            viewModel.loadRecommendations();
-            binding.layoutRecommendations.setVisibility(View.VISIBLE);
-        } else {
-            binding.layoutRecommendations.setVisibility(View.GONE);
-        }
+        setupViewPagerAndTabs();
     }
 
-    private void setupRecyclerViews() {
-        // Latest Posts RecyclerView
-        latestPostsAdapter = new PostAdapter(post -> {
-            Bundle bundle = new Bundle();
-            bundle.putInt("postId", post.getPostId());
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.postDetailFragment, bundle);
-        });
+    private void setupViewPagerAndTabs() {
+        boolean isLoggedIn = sessionManager.isLoggedIn();
 
-        binding.rvLatestPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvLatestPosts.setAdapter(latestPostsAdapter);
-        binding.rvLatestPosts.setNestedScrollingEnabled(false);
+        HomePagerAdapter pagerAdapter = new HomePagerAdapter(this, isLoggedIn);
+        binding.viewPager.setAdapter(pagerAdapter);
 
-        // Recommendations RecyclerView
-        recommendationsAdapter = new PostAdapter(post -> {
-            Bundle bundle = new Bundle();
-            bundle.putInt("postId", post.getPostId());
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.postDetailFragment, bundle);
-        });
-
-        binding.rvRecommendations.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvRecommendations.setAdapter(recommendationsAdapter);
-        binding.rvRecommendations.setNestedScrollingEnabled(false);
-    }
-
-    private void setupObservers() {
-        // Latest Posts Observer
-        viewModel.getLatestPosts().observe(getViewLifecycleOwner(), resource -> {
-            if (resource.getStatus() == Resource.Status.LOADING) {
-                binding.pbLatestPosts.setVisibility(View.VISIBLE);
-                binding.rvLatestPosts.setVisibility(View.GONE);
-                binding.layoutLatestError.setVisibility(View.GONE);
-            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
-                binding.pbLatestPosts.setVisibility(View.GONE);
-                binding.rvLatestPosts.setVisibility(View.VISIBLE);
-                binding.layoutLatestError.setVisibility(View.GONE);
-
-                if (resource.getData() != null) {
-                    latestPostsAdapter.submitList(resource.getData());
-                }
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                binding.pbLatestPosts.setVisibility(View.GONE);
-                binding.rvLatestPosts.setVisibility(View.GONE);
-                binding.layoutLatestError.setVisibility(View.VISIBLE);
-                binding.tvLatestError.setText(resource.getMessage());
+        new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
+            if (position == 0) {
+                tab.setText(R.string.latest_posts);
+            } else if (position == 1) {
+                tab.setText(R.string.recommendations_for_you);
             }
-        });
-
-        // Recommendations Observer
-        viewModel.getRecommendations().observe(getViewLifecycleOwner(), resource -> {
-            if (resource.getStatus() == Resource.Status.LOADING) {
-                binding.pbRecommendations.setVisibility(View.VISIBLE);
-                binding.rvRecommendations.setVisibility(View.GONE);
-            } else if (resource.getStatus() == Resource.Status.SUCCESS) {
-                binding.pbRecommendations.setVisibility(View.GONE);
-                binding.rvRecommendations.setVisibility(View.VISIBLE);
-
-                if (resource.getData() != null) {
-                    recommendationsAdapter.submitList(resource.getData());
-                }
-            } else if (resource.getStatus() == Resource.Status.ERROR) {
-                binding.pbRecommendations.setVisibility(View.GONE);
-                binding.rvRecommendations.setVisibility(View.VISIBLE);
-            }
-        });
-
-        // Load More visibility
-        viewModel.getHasMoreRecommendations().observe(getViewLifecycleOwner(), hasMore -> {
-            binding.btnLoadMore.setVisibility(Boolean.TRUE.equals(hasMore) ? View.VISIBLE : View.GONE);
-        });
-    }
-
-    private void setupClickListeners() {
-        // Retry Latest Posts
-        binding.btnRetryLatest.setOnClickListener(v -> viewModel.loadLatestPosts());
-
-        // Load More Recommendations
-        binding.btnLoadMore.setOnClickListener(v -> viewModel.loadMoreRecommendations());
+        }).attach();
     }
 
     @Override

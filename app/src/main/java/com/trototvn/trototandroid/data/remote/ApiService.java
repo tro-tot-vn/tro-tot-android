@@ -64,6 +64,36 @@ public interface ApiService {
     Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
 
     /**
+     * POST - Send OTP for Registration
+     */
+    @POST("api/auth/send-otp-register")
+    Single<ResponseData<com.trototvn.trototandroid.data.model.auth.OTPResponse>> sendOtpRegister(@Body com.trototvn.trototandroid.data.model.auth.OTPRequest request);
+
+    /**
+     * POST - Verify OTP for Registration
+     */
+    @POST("api/auth/verify-otp-register")
+    Single<ResponseData<Void>> verifyOtpRegister(@Body com.trototvn.trototandroid.data.model.auth.VerifyOTPRequest request);
+
+    /**
+     * POST - Forgot Password (Send OTP)
+     */
+    @POST("api/auth/forgot-password")
+    Single<ResponseData<com.trototvn.trototandroid.data.model.auth.OTPResponse>> forgotPassword(@Body com.trototvn.trototandroid.data.model.auth.OTPRequest request);
+
+    /**
+     * POST - Verify OTP (Forgot Password)
+     */
+    @POST("api/auth/verify-otp")
+    Single<ResponseData<com.trototvn.trototandroid.data.model.auth.VerifyOTPResponse>> verifyOtp(@Body com.trototvn.trototandroid.data.model.auth.VerifyOTPRequest request);
+
+    /**
+     * POST - Reset Password
+     */
+    @POST("api/auth/reset-password")
+    Single<ResponseData<Void>> resetPassword(@Body com.trototvn.trototandroid.data.model.auth.ResetPasswordRequest request);
+
+    /**
      * POST - Refresh Token
      * Using Call instead of RxJava/Single because Authenticator runs synchronously
      * Backend only returns { accessToken }, NOT full Token object
@@ -78,7 +108,7 @@ public interface ApiService {
          * Returns 4 latest approved posts for home screen
          */
         @GET("api/posts/latest")
-        Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
+        Single<ResponseData<List<Post>>> getLatestPosts(@Query("page") int page, @Query("limit") int limit);
 
         /**
          * GET - Post Detail by ID

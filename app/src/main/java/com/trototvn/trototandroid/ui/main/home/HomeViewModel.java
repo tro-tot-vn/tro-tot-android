@@ -30,7 +30,12 @@ public class HomeViewModel extends ViewModel {
 
     // Latest Posts
     private final MutableLiveData<Resource<List<Post>>> latestPosts = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoadingMoreLatestPosts = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> hasMoreLatestPosts = new MutableLiveData<>(false);
     
+    private int currentLatestPostsPage = 0;
+    private final int latestPostsPageSize = 10;
+    private final List<Post> allLatestPosts = new ArrayList<>();
     // Recommendations
     private final MutableLiveData<Resource<List<Post>>> recommendations = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoadingMore = new MutableLiveData<>(false);
@@ -53,16 +58,74 @@ public class HomeViewModel extends ViewModel {
         return latestPosts;
     }
 
+    public LiveData<Boolean> getIsLoadingMoreLatestPosts() {
+        return isLoadingMoreLatestPosts;
+    }
+
+    public LiveData<Boolean> getHasMoreLatestPosts() {
+        return hasMoreLatestPosts;
+    }
+
     public void loadLatestPosts() {
+        currentLatestPostsPage = 0;
+        allLatestPosts.clear();
+        
         latestPosts.setValue(Resource.loading(null));
+        loadLatestPostsPage(1);
+    }
+
+    public void loadMoreLatestPosts() {
+        if (Boolean.TRUE.equals(isLoadingMoreLatestPosts.getValue()) || 
+            Boolean.FALSE.equals(hasMoreLatestPosts.getValue())) {
+            return;
+        }
+        
+        loadLatestPostsPage(currentLatestPostsPage + 1);
+    }
+
+    private void loadLatestPostsPage(int page) {
+        if (page == 1) {
+            latestPosts.setValue(Resource.loading(null));
+        } else {
+            isLoadingMoreLatestPosts.setValue(true);
+        }
         
         disposable.add(
-                postRepository.getLatestPosts(4)
+                postRepository.getLatestPosts(page, latestPostsPageSize)
                         .subscribe(
-                                resource -> latestPosts.setValue(resource),
+                                resource -> {
+                                    if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                                        currentLatestPostsPage = page;
+                                        
+                                        if (page == 1) {
+                                            allLatestPosts.clear();
+                                        }
+                                        
+                                        List<Post> newData = resource.getData();
+                                        if (newData != null && !newData.isEmpty()) {
+                                            allLatestPosts.addAll(newData);
+                                            hasMoreLatestPosts.setValue(newData.size() == latestPostsPageSize);
+                                        } else {
+                                            hasMoreLatestPosts.setValue(false);
+                                        }
+                                        
+                                        latestPosts.setValue(Resource.success(new ArrayList<>(allLatestPosts)));
+                                        isLoadingMoreLatestPosts.setValue(false);
+                                    } else {
+                                        if (page == 1) {
+                                            latestPosts.setValue(Resource.error("Không thể tải bài đăng mới", null));
+                                        }
+                                        isLoadingMoreLatestPosts.setValue(false);
+                                        hasMoreLatestPosts.setValue(false);
+                                    }
+                                },
                                 error -> {
                                     Timber.e(error, "Error loading latest posts");
-                                    latestPosts.setValue(Resource.error("Không thể tải bài đăng mới", null));
+                                    if (page == 1) {
+                                        latestPosts.setValue(Resource.error("Không thể tải bài đăng mới", null));
+                                    }
+                                    isLoadingMoreLatestPosts.setValue(false);
+                                    hasMoreLatestPosts.setValue(false);
                                 }
                         )
         );

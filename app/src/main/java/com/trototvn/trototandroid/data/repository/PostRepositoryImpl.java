@@ -37,8 +37,8 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public Single<Resource<List<Post>>> getLatestPosts(int limit) {
-        return apiService.getLatestPosts(limit)
+    public Single<Resource<List<Post>>> getLatestPosts(int page, int limit) {
+        return apiService.getLatestPosts(page, limit)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(response -> {

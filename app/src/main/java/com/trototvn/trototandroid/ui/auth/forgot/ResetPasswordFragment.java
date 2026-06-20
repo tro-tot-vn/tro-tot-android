@@ -10,19 +10,25 @@ import androidx.navigation.Navigation;
 
 import com.trototvn.trototandroid.R;
 import com.trototvn.trototandroid.data.model.Resource;
-import com.trototvn.trototandroid.databinding.FragmentForgotPasswordBinding;
+import com.trototvn.trototandroid.databinding.FragmentResetPasswordBinding;
 import com.trototvn.trototandroid.ui.base.BaseFragment;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordBinding> {
+public class ResetPasswordFragment extends BaseFragment<FragmentResetPasswordBinding> {
 
-    private ForgotPasswordViewModel viewModel;
+    private ResetPasswordViewModel viewModel;
+    private String resetToken;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        viewModel = new ViewModelProvider(this).get(ForgotPasswordViewModel.class);
+        viewModel = new ViewModelProvider(this).get(ResetPasswordViewModel.class);
+        
+        if (getArguments() != null) {
+            resetToken = getArguments().getString("RESET_TOKEN");
+        }
+
         super.onViewCreated(view, savedInstanceState);
     }
 
@@ -31,14 +37,16 @@ public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordB
         binding.btnBack.setOnClickListener(v -> Navigation.findNavController(requireView()).navigateUp());
 
         binding.btnSubmit.setOnClickListener(v -> {
-            String email = binding.etEmail.getText() != null ? binding.etEmail.getText().toString().trim() : "";
-            viewModel.sendOtp(email);
+            String password = binding.etPassword.getText() != null ? binding.etPassword.getText().toString().trim() : "";
+            String confirmPassword = binding.etConfirmPassword.getText() != null ? binding.etConfirmPassword.getText().toString().trim() : "";
+            
+            viewModel.resetPassword(resetToken, password, confirmPassword);
         });
     }
 
     @Override
     protected void observeData() {
-        viewModel.getForgotPasswordResult().observe(getViewLifecycleOwner(), resource -> {
+        viewModel.getResetResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource == null) return;
             switch (resource.getStatus()) {
                 case LOADING:
@@ -47,9 +55,8 @@ public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordB
                     break;
                 case SUCCESS:
                     showLoading(false);
-                    showToast("Mã OTP đã được gửi đến email của bạn.");
-                    String email = binding.etEmail.getText() != null ? binding.etEmail.getText().toString().trim() : "";
-                    navigateToVerifyOtp(email);
+                    showToast("Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");
+                    Navigation.findNavController(requireView()).navigate(R.id.action_resetPasswordFragment_to_loginFragment);
                     break;
                 case ERROR:
                     showLoading(false);
@@ -58,24 +65,20 @@ public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordB
             }
         });
 
-        viewModel.getEmailError().observe(getViewLifecycleOwner(), error -> {
-            binding.tilEmail.setError(error);
+        viewModel.getPasswordError().observe(getViewLifecycleOwner(), error -> {
+            binding.tilPassword.setError(error);
         });
-    }
 
-    private void navigateToVerifyOtp(String email) {
-        Bundle bundle = new Bundle();
-        bundle.putString("EMAIL", email);
-        bundle.putString("OTP_TYPE", "FORGOT_PASSWORD");
-        Navigation.findNavController(requireView())
-                .navigate(R.id.action_forgotPasswordFragment_to_verifyOtpFragment, bundle);
+        viewModel.getConfirmPasswordError().observe(getViewLifecycleOwner(), error -> {
+            binding.tilConfirmPassword.setError(error);
+        });
     }
 
     @Override
     protected void showLoading(boolean isLoading) {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         binding.btnSubmit.setEnabled(!isLoading);
-        binding.btnSubmit.setText(isLoading ? "" : "Gửi mã OTP");
+        binding.btnSubmit.setText(isLoading ? "" : "Lưu mật khẩu mới");
     }
 
     private void showError(String message) {
