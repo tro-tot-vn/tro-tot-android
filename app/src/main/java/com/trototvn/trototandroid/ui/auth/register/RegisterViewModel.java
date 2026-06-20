@@ -39,8 +39,8 @@ public class RegisterViewModel extends BaseViewModel {
     private final AuthRepository authRepository;
     private final LocationService locationService;
 
-    // LiveData for register result
-    private final MutableLiveData<Resource<RegisterResponse>> registerResult = new MutableLiveData<>();
+    // LiveData for register and send OTP result
+    private final MutableLiveData<Resource<String>> registerResult = new MutableLiveData<>();
 
     // LiveData for validation errors
     private final MutableLiveData<String> phoneError = new MutableLiveData<>();
@@ -61,7 +61,7 @@ public class RegisterViewModel extends BaseViewModel {
         loadCities();
     }
 
-    public MutableLiveData<Resource<RegisterResponse>> getRegisterResult() {
+    public MutableLiveData<Resource<String>> getRegisterResult() {
         return registerResult;
     }
 
@@ -135,13 +135,31 @@ public class RegisterViewModel extends BaseViewModel {
                 currentCity, currentDistrict, currentJob
         );
 
-        // Call repository
+        // Call repository: Chain Register -> Send OTP
         addDisposable(
                 authRepository.register(request)
+                        .flatMap(resource -> {
+                            if (resource.getStatus() == Resource.Status.SUCCESS) {
+                                return authRepository.sendOtpRegister(email);
+                            } else {
+                                return io.reactivex.rxjava3.core.Single.just(
+                                    Resource.<com.trototvn.trototandroid.data.model.auth.OTPResponse>error(resource.getMessage(), null)
+                                );
+                            }
+                        })
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                resource -> registerResult.setValue(resource),
-                                throwable -> handleError(registerResult, throwable.getMessage())
+                                resource -> {
+                                    if (resource.getStatus() == Resource.Status.SUCCESS) {
+                                        registerResult.setValue(Resource.success(email));
+                                    } else if (resource.getStatus() == Resource.Status.ERROR) {
+                                        registerResult.setValue(Resource.error(resource.getMessage(), null));
+                                    }
+                                },
+                                throwable -> {
+                                    String errorMsg = com.trototvn.trototandroid.utils.ErrorHandler.getErrorMessage(throwable);
+                                    registerResult.setValue(Resource.error(errorMsg, null));
+                                }
                         )
         );
     }

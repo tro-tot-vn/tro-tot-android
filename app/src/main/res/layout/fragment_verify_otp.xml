@@ -34,16 +34,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Quên mật khẩu"
+                android:text="Xác minh OTP"
                 android:textColor="@color/text_primary"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvDescription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Vui lòng nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu của bạn."
+                android:text="Vui lòng nhập mã OTP đã được gửi đến email của bạn."
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -82,21 +83,22 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Email Input -->
+            <!-- OTP Input -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilEmail"
+                android:id="@+id/tilOtp"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:hint="Địa chỉ Email"
-                app:startIconDrawable="@drawable/ic_user">
+                android:hint="Mã OTP (6 chữ số)"
+                app:startIconDrawable="@drawable/ic_lock">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etEmail"
+                    android:id="@+id/etOtp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"
+                    android:inputType="number"
+                    android:maxLength="6"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -110,7 +112,7 @@
                     android:id="@+id/btnSubmit"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:text="Gửi mã OTP"
+                    android:text="Xác nhận"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:cornerRadius="12dp" />
@@ -124,6 +126,30 @@
                     android:indeterminateTint="@color/white"
                     android:visibility="gone" />
             </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chưa nhận được mã? "
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvResend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gửi lại"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

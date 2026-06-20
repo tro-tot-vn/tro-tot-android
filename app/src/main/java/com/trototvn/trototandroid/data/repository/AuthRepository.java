@@ -7,6 +7,11 @@ import com.trototvn.trototandroid.data.model.auth.LoginResponse;
 import com.trototvn.trototandroid.data.model.auth.RegisterRequest;
 import com.trototvn.trototandroid.data.model.auth.RegisterResponse;
 import com.trototvn.trototandroid.data.model.auth.Token;
+import com.trototvn.trototandroid.data.model.auth.OTPRequest;
+import com.trototvn.trototandroid.data.model.auth.OTPResponse;
+import com.trototvn.trototandroid.data.model.auth.ResetPasswordRequest;
+import com.trototvn.trototandroid.data.model.auth.VerifyOTPRequest;
+import com.trototvn.trototandroid.data.model.auth.VerifyOTPResponse;
 import com.trototvn.trototandroid.data.remote.ApiService;
 import com.trototvn.trototandroid.utils.ErrorHandler;
 import com.trototvn.trototandroid.utils.SessionManager;
@@ -89,6 +94,94 @@ public class AuthRepository {
                         Resource<RegisterResponse> errorResource = Resource.error(throwable.getMessage(), null);
                         return Single.just(errorResource);
                     }
+                });
+    }
+
+    /**
+     * Send OTP for registration
+     */
+    public Single<Resource<OTPResponse>> sendOtpRegister(String email) {
+        return apiService.sendOtpRegister(new OTPRequest(email))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<OTPResponse>error(response.getMessage(), null);
+                    }
+                })
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Send OTP error");
+                    return Single.just(Resource.error(ErrorHandler.getErrorMessage(throwable), null));
+                });
+    }
+
+    /**
+     * Verify OTP for registration
+     */
+    public Single<Resource<Void>> verifyOtpRegister(String email, String otp) {
+        return apiService.verifyOtpRegister(new VerifyOTPRequest(email, otp))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> Resource.<Void>success(null))
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Verify OTP error");
+                    return Single.just(Resource.error(ErrorHandler.getErrorMessage(throwable), null));
+                });
+    }
+
+    /**
+     * Forgot password - Send OTP
+     */
+    public Single<Resource<OTPResponse>> forgotPassword(String email) {
+        return apiService.forgotPassword(new OTPRequest(email))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<OTPResponse>error(response.getMessage(), null);
+                    }
+                })
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Forgot password error");
+                    return Single.just(Resource.error(ErrorHandler.getErrorMessage(throwable), null));
+                });
+    }
+
+    /**
+     * Verify OTP for forgot password
+     */
+    public Single<Resource<VerifyOTPResponse>> verifyOtp(String email, String otp) {
+        return apiService.verifyOtp(new VerifyOTPRequest(email, otp))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> {
+                    if (response.getData() != null) {
+                        return Resource.success(response.getData());
+                    } else {
+                        return Resource.<VerifyOTPResponse>error(response.getMessage(), null);
+                    }
+                })
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Verify OTP forgot password error");
+                    return Single.just(Resource.error(ErrorHandler.getErrorMessage(throwable), null));
+                });
+    }
+
+    /**
+     * Reset password
+     */
+    public Single<Resource<Void>> resetPassword(String resetToken, String newPassword) {
+        return apiService.resetPassword(new ResetPasswordRequest(resetToken, newPassword))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(response -> Resource.<Void>success(null))
+                .onErrorResumeNext(throwable -> {
+                    Timber.e(throwable, "Reset password error");
+                    return Single.just(Resource.error(ErrorHandler.getErrorMessage(throwable), null));
                 });
     }
 
