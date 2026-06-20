@@ -102,6 +102,9 @@ public interface ChatDao {
     @Query("SELECT * FROM message_attachments WHERE message_id = :messageId")
     Single<List<MessageAttachmentEntity>> getAttachmentsByMessageId(long messageId);
 
+    @Query("SELECT * FROM message_attachments WHERE message_id IN (:messageIds)")
+    Single<List<MessageAttachmentEntity>> getAttachmentsByMessageIds(List<Long> messageIds);
+
     @Query("SELECT * FROM conversation_participants WHERE conversation_id = :conversationId")
     Single<List<ConversationParticipantEntity>> getParticipantsByConversationId(long conversationId);
 

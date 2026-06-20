@@ -13,6 +13,7 @@ public class SocketEvents {
     public static final String MESSAGE_SENT = "message:sent";
     public static final String MESSAGE_RECEIVED = "message:received";
     public static final String MESSAGE_READ = "message:read";
+    public static final String MESSAGE_DELIVERED = "message:delivered";
 
     // Typing events
     public static final String TYPING_START = "typing:start";
