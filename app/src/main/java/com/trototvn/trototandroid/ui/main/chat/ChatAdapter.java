@@ -31,6 +31,12 @@ import com.trototvn.trototandroid.utils.Constants;
 
 import com.trototvn.trototandroid.di.GlideApp;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.load.DataSource;
+import android.graphics.drawable.Drawable;
+import androidx.annotation.Nullable;
 
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -246,6 +252,9 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
                 fileUrl = message.getAttachments().get(0).fileUrl;
+                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_SENT: messageId=" + message.messageId + ", raw fileUrl=" + fileUrl);
+            } else {
+                android.util.Log.w("ChatAdapterImage", "VIEW_TYPE_IMAGE_SENT: messageId=" + message.messageId + " has NO attachments. Content: " + message.content);
             }
 
             if (fileUrl != null && !fileUrl.isEmpty() && !fileUrl.startsWith("http")) {
@@ -264,15 +273,29 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 GlideApp.with(binding.getRoot().getContext()).clear(binding.ivContent);
                 binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
             } else {
+                final String resolvedUrl = fileUrl;
+                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_SENT: messageId=" + message.messageId + ", loading resolved URL: " + resolvedUrl);
                 GlideApp.with(binding.getRoot().getContext())
-                        .load(fileUrl)
+                        .load(resolvedUrl)
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                android.util.Log.e("ChatAdapterImage", "VIEW_TYPE_IMAGE_SENT: Glide load failed for URL: " + resolvedUrl, e);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_SENT: Glide load succeeded for URL: " + resolvedUrl);
+                                return false;
+                            }
+                        })
                         .into(binding.ivContent);
 
-                String finalUrl = fileUrl;
-                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), finalUrl));
+                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), resolvedUrl));
             }
 
         } else if (holder.binding instanceof ItemChatImageReceivedBinding) {
@@ -299,6 +322,9 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
             String fileUrl = "";
             if (message.getAttachments() != null && !message.getAttachments().isEmpty()) {
                 fileUrl = message.getAttachments().get(0).fileUrl;
+                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_RECEIVED: messageId=" + message.messageId + ", raw fileUrl=" + fileUrl);
+            } else {
+                android.util.Log.w("ChatAdapterImage", "VIEW_TYPE_IMAGE_RECEIVED: messageId=" + message.messageId + " has NO attachments. Content: " + message.content);
             }
 
             if (fileUrl != null && !fileUrl.isEmpty() && !fileUrl.startsWith("http")) {
@@ -317,15 +343,29 @@ public class ChatAdapter extends BaseAdapter<MessageEntity, ViewBinding> {
                 GlideApp.with(binding.getRoot().getContext()).clear(binding.ivContent);
                 binding.ivContent.setImageResource(R.drawable.ic_image_placeholder);
             } else {
+                final String resolvedUrl = fileUrl;
+                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_RECEIVED: messageId=" + message.messageId + ", loading resolved URL: " + resolvedUrl);
                 GlideApp.with(binding.getRoot().getContext())
-                        .load(fileUrl)
+                        .load(resolvedUrl)
                         .placeholder(new ColorDrawable(Color.LTGRAY))
                         .error(new ColorDrawable(Color.RED))
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                android.util.Log.e("ChatAdapterImage", "VIEW_TYPE_IMAGE_RECEIVED: Glide load failed for URL: " + resolvedUrl, e);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                android.util.Log.d("ChatAdapterImage", "VIEW_TYPE_IMAGE_RECEIVED: Glide load succeeded for URL: " + resolvedUrl);
+                                return false;
+                            }
+                        })
                         .into(binding.ivContent);
 
-                String finalUrl = fileUrl;
-                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), finalUrl));
+                binding.ivContent.setOnClickListener(v -> showFullScreenImage(v.getContext(), resolvedUrl));
             }
         } else if (holder.binding instanceof ItemChatCallSentBinding) {
             ItemChatCallSentBinding binding = (ItemChatCallSentBinding) holder.binding;
