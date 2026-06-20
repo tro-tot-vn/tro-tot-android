@@ -24,7 +24,7 @@ public interface PostRepository {
      * @param limit Number of posts to fetch
      * @return Single emitting Resource with list of posts
      */
-    Single<Resource<List<Post>>> getLatestPosts(int limit);
+    Single<Resource<List<Post>>> getLatestPosts(int page, int limit);
 
     /**
      * Get personalized recommendations

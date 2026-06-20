@@ -60,6 +60,7 @@ public class LatestPostsFragment extends Fragment {
 
         binding.rvLatestPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvLatestPosts.setAdapter(adapter);
+        // Remove infinite scroll listener since we use 'Load More' button now
 
         // SwipeRefreshLayout
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
@@ -70,7 +71,6 @@ public class LatestPostsFragment extends Fragment {
     private void setupObservers() {
         viewModel.getLatestPosts().observe(getViewLifecycleOwner(), resource -> {
             if (resource.getStatus() == Resource.Status.LOADING) {
-                // Only show progress bar if not swipe refreshing
                 if (!binding.swipeRefreshLayout.isRefreshing() && adapter.getItemCount() == 0) {
                     binding.pbLatestPosts.setVisibility(View.VISIBLE);
                 }
@@ -92,10 +92,20 @@ public class LatestPostsFragment extends Fragment {
                 }
             }
         });
+
+        viewModel.getIsLoadingMoreLatestPosts().observe(getViewLifecycleOwner(), isLoadingMore -> {
+            // Can show a small progress bar or change button state if needed.
+            // For now, we rely on the main progress bar or just let user wait.
+        });
+
+        viewModel.getHasMoreLatestPosts().observe(getViewLifecycleOwner(), hasMore -> {
+            binding.btnLoadMoreLatest.setVisibility(Boolean.TRUE.equals(hasMore) ? View.VISIBLE : View.GONE);
+        });
     }
 
     private void setupClickListeners() {
         binding.btnRetryLatest.setOnClickListener(v -> viewModel.loadLatestPosts());
+        binding.btnLoadMoreLatest.setOnClickListener(v -> viewModel.loadMoreLatestPosts());
     }
 
     @Override

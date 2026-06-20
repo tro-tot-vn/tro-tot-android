@@ -108,7 +108,7 @@ public interface ApiService {
          * Returns 4 latest approved posts for home screen
          */
         @GET("api/posts/latest")
-        Single<ResponseData<List<Post>>> getLatestPosts(@Query("limit") int limit);
+        Single<ResponseData<List<Post>>> getLatestPosts(@Query("page") int page, @Query("limit") int limit);
 
         /**
          * GET - Post Detail by ID
