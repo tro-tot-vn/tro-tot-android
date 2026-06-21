@@ -537,8 +537,13 @@ public class VideoCallActivity extends BaseActivity<ActivityVideoCallBinding> {
         if (roomId != null) {
             JsonObject payload = new JsonObject();
             payload.addProperty("roomId", roomId);
-            payload.addProperty("reason", "User hung up");
-            socketIOManager.emit(SocketEvents.EMIT_ENDED, payload);
+            if (isPeerConnected) {
+                payload.addProperty("reason", "User hung up");
+                socketIOManager.emit(SocketEvents.EMIT_ENDED, payload);
+            } else {
+                payload.addProperty("reason", "Cancelled by user");
+                socketIOManager.emit(SocketEvents.EMIT_REJECTED, payload);
+            }
         }
         finish();
     }
