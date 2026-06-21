@@ -149,7 +149,7 @@ public class PostDetailFragment extends Fragment {
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 long conversationId = resource.getData().conversationId;
                 String partnerName = "";
-                Resource<com.trototvn.trototandroid.data.model.post.Post> postRes = viewModel.getPostDetail().getValue();
+                Resource<com.trototvn.trototandroid.data.model.post.PostDetail> postRes = viewModel.getPostDetail().getValue();
                 if (postRes != null && postRes.getData() != null) {
                     partnerName = postRes.getData().getOwner().getFullName();
                 }
