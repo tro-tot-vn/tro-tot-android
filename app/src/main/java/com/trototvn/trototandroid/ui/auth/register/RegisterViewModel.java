@@ -211,8 +211,11 @@ public class RegisterViewModel extends BaseViewModel {
         if (password == null || password.trim().isEmpty()) {
             passwordError.setValue("Vui lòng nhập mật khẩu");
             isValid = false;
-        } else if (password.length() < 6) {
-            passwordError.setValue("Mật khẩu phải có ít nhất 6 ký tự");
+        } else if (password.length() < 8) {
+            passwordError.setValue("Mật khẩu phải có ít nhất 8 ký tự");
+            isValid = false;
+        } else if (!Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$").matcher(password).matches()) {
+            passwordError.setValue("Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số");
             isValid = false;
         }
 

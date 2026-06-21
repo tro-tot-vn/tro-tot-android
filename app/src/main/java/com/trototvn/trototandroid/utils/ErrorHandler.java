@@ -44,6 +44,28 @@ public class ErrorHandler {
                 String backendMessage = jsonObject.optString("message", "");
                 
                 if (!backendMessage.isEmpty()) {
+                    if ("VALIDATION_ERROR".equals(backendMessage) && jsonObject.has("error")) {
+                        org.json.JSONArray errorArray = jsonObject.optJSONArray("error");
+                        if (errorArray != null && errorArray.length() > 0) {
+                            StringBuilder sb = new StringBuilder();
+                            for (int i = 0; i < errorArray.length(); i++) {
+                                JSONObject errObj = errorArray.optJSONObject(i);
+                                if (errObj != null) {
+                                    String param = errObj.optString("param", "");
+                                    String msg = errObj.optString("msg", "");
+                                    
+                                    // Translate some common validation messages
+                                    if (param.equals("password") && msg.contains("Not match")) {
+                                        msg = "Mật khẩu phải có ít nhất 8 ký tự, 1 chữ hoa, 1 chữ thường và 1 số";
+                                    }
+                                    
+                                    sb.append(param.isEmpty() ? "" : param + ": ").append(msg).append("\n");
+                                }
+                            }
+                            return sb.toString().trim();
+                        }
+                    }
+
                     switch (backendMessage) {
                         case "ACCOUNT_NOT_FOUND":
                             return "Tài khoản không tồn tại.";
@@ -54,7 +76,22 @@ public class ErrorHandler {
                         case "PHONE_ALREADY_EXISTS":
                             return "Số điện thoại này đã được sử dụng.";
                         case "EMAIL_ALREADY_EXISTS":
-                            return "Email này đã được sử dụng.";
+                        case "USER_ALREADY_EXISTS":
+                        case "EMAIL_EXIST":
+                            if (jsonObject.has("error")) {
+                                org.json.JSONArray errArr = jsonObject.optJSONArray("error");
+                                if (errArr != null && errArr.length() > 0 && "OTP_SENT_RECENTLY".equals(errArr.optString(0))) {
+                                    return "Mã OTP đã được gửi gần đây. Vui lòng kiểm tra email hoặc thử lại sau ít phút.";
+                                }
+                            }
+                            return "Tài khoản với Email hoặc Số điện thoại này đã tồn tại. Vui lòng đăng nhập hoặc sử dụng thông tin khác.";
+                        case "INVALID_OTP":
+                            return "Mã xác thực OTP không chính xác hoặc đã hết hạn.";
+                        case "USER_NOT_FOUND":
+                            return "Không tìm thấy người dùng với thông tin này.";
+                        case "INVALID_ACCESS_TOKEN":
+                        case "INVALID_TOKEN":
+                            return "Phiên làm việc không hợp lệ, vui lòng đăng nhập lại.";
                         default:
                             if (!backendMessage.contains("_")) {
                                 return backendMessage;

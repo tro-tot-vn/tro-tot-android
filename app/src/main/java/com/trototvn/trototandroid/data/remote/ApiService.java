@@ -61,7 +61,7 @@ public interface ApiService {
      * POST - Register
      */
     @POST("api/auth/register")
-    Single<ResponseData<RegisterResponse>> register(@Body RegisterRequest request);
+    Single<ResponseData<String>> register(@Body RegisterRequest request);
 
     /**
      * POST - Send OTP for Registration
@@ -73,7 +73,7 @@ public interface ApiService {
      * POST - Verify OTP for Registration
      */
     @POST("api/auth/verify-otp-register")
-    Single<ResponseData<Void>> verifyOtpRegister(@Body com.trototvn.trototandroid.data.model.auth.VerifyOTPRequest request);
+    Single<ResponseData<Boolean>> verifyOtpRegister(@Body com.trototvn.trototandroid.data.model.auth.VerifyOTPRequest request);
 
     /**
      * POST - Forgot Password (Send OTP)
@@ -91,7 +91,7 @@ public interface ApiService {
      * POST - Reset Password
      */
     @POST("api/auth/reset-password")
-    Single<ResponseData<Void>> resetPassword(@Body com.trototvn.trototandroid.data.model.auth.ResetPasswordRequest request);
+    Single<ResponseData<String>> resetPassword(@Body com.trototvn.trototandroid.data.model.auth.ResetPasswordRequest request);
 
     /**
      * POST - Refresh Token
