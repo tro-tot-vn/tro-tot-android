@@ -27,16 +27,11 @@ public class TokenAuthenticator implements Authenticator {
 
     private final SessionManager sessionManager;
     private final Provider<ApiService> apiServiceProvider; // Use Provider to avoid circular dependency
-    private final android.content.Context context;
 
     @Inject
-    public TokenAuthenticator(
-            SessionManager sessionManager, 
-            Provider<ApiService> apiServiceProvider,
-            @dagger.hilt.android.qualifiers.ApplicationContext android.content.Context context) {
+    public TokenAuthenticator(SessionManager sessionManager, Provider<ApiService> apiServiceProvider) {
         this.sessionManager = sessionManager;
         this.apiServiceProvider = apiServiceProvider;
-        this.context = context;
     }
 
     @Nullable
@@ -48,9 +43,9 @@ public class TokenAuthenticator implements Authenticator {
         }
 
         // If the request itself is the refresh-token endpoint, the refresh token is expired or invalid.
-        // Clear session and return null to prevent infinite loop.
+        // Notify session expired and return null to prevent infinite loop.
         if (response.request().url().encodedPath().contains("/auth/refresh-token")) {
-            forceLogout();
+            sessionManager.notifySessionExpired();
             return null;
         }
 
@@ -60,7 +55,7 @@ public class TokenAuthenticator implements Authenticator {
             if (responseBody != null) {
                 String bodyString = responseBody.string();
                 if (bodyString.contains("INVALID_ACCESS_TOKEN")) {
-                    forceLogout();
+                    sessionManager.notifySessionExpired();
                     return null;
                 }
             }
@@ -102,8 +97,8 @@ public class TokenAuthenticator implements Authenticator {
                         .header("Authorization", "Bearer " + newAccessToken)
                         .build();
             } else {
-                // Refresh failed (e.g., refresh token expired), logout user
-                forceLogout();
+                // Refresh failed (e.g., refresh token expired), trigger global logout
+                sessionManager.notifySessionExpired();
                 return null;
             }
         } catch (Exception e) {
@@ -118,20 +113,5 @@ public class TokenAuthenticator implements Authenticator {
             result++;
         }
         return result;
-    }
-
-    private void forceLogout() {
-        if (!sessionManager.isLoggedIn()) return; // Already logged out
-
-        sessionManager.clearSession();
-        android.content.Intent intent = new android.content.Intent(context, com.trototvn.trototandroid.ui.splash.SplashActivity.class);
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        // Use a handler to start activity on main thread if needed, or simply start it.
-        // startActivity with FLAG_ACTIVITY_NEW_TASK from ApplicationContext works fine.
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-            context.startActivity(intent);
-            android.widget.Toast.makeText(context, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", android.widget.Toast.LENGTH_LONG).show();
-        });
     }
 }
