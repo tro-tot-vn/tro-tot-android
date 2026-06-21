@@ -43,9 +43,9 @@ public class TokenAuthenticator implements Authenticator {
         }
 
         // If the request itself is the refresh-token endpoint, the refresh token is expired or invalid.
-        // Clear session and return null to prevent infinite loop.
+        // Notify session expired and return null to prevent infinite loop.
         if (response.request().url().encodedPath().contains("/auth/refresh-token")) {
-            sessionManager.clearSession();
+            sessionManager.notifySessionExpired();
             return null;
         }
 
@@ -55,7 +55,7 @@ public class TokenAuthenticator implements Authenticator {
             if (responseBody != null) {
                 String bodyString = responseBody.string();
                 if (bodyString.contains("INVALID_ACCESS_TOKEN")) {
-                    sessionManager.clearSession();
+                    sessionManager.notifySessionExpired();
                     return null;
                 }
             }
@@ -97,8 +97,8 @@ public class TokenAuthenticator implements Authenticator {
                         .header("Authorization", "Bearer " + newAccessToken)
                         .build();
             } else {
-                // Refresh failed (e.g., refresh token expired), logout user
-                sessionManager.clearSession();
+                // Refresh failed (e.g., refresh token expired), trigger global logout
+                sessionManager.notifySessionExpired();
                 return null;
             }
         } catch (Exception e) {

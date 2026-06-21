@@ -368,6 +368,88 @@ public class ChatRepository {
                 .subscribeOn(Schedulers.io());
     }
 
+    /**
+     * Tạo hội thoại mới.
+     */
+    public Single<Resource<ConversationDto>> createConversation(int targetUserId) {
+        com.trototvn.trototandroid.data.model.chat.CreateConversationRequest request = new com.trototvn.trototandroid.data.model.chat.CreateConversationRequest("Direct", java.util.Collections.singletonList(targetUserId));
+        return apiService.createConversation(request)
+                .subscribeOn(Schedulers.io())
+                .flatMap(response -> {
+                    if (response != null && response.getData() != null) {
+                        ConversationDto dto = response.getData();
+                        long currentUserId = 0;
+                        try {
+                            if (sessionManager.getUserId() != null)
+                                currentUserId = Long.parseLong(sessionManager.getUserId());
+                        } catch (Exception ignored) {}
+
+                        String partnerName = "Người dùng ẩn danh";
+                        String partnerAvatar = null;
+                        List<ConversationParticipantEntity> participantEntities = new ArrayList<>();
+
+                        if (dto.participants != null) {
+                            for (com.trototvn.trototandroid.data.model.chat.ParticipantDto p : dto.participants) {
+                                participantEntities.add(new ConversationParticipantEntity(
+                                        p.getSignalingId(),
+                                        dto.conversationId,
+                                        p.customerId
+                                ));
+
+                                if (p.customerId != currentUserId) {
+                                    partnerName = (p.firstName != null ? p.firstName : "") + " " + (p.lastName != null ? p.lastName : "");
+                                    partnerName = partnerName.trim();
+                                    if (partnerName.isEmpty()) partnerName = "Người dùng ẩn danh";
+                                    if (p.avatarId != null) {
+                                        String baseUrl = com.trototvn.trototandroid.utils.Constants.BASE_URL;
+                                        if (baseUrl.endsWith("/")) baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+                                        partnerAvatar = baseUrl + "/api/files/" + p.avatarId;
+                                    }
+                                }
+                            }
+                        }
+
+                        Date lastDate = dto.updatedAt != null ? dto.updatedAt : new Date();
+                        if (dto.getLastMessageAt() != null && !dto.getLastMessageAt().isEmpty()) {
+                            try {
+                                java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                                isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("GMT+7"));
+                                lastDate = isoFormat.parse(dto.getLastMessageAt());
+                            } catch (Exception e) {
+                                Timber.e(e, "Error parsing lastMessageAt");
+                            }
+                        }
+
+                        String lastMsg = dto.getLastMessage();
+                        if (lastMsg == null || lastMsg.trim().isEmpty()) {
+                            if (dto.getLastMessageAt() != null && !dto.getLastMessageAt().isEmpty()) {
+                                lastMsg = "[Hình ảnh]";
+                            } else {
+                                lastMsg = "";
+                            }
+                        }
+
+                        ConversationEntity entity = new ConversationEntity(
+                                dto.conversationId,
+                                partnerName,
+                                partnerAvatar,
+                                lastMsg,
+                                0,
+                                dto.createdAt != null ? dto.createdAt : new Date(),
+                                lastDate);
+
+                        joinConversation(dto.conversationId);
+
+                        return chatDao.insertConversation(entity)
+                                .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities))
+                                .andThen(Single.just(Resource.success(dto)));
+                    } else {
+                        return Single.just(Resource.<ConversationDto>error("Phản hồi rỗng từ server", null));
+                    }
+                })
+                .onErrorReturn(throwable -> Resource.error(throwable.getMessage(), null));
+    }
+
     // ─────────────────────────────────────────────────────────────
     // SEND MESSAGE – Optimistic insert → Socket emit
     // ─────────────────────────────────────────────────────────────

@@ -144,6 +144,31 @@ public class PostDetailFragment extends Fragment {
             }
         });
 
+        // Observe Create Chat Result
+        viewModel.getCreateChatResult().observe(getViewLifecycleOwner(), resource -> {
+            if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
+                long conversationId = resource.getData().conversationId;
+                String partnerName = "";
+                Resource<com.trototvn.trototandroid.data.model.post.Post> postRes = viewModel.getPostDetail().getValue();
+                if (postRes != null && postRes.getData() != null) {
+                    partnerName = postRes.getData().getOwner().getFullName();
+                }
+
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putLong("conversationId", conversationId);
+                bundle.putString("partnerName", partnerName);
+                androidx.navigation.fragment.NavHostFragment.findNavController(this)
+                        .navigate(com.trototvn.trototandroid.R.id.chatDetailFragment, bundle);
+                
+                // Clear state to avoid multiple navigations
+                viewModel.getCreateChatResult().setValue(Resource.loading(null));
+            } else if (resource.getStatus() == Resource.Status.ERROR) {
+                Toast.makeText(requireContext(), resource.getMessage(), Toast.LENGTH_SHORT).show();
+            } else if (resource.getStatus() == Resource.Status.LOADING) {
+                // optional: show loading somewhere if needed
+            }
+        });
+
         // Observe Rating Stats
         viewModel.getRatingStats().observe(getViewLifecycleOwner(), resource -> {
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
@@ -286,8 +311,15 @@ public class PostDetailFragment extends Fragment {
         binding.tvPhone.setText(viewModel.getMaskedPhone(phone));
 
         binding.btnShowPhone.setOnClickListener(v -> {
-            binding.tvPhone.setText(phone);
-            binding.btnShowPhone.setVisibility(View.GONE);
+            if (!viewModel.isAuthenticated()) {
+                Toast.makeText(requireContext(), "Vui lòng đăng nhập để xem số điện thoại", Toast.LENGTH_LONG).show();
+            } else {
+                if (binding.tvPhone.getText().toString().equals(phone)) {
+                    showPhoneActionDialog(phone);
+                } else {
+                    binding.tvPhone.setText(phone);
+                }
+            }
         });
 
         // Description
@@ -371,12 +403,21 @@ public class PostDetailFragment extends Fragment {
             if (!viewModel.isAuthenticated()) {
                 Toast.makeText(requireContext(), "Vui lòng đăng nhập để xem số điện thoại", Toast.LENGTH_LONG).show();
             } else {
-                binding.btnSellerPhone.setText(phone);
+                if (binding.btnSellerPhone.getText().toString().equals(phone)) {
+                    showPhoneActionDialog(phone);
+                } else {
+                    binding.btnSellerPhone.setText(phone);
+                }
             }
         });
 
         binding.btnSellerChat.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Tính năng Chat sẽ sớm được ra mắt!", Toast.LENGTH_SHORT).show();
+            if (!viewModel.isAuthenticated()) {
+                Toast.makeText(requireContext(), "Vui lòng đăng nhập để chat", Toast.LENGTH_LONG).show();
+            } else {
+                int sellerId = seller.getCustomerId();
+                viewModel.createAndNavigateToChat(sellerId);
+            }
         });
 
         // Quick Messaging Setup
@@ -401,6 +442,26 @@ public class PostDetailFragment extends Fragment {
         tvValue.setText(value);
 
         binding.tableDetails.addView(rowView);
+    }
+
+    private void showPhoneActionDialog(String phone) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Số điện thoại: " + phone)
+                .setItems(new CharSequence[]{"Gọi điện thoại", "Sao chép số"}, (dialog, which) -> {
+                    if (which == 0) {
+                        // Call
+                        android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_DIAL);
+                        intent.setData(Uri.parse("tel:" + phone));
+                        startActivity(intent);
+                    } else if (which == 1) {
+                        // Copy
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("phone", phone);
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(requireContext(), "Đã sao chép số điện thoại", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     @Override

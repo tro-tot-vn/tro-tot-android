@@ -257,4 +257,15 @@ public class SessionManager {
     public String getFcmToken() {
         return prefs.getString(KEY_FCM_TOKEN, null);
     }
+
+    // Global Event for Forced Logout
+    private final io.reactivex.rxjava3.subjects.Subject<Boolean> sessionExpiredSubject = io.reactivex.rxjava3.subjects.PublishSubject.<Boolean>create().toSerialized();
+
+    public io.reactivex.rxjava3.core.Observable<Boolean> observeSessionExpiration() {
+        return sessionExpiredSubject.hide();
+    }
+
+    public void notifySessionExpired() {
+        sessionExpiredSubject.onNext(true);
+    }
 }

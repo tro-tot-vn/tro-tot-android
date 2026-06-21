@@ -76,7 +76,7 @@ public class AuthRepository {
     /**
      * Register new account
      */
-    public Single<Resource<RegisterResponse>> register(RegisterRequest request) {
+    public Single<Resource<String>> register(RegisterRequest request) {
         return apiService.register(request)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -84,14 +84,15 @@ public class AuthRepository {
                     if (response.getData() != null) {
                         return Resource.success(response.getData());
                     } else {
-                        return Resource.<RegisterResponse>error(response.getMessage(), null);
+                        return Resource.<String>error(response.getMessage(), null);
                     }
                 })
-                .onErrorResumeNext(new Function<Throwable, Single<Resource<RegisterResponse>>>() {
+                .onErrorResumeNext(new Function<Throwable, Single<Resource<String>>>() {
                     @Override
-                    public Single<Resource<RegisterResponse>> apply(Throwable throwable) {
+                    public Single<Resource<String>> apply(Throwable throwable) {
                         Timber.e(throwable, "Register error");
-                        Resource<RegisterResponse> errorResource = Resource.error(throwable.getMessage(), null);
+                        String userMessage = ErrorHandler.getErrorMessage(throwable);
+                        Resource<String> errorResource = Resource.error(userMessage, null);
                         return Single.just(errorResource);
                     }
                 });

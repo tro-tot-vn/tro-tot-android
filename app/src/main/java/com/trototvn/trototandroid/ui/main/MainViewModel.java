@@ -30,6 +30,7 @@ public class MainViewModel extends BaseViewModel {
 
     private final MutableLiveData<Boolean> logoutCompleted = new MutableLiveData<>();
     private final MutableLiveData<ChatRepository.InAppNotificationEvent> inAppNotificationEvent = new MutableLiveData<>();
+    private boolean isLoggingOut = false;
 
     public LiveData<ChatRepository.InAppNotificationEvent> getInAppNotificationEvent() {
         return inAppNotificationEvent;
@@ -82,6 +83,21 @@ public class MainViewModel extends BaseViewModel {
                                     throwable -> Timber.e(throwable, "Error observing in-app notifications")
                             )
             );
+
+            // 6. Listen to forced logout events globally
+            addDisposable(
+                    sessionManager.observeSessionExpiration()
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    expired -> {
+                                        if (expired && !isLoggingOut) {
+                                            Timber.w("Forced logout triggered by session expiration.");
+                                            logout();
+                                        }
+                                    },
+                                    throwable -> Timber.e(throwable, "Error observing session expiration")
+                            )
+            );
         }
     }
 
@@ -89,6 +105,9 @@ public class MainViewModel extends BaseViewModel {
      * Coordinate user logout (socket disconnect, FCM token unregister, local DB clear)
      */
     public void logout() {
+        if (isLoggingOut) return;
+        isLoggingOut = true;
+
         chatRepository.stopObservingIncomingMessages();
         chatRepository.stopObservingIncomingCalls();
         socketIOManager.disconnect();

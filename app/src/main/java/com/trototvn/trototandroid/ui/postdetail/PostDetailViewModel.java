@@ -11,6 +11,8 @@ import com.trototvn.trototandroid.data.model.rating.RatingStats;
 import com.trototvn.trototandroid.data.repository.PostDetailRepository;
 import com.trototvn.trototandroid.data.repository.RatingRepository;
 import com.trototvn.trototandroid.data.repository.SavedPostRepository;
+import com.trototvn.trototandroid.data.repository.ChatRepository;
+import com.trototvn.trototandroid.data.model.chat.ConversationDto;
 import com.trototvn.trototandroid.utils.SessionManager;
 import com.trototvn.trototandroid.ui.base.BaseViewModel;
 
@@ -31,6 +33,7 @@ public class PostDetailViewModel extends BaseViewModel {
     private final PostDetailRepository repository;
     private final RatingRepository ratingRepository;
     private final SavedPostRepository savedPostRepository;
+    private final ChatRepository chatRepository;
     private final SessionManager sessionManager;
 
     private final MutableLiveData<Resource<PostDetail>> postDetail = new MutableLiveData<>();
@@ -39,12 +42,14 @@ public class PostDetailViewModel extends BaseViewModel {
     private final MutableLiveData<Resource<RatingListResponse>> ratingsList = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isSaved = new MutableLiveData<>(null);
     private final MutableLiveData<Resource<Void>> saveStatus = new MutableLiveData<>();
+    private final MutableLiveData<Resource<ConversationDto>> createChatResult = new MutableLiveData<>();
 
     @Inject
-    public PostDetailViewModel(PostDetailRepository repository, RatingRepository ratingRepository, SavedPostRepository savedPostRepository, SessionManager sessionManager) {
+    public PostDetailViewModel(PostDetailRepository repository, RatingRepository ratingRepository, SavedPostRepository savedPostRepository, ChatRepository chatRepository, SessionManager sessionManager) {
         this.repository = repository;
         this.ratingRepository = ratingRepository;
         this.savedPostRepository = savedPostRepository;
+        this.chatRepository = chatRepository;
         this.sessionManager = sessionManager;
     }
 
@@ -70,6 +75,10 @@ public class PostDetailViewModel extends BaseViewModel {
 
     public LiveData<Resource<Void>> getSaveStatus() {
         return saveStatus;
+    }
+
+    public MutableLiveData<Resource<ConversationDto>> getCreateChatResult() {
+        return createChatResult;
     }
 
     /**
@@ -310,5 +319,29 @@ public class PostDetailViewModel extends BaseViewModel {
                             )
             );
         }
+    }
+
+    /**
+     * Tự động tạo hoặc lấy cuộc trò chuyện với chủ bài đăng
+     */
+    public void createAndNavigateToChat(int sellerId) {
+        if (!isAuthenticated()) {
+            createChatResult.setValue(Resource.error("Vui lòng đăng nhập để thực hiện", null));
+            return;
+        }
+
+        createChatResult.setValue(Resource.loading(null));
+
+        compositeDisposable.add(
+                chatRepository.createConversation(sellerId)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                result -> createChatResult.setValue(result),
+                                throwable -> {
+                                    Timber.e(throwable, "Error creating conversation");
+                                    createChatResult.setValue(Resource.error("Lỗi khi kết nối tới người dùng này", null));
+                                }
+                        )
+        );
     }
 }

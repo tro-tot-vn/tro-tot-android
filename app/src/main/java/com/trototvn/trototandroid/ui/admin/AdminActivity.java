@@ -30,8 +30,13 @@ public class AdminActivity extends AppCompatActivity {
     @Inject
     SessionManager sessionManager;
 
+    @Inject
+    com.trototvn.trototandroid.data.repository.AuthRepository authRepository;
+
     private ActivityAdminBinding binding;
     private NavController navController;
+    private final io.reactivex.rxjava3.disposables.CompositeDisposable compositeDisposable = new io.reactivex.rxjava3.disposables.CompositeDisposable();
+    private boolean isLoggingOut = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +46,21 @@ public class AdminActivity extends AppCompatActivity {
 
         setupNavigation();
         applyRoleVisibility();
+
+        // Listen to forced logout events globally
+        compositeDisposable.add(
+                sessionManager.observeSessionExpiration()
+                        .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+                        .subscribe(
+                                expired -> {
+                                    if (expired && !isLoggingOut) {
+                                        timber.log.Timber.w("Admin forced logout triggered by session expiration.");
+                                        logout();
+                                    }
+                                },
+                                throwable -> timber.log.Timber.e(throwable, "Error observing session expiration")
+                        )
+        );
     }
 
     private void setupNavigation() {
@@ -67,6 +87,26 @@ public class AdminActivity extends AppCompatActivity {
 
     /** Clear the session and return to the splash/auth flow. */
     public void logout() {
+        if (isLoggingOut) return;
+        isLoggingOut = true;
+
+        String fcmToken = sessionManager.getFcmToken();
+        if (fcmToken != null && !fcmToken.isEmpty()) {
+            // Đẩy unregister token lên io thread và sau khi xong (hoặc lỗi) thì logout
+            io.reactivex.rxjava3.disposables.Disposable d = authRepository.unregisterFcmToken(fcmToken)
+                    .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+                    .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+                    .doFinally(this::performLocalLogout)
+                    .subscribe(
+                            () -> timber.log.Timber.d("Admin FCM unregister success"),
+                            throwable -> timber.log.Timber.e(throwable, "Admin FCM unregister failed")
+                    );
+        } else {
+            performLocalLogout();
+        }
+    }
+
+    private void performLocalLogout() {
         sessionManager.clearSession();
         Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -81,6 +121,7 @@ public class AdminActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        compositeDisposable.clear();
         super.onDestroy();
         binding = null;
     }
