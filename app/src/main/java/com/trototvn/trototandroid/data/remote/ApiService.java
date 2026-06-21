@@ -377,6 +377,12 @@ public interface ApiService {
     Single<ResponseData<List<ConversationDto>>> fetchConversations();
 
     /**
+     * POST - Tạo hội thoại mới.
+     */
+    @POST("api/conversations")
+    Single<ResponseData<ConversationDto>> createConversation(@Body com.trototvn.trototandroid.data.model.chat.CreateConversationRequest request);
+
+    /**
      * POST - Gửi tin nhắn.
      */
     @POST("api/chat/conversations/{conversationId}/messages")

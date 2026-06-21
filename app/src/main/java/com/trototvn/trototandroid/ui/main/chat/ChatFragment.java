@@ -271,6 +271,10 @@ public class ChatFragment extends BaseFragment<FragmentChatDetailBinding> {
         // Quan sát thông tin hội thoại để tải ảnh đại diện đối phương
         viewModel.getConversationLiveData().observe(getViewLifecycleOwner(), conversation -> {
             if (conversation != null) {
+                if (conversation.partnerName != null && !conversation.partnerName.isEmpty()) {
+                    binding.toolbarTitle.setText(conversation.partnerName);
+                }
+
                 // Cập nhật avatar đối phương vào Adapter tin nhắn
                 adapter.setPartnerAvatar(conversation.partnerAvatar);
 
