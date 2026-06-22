@@ -148,8 +148,8 @@ public class PostDetailFragment extends Fragment {
         viewModel.getCreateChatResult().observe(getViewLifecycleOwner(), resource -> {
             if (resource.getStatus() == Resource.Status.SUCCESS && resource.getData() != null) {
                 long conversationId = resource.getData().conversationId;
-                String partnerName = "";
-                Resource<com.trototvn.trototandroid.data.model.post.Post> postRes = viewModel.getPostDetail().getValue();
+                String partnerName = "Loading ...";
+                Resource<com.trototvn.trototandroid.data.model.post.PostDetail> postRes = viewModel.getPostDetail().getValue();
                 if (postRes != null && postRes.getData() != null) {
                     partnerName = postRes.getData().getOwner().getFullName();
                 }
