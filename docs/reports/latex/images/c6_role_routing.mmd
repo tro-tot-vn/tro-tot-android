@@ -1,0 +1,12 @@
+%% Chương 6 - Điều hướng theo vai trò khi khởi động / đăng nhập
+%% Export: mmdc -i c6_role_routing.mmd -o outputs/c6_role_routing.png -b white -s 2
+flowchart TD
+    A["Mở ứng dụng / Đăng nhập thành công"] --> B{"SessionManager.isLoggedIn()?"}
+    B -- "Chưa" --> C["AuthActivity (Đăng nhập / Đăng ký)"]
+    C --> E
+    B -- "Rồi" --> E{"isAdminUser()? — đọc roleName từ JWT"}
+    E -- "Moderator / Manager" --> F["AdminActivity — khu quản trị"]
+    E -- "Customer" --> G["MainActivity — ứng dụng người dùng"]
+    F --> H{"isManager()?"}
+    H -- "Có" --> I["Hiện tab Kiểm duyệt viên"]
+    H -- "Không" --> J["Ẩn tab Kiểm duyệt viên"]
