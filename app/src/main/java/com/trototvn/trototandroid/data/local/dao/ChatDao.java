@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Upsert;
 
 import com.trototvn.trototandroid.data.local.entity.ConversationEntity;
 import com.trototvn.trototandroid.data.local.entity.ConversationParticipantEntity;
@@ -30,16 +31,16 @@ public interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertMessages(List<MessageEntity> messages);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     Completable insertConversation(ConversationEntity conversation);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     Completable insertConversations(List<ConversationEntity> conversations);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     Completable insertParticipant(ConversationParticipantEntity participant);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     Completable insertParticipants(List<ConversationParticipantEntity> participants);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -92,6 +93,16 @@ public interface ChatDao {
            "(SELECT message_status FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS lastMessageStatus " +
            "FROM conversations c ORDER BY c.updated_at DESC")
     Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> getConversationsWithStatus(long currentUserId);
+
+    @Query("SELECT c.conversation_id, c.partner_name, c.partner_avatar, c.last_message, " +
+           "(SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.conversation_id AND m.sender_id != :currentUserId AND m.message_status = 'SENT' AND m.deleted_at IS NULL) AS unread_count, " +
+           "c.created_at, c.updated_at, " +
+           "(SELECT sender_id FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS lastMessageSenderId, " +
+           "(SELECT message_status FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS lastMessageStatus " +
+           "FROM conversations c " +
+           "WHERE c.partner_name LIKE :query " +
+           "ORDER BY c.updated_at DESC")
+    Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> getConversationsWithStatusFiltered(long currentUserId, String query);
 
     @Query("SELECT MAX(created_at) FROM messages")
     java.util.Date getLatestMessageTimestampSync();

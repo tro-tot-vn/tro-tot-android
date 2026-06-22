@@ -369,6 +369,26 @@ public class ChatRepository {
     }
 
     /**
+     * Trả về Flowable real-time danh sách hội thoại từ Room lọc theo tên đối phương.
+     */
+    public Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> observeConversationsFiltered(String query) {
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException e) {
+                    Timber.e(e, "Failed to parse currentUserId: %s", uid);
+                }
+            }
+        }
+        String formattedQuery = "%" + query.trim() + "%";
+        return chatDao.getConversationsWithStatusFiltered(currentUserId, formattedQuery)
+                .subscribeOn(Schedulers.io());
+    }
+
+    /**
      * Tạo hội thoại mới.
      */
     public Single<Resource<ConversationDto>> createConversation(int targetUserId) {
@@ -998,14 +1018,14 @@ public class ChatRepository {
     }
 
     /**
-     * Tải danh sách hội thoại từ server rồi upsert vào Room (SSOT).
+     * Tải danh sách hội thoại từ server rồi upsert vào Room (SSOT) với các tham số tìm kiếm và phân trang.
      */
-    public Completable fetchConversations() {
-        return apiService.fetchConversations()
+    public Single<Integer> fetchConversations(String search, int limit, int offset) {
+        return apiService.fetchConversations(search, limit, offset)
                 .subscribeOn(Schedulers.io())
-                .flatMapCompletable(response -> {
+                .flatMap(response -> {
                     if (response == null || response.getData() == null || response.getData().isEmpty()) {
-                        return Completable.complete();
+                        return Single.just(0);
                     }
 
                     List<ConversationEntity> entities = new ArrayList<>();
@@ -1082,9 +1102,16 @@ public class ChatRepository {
                         joinConversation(dto.conversationId);
                     }
 
-                    return chatDao.insertConversations(entities)
-                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities))
-                            .andThen(syncMissedMessages());
+                    final int count = response.getData().size();
+                    Completable dbOperation = chatDao.insertConversations(entities)
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
+                    
+                    if (search == null || search.trim().isEmpty()) {
+                        return dbOperation.andThen(syncMissedMessages())
+                                .andThen(Single.just(count));
+                    } else {
+                        return dbOperation.andThen(Single.just(count));
+                    }
                 });
     }
 

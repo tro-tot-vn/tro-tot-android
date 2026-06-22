@@ -370,11 +370,11 @@ public interface ApiService {
             @Query("since") String since,
             @Query("limit") int limit);
 
-    /**
-     * GET - Lấy danh sách hội thoại.
-     */
     @GET("api/conversations")
-    Single<ResponseData<List<ConversationDto>>> fetchConversations();
+    Single<ResponseData<List<ConversationDto>>> fetchConversations(
+            @Query("search") String search,
+            @Query("limit") int limit,
+            @Query("offset") int offset);
 
     /**
      * POST - Tạo hội thoại mới.
