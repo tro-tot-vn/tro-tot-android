@@ -1,0 +1,14 @@
+%% Chương 6 - Luồng kiểm duyệt một bài đăng
+%% Export: mmdc -i c6_moderation_flow.mmd -o outputs/c6_moderation_flow.png -b white -s 2
+flowchart TD
+    A["AdminReviewFragment: hàng đợi tin chờ duyệt"] --> B["GET api/admin/posts/pending"]
+    B --> C["Chọn 1 tin → AdminPostDetailFragment (nhận AdminPost dạng JSON)"]
+    C --> D["Tải lịch sử: GET api/admin/posts/{id}/history"]
+    C --> E{"Chọn hành động"}
+    E -- "Duyệt" --> F["ModeratePostRequest.approve()"]
+    E -- "Từ chối" --> G{"Đã nhập lý do?"}
+    G -- "Chưa" --> H["Báo lỗi: lý do bắt buộc khi từ chối"]
+    G -- "Rồi" --> I["ModeratePostRequest.reject() + cờ nội dung vi phạm"]
+    F --> J["POST api/admin/posts/{id}/moderate"]
+    I --> J
+    J --> K["Thành công → Toast + quay lại, làm mới hàng đợi"]
