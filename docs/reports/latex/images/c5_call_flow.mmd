@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor A as Caller (Người gọi)
+    participant Server as Backend / Socket.IO
+    participant FCM as Firebase (FCM)
+    actor B as Callee (Người nhận)
+
+    A->>Server: API GET /api/video-call/ice-config (lấy STUN/TURN)
+    Server-->>A: Trả về IceConfigDto (ICE Servers)
+    A->>Server: Socket emit 'video:call:createRoom' (calleeId)
+    Note over Server: Server tạo roomId (video_A_B)
+    Server-->>A: Socket listen 'video:call:roomCreated'
+    
+    alt Callee Online (đang mở App)
+        Server->>B: Socket emit 'video:call:request'
+    else Callee App bị tắt (Killed)
+        Server->>FCM: Gửi FCM Data Payload (VIDEO_CALL_REQUEST)
+        FCM->>B: Đánh thức thiết bị, hiện IncomingCallActivity
+    end
+
+    B->>Server: API GET /api/video-call/ice-config
+    Server-->>B: Trả về IceConfigDto (ICE Servers)
+    B->>Server: Socket emit 'video:call:accepted'
+    Server-->>A: Socket listen 'video:call:accepted'
+
+    par Bắt đầu WebRTC Peer Negotiation (Signaling)
+        A->>Server: Socket emit 'video:call:offer' (SDP Offer)
+        Server->>B: Socket listen 'video:call:offer'
+        B->>Server: Socket emit 'video:call:answer' (SDP Answer)
+        Server->>A: Socket listen 'video:call:answer'
+    and Trao đổi ICE Candidates
+        A->>Server: Socket emit 'video:call:iceCandidate'
+        Server->>B: Socket listen 'video:call:iceCandidate'
+        B->>Server: Socket emit 'video:call:iceCandidate'
+        Server->>A: Socket listen 'video:call:iceCandidate'
+    end
+
+    Note over A,B: Thiết lập kênh truyền Media trực tiếp (P2P) thành công

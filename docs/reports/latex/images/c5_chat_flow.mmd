@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor A as User A (Sender)
+    participant UI as UI (ChatFragment)
+    participant VM as ChatViewModel
+    participant Repo as ChatRepository
+    participant Room as Room DB (ChatDao)
+    participant Server as Backend / Socket.IO
+    actor B as User B (Receiver)
+
+    A->>UI: Nhập tin nhắn & nhấn Gửi
+    UI->>VM: sendTextMessage()
+    VM->>Repo: sendTextMessage()
+    Note over Repo,Room: Tạo & chèn tin nhắn tạm (optimisticId < 0, status: SENT)
+    Repo->>Room: insertMessage(optimistic)
+    Room-->>UI: (Flowable) Render tin nhắn tức thì
+    
+    Repo->>Server: API POST /chat/conversations/{id}/messages
+    Server-->>Repo: Trả về MessageDto (real messageId > 0)
+    Note over Repo,Room: Lưu tin nhắn chính thức & xóa tin nhắn tạm
+    Repo->>Room: insertMessage(serverMessage)
+    Repo->>Room: softDeleteMessage(optimisticId)
+    Room-->>UI: Cập nhật UI tin nhắn chính thức
+    
+    Note over Server: Server broadcast tin nhắn thời gian thực
+    Server->>B: Socket.IO event 'message:received'
+    Note over B: Đối phương lưu tin nhắn vào Room DB của họ
+    B->>Room: insertMessage(receivedMessage)
+    Room-->>B: Cập nhật UI hiển thị tin nhắn mới

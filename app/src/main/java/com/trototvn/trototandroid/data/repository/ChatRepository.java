@@ -301,6 +301,50 @@ public class ChatRepository {
      */
     public Flowable<List<MessageEntity>> observeMessages(long conversationId) {
         return chatDao.getMessagesByConversationId(conversationId)
+                .flatMapSingle(messages -> {
+                    if (messages.isEmpty()) {
+                        return Single.just(messages);
+                    }
+                    List<Long> messageIds = new ArrayList<>();
+                    for (MessageEntity msg : messages) {
+                        messageIds.add(msg.messageId);
+                    }
+                    return chatDao.getAttachmentsByMessageIds(messageIds)
+                            .map(attachmentEntities -> {
+                                java.util.Map<Long, List<AttachmentDto>> map = new java.util.HashMap<>();
+                                for (MessageAttachmentEntity att : attachmentEntities) {
+                                    List<AttachmentDto> list = map.get(att.messageId);
+                                    if (list == null) {
+                                        list = new ArrayList<>();
+                                        map.put(att.messageId, list);
+                                    }
+                                    AttachmentDto dto = new AttachmentDto();
+                                    dto.attachmentId = att.attachmentId;
+                                    dto.messageId = att.messageId;
+                                    dto.fileName = att.fileName;
+                                    dto.fileUrl = att.fileUrl;
+                                    dto.fileType = att.fileType;
+                                    dto.fileSize = att.fileSize;
+                                    dto.mimeType = att.mimeType;
+                                    dto.cloudFileId = att.cloudFileId;
+                                    dto.createdAt = att.createdAt;
+                                    list.add(dto);
+                                }
+                                for (MessageEntity msg : messages) {
+                                    List<AttachmentDto> list = map.get(msg.messageId);
+                                    if (list != null) {
+                                        msg.setAttachments(list);
+                                    } else if (msg.getAttachments() == null) {
+                                        msg.setAttachments(new ArrayList<>());
+                                    }
+                                }
+                                return messages;
+                            })
+                            .onErrorReturn(throwable -> {
+                                Timber.e(throwable, "Error loading attachments from DB");
+                                return messages;
+                            });
+                })
                 .subscribeOn(Schedulers.io());
     }
 
@@ -321,6 +365,26 @@ public class ChatRepository {
             }
         }
         return chatDao.getConversationsWithStatus(currentUserId)
+                .subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Trả về Flowable real-time danh sách hội thoại từ Room lọc theo tên đối phương.
+     */
+    public Flowable<List<com.trototvn.trototandroid.data.local.entity.ConversationUIModel>> observeConversationsFiltered(String query) {
+        long currentUserId = 0;
+        if (sessionManager != null) {
+            String uid = sessionManager.getUserId();
+            if (uid != null && !uid.isEmpty()) {
+                try {
+                    currentUserId = Long.parseLong(uid);
+                } catch (NumberFormatException e) {
+                    Timber.e(e, "Failed to parse currentUserId: %s", uid);
+                }
+            }
+        }
+        String formattedQuery = "%" + query.trim() + "%";
+        return chatDao.getConversationsWithStatusFiltered(currentUserId, formattedQuery)
                 .subscribeOn(Schedulers.io());
     }
 
@@ -635,6 +699,17 @@ public class ChatRepository {
                         () -> {},
                         error -> Timber.e(error, "Socket message read stream error"));
         socketDisposables.add(dRead);
+
+        Disposable dDelivered = socketIOManager.getMessageDelivered()
+                .subscribeOn(Schedulers.io())
+                .flatMapCompletable(raw -> handleMessageDeliveredEvent(raw.toString()).onErrorComplete(err -> {
+                    Timber.e(err, "Error in handleMessageDeliveredEvent stream");
+                    return true;
+                }))
+                .subscribe(
+                        () -> {},
+                        error -> Timber.e(error, "Socket message delivered stream error"));
+        socketDisposables.add(dDelivered);
     }
 
     public void joinConversation(long conversationId) {
@@ -704,6 +779,65 @@ public class ChatRepository {
         }))
         .onErrorComplete(e -> {
             Timber.e(e, "Error parsing message:read socket payload: %s", jsonPayload);
+            return true;
+        });
+    }
+
+    /**
+     * Xử lý sự kiện message:delivered từ Socket.IO và cập nhật trạng thái trong database thành DELIVERED
+     */
+    public Completable handleMessageDeliveredEvent(String jsonPayload) {
+        return Completable.fromAction(() -> {
+            Timber.d("handleMessageDeliveredEvent: raw payload = %s", jsonPayload);
+        })
+        .andThen(Completable.defer(() -> {
+            if (jsonPayload == null || jsonPayload.trim().isEmpty()) {
+                return Completable.complete();
+            }
+
+            com.google.gson.JsonElement element = gson.fromJson(jsonPayload, com.google.gson.JsonElement.class);
+            List<Long> deliveredIds = new ArrayList<>();
+
+            if (element.isJsonObject()) {
+                com.google.gson.JsonObject obj = element.getAsJsonObject();
+                if (obj.has("data") && !obj.get("data").isJsonNull()) {
+                    com.google.gson.JsonElement dataElement = obj.get("data");
+                    if (dataElement.isJsonObject()) {
+                        com.google.gson.JsonObject dataObj = dataElement.getAsJsonObject();
+                        extractIdsFromJsonObject(dataObj, deliveredIds);
+                    } else if (dataElement.isJsonArray()) {
+                        extractIdsFromJsonArray(dataElement.getAsJsonArray(), deliveredIds);
+                    } else if (dataElement.isJsonPrimitive()) {
+                        try {
+                            deliveredIds.add(dataElement.getAsLong());
+                        } catch (Exception ignored) {}
+                    }
+                } else {
+                    extractIdsFromJsonObject(obj, deliveredIds);
+                }
+            } else if (element.isJsonArray()) {
+                extractIdsFromJsonArray(element.getAsJsonArray(), deliveredIds);
+            } else if (element.isJsonPrimitive()) {
+                try {
+                    deliveredIds.add(element.getAsLong());
+                } catch (Exception ignored) {}
+            }
+
+            if (!deliveredIds.isEmpty()) {
+                List<Completable> updates = new ArrayList<>();
+                for (Long id : deliveredIds) {
+                    updates.add(chatDao.updateMessageStatus(id, MessageStatus.DELIVERED, System.currentTimeMillis()));
+                }
+                return Completable.merge(updates)
+                        .doOnComplete(() -> Timber.d("Successfully marked messages %s as DELIVERED from socket event", deliveredIds))
+                        .doOnError(err -> Timber.e(err, "Failed to update message statuses for message:delivered socket event"));
+            } else {
+                Timber.w("No message IDs extracted from message:delivered payload: %s", jsonPayload);
+                return Completable.complete();
+            }
+        }))
+        .onErrorComplete(e -> {
+            Timber.e(e, "Error parsing message:delivered socket payload: %s", jsonPayload);
             return true;
         });
     }
@@ -802,7 +936,7 @@ public class ChatRepository {
                             && !MessageStatus.READ.equals(entity.messageStatus) 
                             && !MessageStatus.DELIVERED.equals(entity.messageStatus)) {
                         Timber.d("saveIncomingMessageEntity: Emitting DELIVERED receipt back to server for messageId: %d", entity.messageId);
-                        socketIOManager.emitMessageReceived(entity.conversationId, java.util.Collections.singletonList(entity.messageId));
+                        socketIOManager.emitMessageDelivered(entity.conversationId, java.util.Collections.singletonList(entity.messageId));
                     } else {
                         Timber.d("saveIncomingMessageEntity: Condition NOT met for emitting receipt (sender is current user OR status is READ/DELIVERED)");
                     }
@@ -884,14 +1018,14 @@ public class ChatRepository {
     }
 
     /**
-     * Tải danh sách hội thoại từ server rồi upsert vào Room (SSOT).
+     * Tải danh sách hội thoại từ server rồi upsert vào Room (SSOT) với các tham số tìm kiếm và phân trang.
      */
-    public Completable fetchConversations() {
-        return apiService.fetchConversations()
+    public Single<Integer> fetchConversations(String search, int limit, int offset) {
+        return apiService.fetchConversations(search, limit, offset)
                 .subscribeOn(Schedulers.io())
-                .flatMapCompletable(response -> {
+                .flatMap(response -> {
                     if (response == null || response.getData() == null || response.getData().isEmpty()) {
-                        return Completable.complete();
+                        return Single.just(0);
                     }
 
                     List<ConversationEntity> entities = new ArrayList<>();
@@ -968,9 +1102,16 @@ public class ChatRepository {
                         joinConversation(dto.conversationId);
                     }
 
-                    return chatDao.insertConversations(entities)
-                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities))
-                            .andThen(syncMissedMessages());
+                    final int count = response.getData().size();
+                    Completable dbOperation = chatDao.insertConversations(entities)
+                            .andThen(participantEntities.isEmpty() ? Completable.complete() : chatDao.insertParticipants(participantEntities));
+                    
+                    if (search == null || search.trim().isEmpty()) {
+                        return dbOperation.andThen(syncMissedMessages())
+                                .andThen(Single.just(count));
+                    } else {
+                        return dbOperation.andThen(Single.just(count));
+                    }
                 });
     }
 
@@ -1047,7 +1188,7 @@ public class ChatRepository {
                     }
                     
                     for (java.util.Map.Entry<Long, java.util.List<Long>> entry : convToMsgIds.entrySet()) {
-                        socketIOManager.emitMessageReceived(entry.getKey(), entry.getValue());
+                        socketIOManager.emitMessageDelivered(entry.getKey(), entry.getValue());
                     }
                 }));
         });

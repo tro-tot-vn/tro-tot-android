@@ -99,9 +99,22 @@ public class SessionManager {
                     String payload = new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE), "UTF-8");
                     org.json.JSONObject json = new org.json.JSONObject(payload);
                     Timber.d("JWT Payload (getUserId): %s", payload);
+                    
+                    // Ưu tiên 1: Lấy customerId lồng trong đối tượng customer
+                    if (json.has("customer") && !json.isNull("customer")) {
+                        org.json.JSONObject customer = json.optJSONObject("customer");
+                        if (customer != null && customer.has("customerId")) {
+                            return customer.optString("customerId");
+                        }
+                    }
+                    
+                    // Ưu tiên 2: Lấy customerId ở root-level (nếu có)
                     if (json.has("customerId")) {
                         return json.optString("customerId");
-                    } else if (json.has("accountId")) {
+                    }
+                    
+                    // Ưu tiên 3: Lấy accountId hoặc userId (dành cho Admin hoặc fallback)
+                    if (json.has("accountId")) {
                         return json.optString("accountId");
                     } else if (json.has("userId")) {
                         return json.optString("userId");

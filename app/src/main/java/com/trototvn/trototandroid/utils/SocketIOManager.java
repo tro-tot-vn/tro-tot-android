@@ -31,6 +31,7 @@ public class SocketIOManager {
     private final PublishSubject<String> connectionStatusSubject = PublishSubject.create();
     private final PublishSubject<Object> messageReceivedSubject = PublishSubject.create();
     private final PublishSubject<Object> messageReadSubject = PublishSubject.create();
+    private final PublishSubject<Object> messageDeliveredSubject = PublishSubject.create();
     private final PublishSubject<Object> typingStatusSubject = PublishSubject.create();
     private final PublishSubject<Object> userStatusSubject = PublishSubject.create();
 
@@ -126,6 +127,11 @@ public class SocketIOManager {
             messageReceivedSubject.onNext(args[0]);
         });
 
+        socket.on(SocketEvents.FILE_RECEIVED, args -> {
+            Timber.d("Socket file received: %s", args[0]);
+            messageReceivedSubject.onNext(args[0]);
+        });
+
         socket.on(SocketEvents.MESSAGE_READ, args -> {
             Timber.d("Socket message read: %s", args[0]);
             messageReadSubject.onNext(args[0]);
@@ -137,28 +143,10 @@ public class SocketIOManager {
         socket.on(SocketEvents.USER_ONLINE, args -> userStatusSubject.onNext(args[0]));
         socket.on(SocketEvents.USER_OFFLINE, args -> userStatusSubject.onNext(args[0]));
 
-        socket.on("error", args -> Timber.e("Socket business error: %s", args[0]));
-
-        // Debug candidate socket status events
-        String[] debugEvents = {
-            "message:delivered",
-            "message:status",
-            "message:update",
-            "message:delivered_status",
-            "message:sent",
-            "status",
-            "delivered",
-            "received"
-        };
-        for (String ev : debugEvents) {
-            socket.on(ev, args -> {
-                if (args != null && args.length > 0 && args[0] != null) {
-                    Timber.d("DEBUG_SOCKET: Received event '%s' with payload: %s", ev, args[0]);
-                } else {
-                    Timber.d("DEBUG_SOCKET: Received event '%s' with no payload", ev);
-                }
-            });
-        }
+        socket.on(SocketEvents.MESSAGE_DELIVERED, args -> {
+            Timber.d("Socket message delivered: %s", args[0]);
+            messageDeliveredSubject.onNext(args[0]);
+        });
     }
 
     /**
@@ -239,9 +227,10 @@ public class SocketIOManager {
     }
 
     /**
-     * Emit message received (delivered) event
+    /**
+     * Emit message delivered event
      */
-    public void emitMessageReceived(long conversationId, java.util.List<Long> messageIds) {
+    public void emitMessageDelivered(long conversationId, java.util.List<Long> messageIds) {
         if (socket != null && socket.connected()) {
             com.google.gson.JsonObject data = new com.google.gson.JsonObject();
             data.addProperty("conversationId", conversationId);
@@ -258,13 +247,13 @@ public class SocketIOManager {
             
             try {
                 org.json.JSONObject payload = new org.json.JSONObject(data.toString());
-                socket.emit(SocketEvents.MESSAGE_RECEIVED, payload);
-                Timber.d("Emitted message:received via socket: %s", payload);
+                socket.emit(SocketEvents.MESSAGE_DELIVERED, payload);
+                Timber.d("Emitted message:delivered via socket: %s", payload);
             } catch (Exception e) {
-                Timber.e(e, "Error emitting message:received");
+                Timber.e(e, "Error emitting message:delivered");
             }
         } else {
-            Timber.w("emitMessageReceived: Cannot emit message:received. Socket is %s", 
+            Timber.w("emitMessageDelivered: Cannot emit message:delivered. Socket is %s", 
                     socket == null ? "NULL" : "DISCONNECTED");
         }
     }
@@ -293,6 +282,10 @@ public class SocketIOManager {
 
     public Observable<Object> getMessageRead() {
         return messageReadSubject;
+    }
+
+    public Observable<Object> getMessageDelivered() {
+        return messageDeliveredSubject;
     }
 
     public Observable<Object> getTypingStatus() {
